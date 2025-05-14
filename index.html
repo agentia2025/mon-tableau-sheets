@@ -3,32 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <title>Tableau de bord Maintenance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    select { margin: 10px; padding: 5px; }
-    canvas { max-width: 500px; margin-top: 30px; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-image: url('0c7229a2-b608-4708-847f-744ed130556e.jpg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center top;
+    }
+    select {
+      margin: 10px;
+      padding: 5px;
+      width: 220px;
+    }
+    .filters {
+      display: grid;
+      grid-template-areas:
+        "site type"
+        "machine year";
+      gap: 15px 40px;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .site-group { grid-area: site; }
+    .type-group { grid-area: type; }
+    .machine-group { grid-area: machine; }
+    .year-group { grid-area: year; }
+
+    .chart-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 80px;
+    }
+    .chart-box {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #pieChart {
+      width: 330px !important;
+      height: 330px !important;
+    }
+    #barChart {
+      width: 351px !important;
+      height: 300px !important;
+    }
   </style>
 </head>
 <body>
   <h1>Tableau de bord Maintenance</h1>
 
-  <label for="siteFilter">Filtrer par site :</label>
-  <select id="siteFilter"><option value="">Tous les sites</option></select>
+  <div class="filters">
+    <div class="filter-group site-group">
+      <label for="siteFilter">Site :</label>
+      <select id="siteFilter"><option value="">Tous les sites</option></select>
+    </div>
+    <div class="filter-group type-group">
+      <label for="typeFilter">Type :</label>
+      <select id="typeFilter"><option value="">Tous les types</option></select>
+    </div>
+    <div class="filter-group machine-group">
+      <label for="machineFilter">Machine :</label>
+      <select id="machineFilter"><option value="">Toutes les machines</option></select>
+    </div>
+    <div class="filter-group year-group">
+      <label for="yearFilter">Année :</label>
+      <select id="yearFilter"><option value="">Toutes les années</option></select>
+    </div>
+  </div>
 
-  <label for="typeFilter">Filtrer par type d'intervention :</label>
-  <select id="typeFilter"><option value="">Tous les types</option></select>
+  <div class="chart-container">
+    <div class="chart-box"><canvas id="pieChart"></canvas></div>
+    <div class="chart-box"><canvas id="barChart"></canvas></div>
+  </div>
 
-  <label for="machineFilter">Filtrer par machine :</label>
-  <select id="machineFilter"><option value="">Toutes les machines</option></select>
-
-  <label for="yearFilter">Filtrer par année :</label>
-  <select id="yearFilter"><option value="">Toutes les années</option></select>
-
-  <canvas id="pieChart"></canvas>
-  <canvas id="barChart"></canvas>
-
+  <!-- Script non modifié -->
   <script>
     const url = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
     let allData = [];
@@ -102,7 +162,6 @@
 
       const total = Object.values(typeCounts).reduce((a, b) => a + b, 0);
 
-      // Pie chart
       const pieCtx = document.getElementById("pieChart").getContext("2d");
       if (pieChart) pieChart.destroy();
       pieChart = new Chart(pieCtx, {
@@ -130,7 +189,6 @@
         plugins: [ChartDataLabels]
       });
 
-      // Bar chart
       const barCtx = document.getElementById("barChart").getContext("2d");
       if (barChart) barChart.destroy();
       barChart = new Chart(barCtx, {
@@ -165,4 +223,5 @@
   </script>
 </body>
 </html>
+
 
