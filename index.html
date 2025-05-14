@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <title>Tableau de bord Maintenance</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     select { margin: 10px; padding: 5px; }
-    canvas { max-width: 800px; margin-top: 30px; }
+    canvas { max-width: 500px; margin-top: 30px; }
   </style>
 </head>
 <body>
@@ -99,11 +100,13 @@
         siteCounts[site] = (siteCounts[site] || 0) + 1;
       });
 
-      // Pie chart des types d'intervention
+      const total = Object.values(typeCounts).reduce((a, b) => a + b, 0);
+
+      // Pie chart
       const pieCtx = document.getElementById("pieChart").getContext("2d");
       if (pieChart) pieChart.destroy();
       pieChart = new Chart(pieCtx, {
-        type: "pie",
+        type: "doughnut",
         data: {
           labels: Object.keys(typeCounts),
           datasets: [{
@@ -116,12 +119,18 @@
             title: {
               display: true,
               text: "Répartition des types d'intervention"
+            },
+            datalabels: {
+              formatter: (value) => `${((value / total) * 100).toFixed(1)}%`,
+              color: '#fff',
+              font: { weight: 'bold' }
             }
           }
-        }
+        },
+        plugins: [ChartDataLabels]
       });
 
-      // Bar chart des sites
+      // Bar chart
       const barCtx = document.getElementById("barChart").getContext("2d");
       if (barChart) barChart.destroy();
       barChart = new Chart(barCtx, {
@@ -141,9 +150,16 @@
               display: true,
               text: "Nombre d'interventions par site"
             },
+            datalabels: {
+              anchor: 'end',
+              align: 'right',
+              formatter: (value) => `${value}`,
+              font: { weight: 'bold' }
+            },
             legend: { display: false }
           }
-        }
+        },
+        plugins: [ChartDataLabels]
       });
     }
   </script>
