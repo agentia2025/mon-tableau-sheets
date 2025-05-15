@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Maintenance Armitec</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      text-align: center;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #4e79a7;
+      color: white;
+      position: relative;
+    }
+
+    .menu-button {
+      font-size: 26px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: white;
+      position: absolute;
+      left: 20px;
+      top: 10px;
+    }
+
+    .menu {
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      top: 50px;
+      left: 20px;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 999;
+    }
+
+    .menu a {
+      padding: 10px 20px;
+      text-decoration: none;
+      color: #333;
+      border-bottom: 1px solid #eee;
+    }
+
+    .menu a:last-child {
+      border-bottom: none;
+    }
+
+    .menu a:hover {
+      background-color: #f0f0f0;
+    }
+
+    h1 {
+      margin-top: 80px;
+      font-size: 32px;
+      color: #333;
+    }
+
+    .logo-container {
+      margin-top: 30px;
+    }
+
+    .logo-container img {
+      width: 180px;
+      max-width: 90%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button class="menu-button" onclick="toggleMenu()">☰</button>
+    <div class="menu" id="menu">
+      <a href="index.html">Accueil</a>
+      <a href="tableau.html">Tableau de bord</a>
+      <a href="historique.html">Historique maintenance</a>
+    </div>
+  </header>
+
+  <h1>Maintenance Armitec</h1>
+
+  <div class="logo-container">
+    <img src="https://drive.google.com/uc?export=view&id=1lFuZlWcxLFVUN-urexeImPzNL9s06H0r" alt="Logo Armitec">
+  </div>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById("menu");
+      menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+    }
+
+    // Fermer le menu si on clique ailleurs
+    document.addEventListener("click", function (event) {
+      const menu = document.getElementById("menu");
+      const button = document.querySelector(".menu-button");
+      if (!menu.contains(event.target) && event.target !== button) {
+        menu.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>
