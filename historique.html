@@ -150,19 +150,24 @@
   </header>
 
   <h1>Historique des Maintenance</h1>
-
   <div class="filters">
-    <div class="field-group">
-      <label for="siteFilter">Site</label>
-      <select id="siteFilter"><option value="">Tous les sites</option></select>
-    </div>
-
-    <div class="field-group">
-      <label for="machineFilter">Machine</label>
-      <select id="machineFilter"><option value="">Toutes les machines</option></select>
-    </div>
+  <div class="field-group">
+    <label for="siteFilter">Site</label>
+    <select id="siteFilter"><option value="">Tous les sites</option></select>
   </div>
 
+  <div class="field-group">
+    <label for="machineFilter">Machine</label>
+    <select id="machineFilter"><option value="">Toutes les machines</option></select>
+  </div>
+
+  <div class="field-group">
+    <label for="typeFilter">Type d'intervention</label>
+    <select id="typeFilter"><option value="">Tous les types</option></select>
+  </div>
+</div>
+
+  
   <table id="maintenanceTable">
     <thead>
       <tr>
@@ -206,15 +211,28 @@
       });
 
     function populateSiteFilter(data) {
-      const siteSet = new Set();
-      data.forEach(row => siteSet.add(row["Site Intervention"]));
-      fillSelect("siteFilter", siteSet);
+  const siteSet = new Set();
+  const machineSet = new Set();
+  const typeSet = new Set(); // ➕ NOUVEAU
 
-      document.getElementById("siteFilter").addEventListener("change", () => {
-        updateMachineFilter();
-        filterTable();
-      });
-    }
+  data.forEach(row => {
+    siteSet.add(row["Site Intervention"]);
+    machineSet.add(row["Machine"]);
+    typeSet.add(row["Type d'intervention"]); // ➕ NOUVEAU
+  });
+
+  fillSelect("siteFilter", siteSet);
+  fillSelect("machineFilter", machineSet);
+  fillSelect("typeFilter", typeSet); // ➕ NOUVEAU
+
+  document.getElementById("siteFilter").addEventListener("change", () => {
+    updateMachineFilter();
+    filterTable();
+  });
+  document.getElementById("machineFilter").addEventListener("change", filterTable);
+  document.getElementById("typeFilter").addEventListener("change", filterTable); // ➕ NOUVEAU
+}
+
 
     function updateMachineFilter() {
       const site = document.getElementById("siteFilter").value;
@@ -246,11 +264,14 @@
     function filterTable() {
       const site = document.getElementById("siteFilter").value;
       const machine = document.getElementById("machineFilter").value;
+      const type = document.getElementById("typeFilter").value;
 
       const filtered = allData.filter(row => {
         const matchSite = !site || row["Site Intervention"] === site;
         const matchMachine = !machine || row["Machine"] === machine;
-        return matchSite && matchMachine;
+        const matchType = !type || row["Type d'intervention"] === type;
+        return matchSite && matchMachine && matchType;
+
       });
 
       renderTable(filtered);
