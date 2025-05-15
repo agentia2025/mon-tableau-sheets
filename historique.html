@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Historique des Maintenance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f2f2f2;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .filters {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .filters .field-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .filters label {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .filters select {
+      width: 160px;
+      padding: 6px;
+      font-size: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #4e79a7;
+      color: white;
+      font-weight: bold;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    @media screen and (max-width: 768px) {
+      table, thead, tbody, th, td, tr {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Historique des Maintenance</h1>
+
+  <div class="filters">
+    <div class="field-group">
+      <label for="siteFilter">Site</label>
+      <select id="siteFilter"><option value="">Tous les sites</option></select>
+    </div>
+
+    <div class="field-group">
+      <label for="machineFilter">Machine</label>
+      <select id="machineFilter"><option value="">Toutes les machines</option></select>
+    </div>
+  </div>
+
+  <table id="maintenanceTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Machine</th>
+        <th>Repère fonctionnel</th>
+        <th>Heures Machine</th>
+        <th>Type d'intervention</th>
+        <th>Type de maintenance</th>
+        <th>Rapport</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Lignes dynamiques -->
+    </tbody>
+  </table>
+
+  <script>
+    const url = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
+    let allData = [];
+
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        allData = data;
+        populateSiteFilter(data);
+        updateMachineFilter();
+        renderTable(data);
+      });
+
+    function populateSiteFilter(data) {
+      const siteSet = new Set();
+      data.forEach(row => siteSet.add(row["Site Intervention"]));
+      fillSelect("siteFilter", siteSet);
+
+      document.getElementById("siteFilter").addEventListener("change", () => {
+        updateMachineFilter();
+        filterTable();
+      });
+    }
+
+    function updateMachineFilter() {
+      const site = document.getElementById("siteFilter").value;
+      const machineSet = new Set();
+
+      allData.forEach(row => {
+        if (!site || row["Site Intervention"] === site) {
+          machineSet.add(row["Machine"]);
+        }
+      });
+
+      const machineSelect = document.getElementById("machineFilter");
+      machineSelect.innerHTML = '<option value="">Toutes les machines</option>';
+      fillSelect("machineFilter", machineSet);
+
+      machineSelect.addEventListener("change", filterTable);
+    }
+
+    function fillSelect(id, values) {
+      const select = document.getElementById(id);
+      Array.from(values).sort().forEach(value => {
+        const opt = document.createElement("option");
+        opt.value = value;
+        opt.textContent = value;
+        select.appendChild(opt);
+      });
+    }
+
+    function filterTable() {
+      const site = document.getElementById("siteFilter").value;
+      const machine = document.getElementById("machineFilter").value;
+
+      const filtered = allData.filter(row => {
+        const matchSite = !site || row["Site Intervention"] === site;
+        const matchMachine = !machine || row["Machine"] === machine;
+        return matchSite && matchMachine;
+      });
+
+      renderTable(filtered);
+    }
+
+    function renderTable(data) {
+      const tbody = document.querySelector("#maintenanceTable tbody");
+      tbody.innerHTML = "";
+
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row["Date Intervention"] || "-"}</td>
+          <td>${row["Machine"] || "-"}</td>
+          <td>${row["Repère fonctionnel"] || "-"}</td>
+          <td>${row["Heures Machine"] || "-"}</td>
+          <td>${row["Type d'intervention"] || "-"}</td>
+          <td>${row["Choix du type de maintenance"] || "-"}</td>
+          <td>${row["Rapport d'intervention"] || "-"}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  </script>
+</body>
+</html>
