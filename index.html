@@ -96,19 +96,23 @@
     <img src="https://drive.google.com/uc?export=view&id=1lFuZlWcxLFVUN-urexeImPzNL9s06H0r" alt="Logo Armitec">
   </div>
 
-  <script>
-    function toggleMenu() {
-      const menu = document.getElementById("menu");
-      menu.style.display = menu.style.display === "flex" ? "none" : "flex";
-    }
+ <script>
+  // Forcer l'état initial du menu à "none"
+  document.getElementById("menu").style.display = "none";
 
-    document.addEventListener("click", function (event) {
-      const menu = document.getElementById("menu");
-      const button = document.querySelector(".menu-button");
-      if (!menu.contains(event.target) && event.target !== button) {
-        menu.style.display = "none";
-      }
-    });
-  </script>
+  function toggleMenu() {
+    const menu = document.getElementById("menu");
+    menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+  }
+
+  document.addEventListener("click", function (event) {
+    const menu = document.getElementById("menu");
+    const button = document.querySelector(".menu-button");
+    if (!menu.contains(event.target) && event.target !== button) {
+      menu.style.display = "none";
+    }
+  });
+</script>
+
 </body>
 </html>
