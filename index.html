@@ -13,44 +13,39 @@
     }
 
     header {
-  display: flex;
-  align-items: center;
-  padding: 10px 20px;
-  background-color: #4e79a7;
-  color: white;
-  position: relative;
-}
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #4e79a7;
+      color: white;
+    }
 
-.menu-button {
-  font-size: 26px;
-  cursor: pointer;
-  background: none;
-  border: none;
-  color: white;
-  margin-right: 3ch; /* espace équivalent à 3 caractères */
-}
+    .menu-button {
+      font-size: 26px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: black;
+      margin-right: 3ch; /* Espace entre le menu et le titre */
+    }
 
-.page-title {
-  font-size: 24px;
-  margin: 0;
-}
+    .page-title {
+      font-size: 24px;
+      margin: 0;
+    }
 
-
-    
     .menu {
       display: none;
       flex-direction: column;
-      background-color: white;
       position: absolute;
-      top: 45px;
-      left: 10px;
+      top: 50px;
+      left: 20px;
+      background-color: white;
       border: 1px solid #ccc;
       border-radius: 6px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
       z-index: 999;
-      min-width: 180px;
     }
-
 
     .menu a {
       padding: 10px 20px;
@@ -85,41 +80,39 @@
   </style>
 </head>
 <body>
- <header>
-  <button class="menu-button" onclick="toggleMenu()">☰</button>
-  <h1 class="page-title">Maintenance Armitec</h1>
-  <div class="menu" id="menu">
-    <a href="index.html">Accueil</a>
-    <a href="tableau.html">Tableau de bord</a>
-    <a href="historique.html">Historique maintenance</a>
-  </div>
-</header>
 
-
-  <h1>Maintenance Armitec</h1>
+  <header>
+    <button class="menu-button">☰</button>
+    <h1 class="page-title">Maintenance Armitec</h1>
+    <div class="menu" id="menu">
+      <a href="index.html">Accueil</a>
+      <a href="tableau.html">Tableau de bord</a>
+      <a href="historique.html">Historique maintenance</a>
+    </div>
+  </header>
 
   <div class="logo-container">
     <img src="logo_armitec.png" alt="Logo Armitec">
-
   </div>
 
- <script>
-  // Forcer l'état initial du menu à "none"
-  document.getElementById("menu").style.display = "none";
+  <script>
+    window.onload = function () {
+      const menu = document.getElementById("menu");
+      const button = document.querySelector(".menu-button");
 
-  function toggleMenu() {
-    const menu = document.getElementById("menu");
-    menu.style.display = menu.style.display === "flex" ? "none" : "flex";
-  }
-
-  document.addEventListener("click", function (event) {
-    const menu = document.getElementById("menu");
-    const button = document.querySelector(".menu-button");
-    if (!menu.contains(event.target) && event.target !== button) {
       menu.style.display = "none";
-    }
-  });
-</script>
 
+      button.addEventListener("click", function () {
+        menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+      });
+
+      document.addEventListener("click", function (event) {
+        if (!menu.contains(event.target) && event.target !== button) {
+          menu.style.display = "none";
+        }
+      });
+    };
+  </script>
 </body>
 </html>
+
