@@ -51,7 +51,7 @@
     }
 
     th, td {
-      padding: 12px;
+      padding: 10px;
       text-align: center;
       border-bottom: 1px solid #ddd;
     }
@@ -68,6 +68,20 @@
 
     tr:hover {
       background-color: #f1f1f1;
+    }
+
+    a {
+      text-decoration: none;
+      font-size: 18px;
+    }
+
+    td:first-child {
+      width: 90px;
+    }
+
+    td:nth-child(2) {
+      text-align: left;
+      width: 120px;
     }
 
     @media screen and (max-width: 768px) {
@@ -97,7 +111,6 @@
       <tr>
         <th>Date</th>
         <th>Machine</th>
-        <th>Repère fonctionnel</th>
         <th>Heures Machine</th>
         <th>Type d'intervention</th>
         <th>Type de maintenance</th>
@@ -178,15 +191,23 @@
       tbody.innerHTML = "";
 
       data.forEach(row => {
+        const date = row["Date Intervention"]
+          ? new Date(row["Date Intervention"]).toLocaleDateString('fr-FR').slice(0, 8)
+          : "-";
+
+        const rapport = row["Rapport d'intervention"];
+        const rapportHTML = rapport
+          ? `<a href="${rapport}" target="_blank" title="Voir le rapport">📄</a>`
+          : "-";
+
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${row["Date Intervention"] || "-"}</td>
+          <td>${date}</td>
           <td>${row["Machine"] || "-"}</td>
-          <td>${row["Repère fonctionnel"] || "-"}</td>
           <td>${row["Heures Machine"] || "-"}</td>
           <td>${row["Type d'intervention"] || "-"}</td>
           <td>${row["Choix du type de maintenance"] || "-"}</td>
-          <td>${row["Rapport d'intervention"] || "-"}</td>
+          <td>${rapportHTML}</td>
         `;
         tbody.appendChild(tr);
       });
