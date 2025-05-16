@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Suivi Préventif</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <style>
@@ -44,7 +44,7 @@
       background-color: white;
       border: 1px solid #ccc;
       border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
       z-index: 999;
     }
 
@@ -148,14 +148,14 @@
       });
     };
 
-    // Chargement des données
+    // URL vers ton script JSON Préventif
     const url = "https://script.google.com/macros/s/AKfycbydUwbmc5KCQ_WWLCriPcx8AZEpOxDY8THCtLsRWmNY1oE19RaKJVN_cEKo5FjLJDKcLw/exec";
     let allData = [];
 
     fetch(url)
       .then(res => res.json())
       .then(data => {
-        allData = data.filter(row => row["Type d'intervention"]?.toLowerCase().includes("préventif"));
+        allData = data.filter(r => r["Prochain contrôle"]);
         populateFilters(allData);
         updateChart();
       });
@@ -166,7 +166,7 @@
 
       data.forEach(row => {
         siteSet.add(row["Site Intervention"]);
-        const date = new Date(row["Date Intervention"]);
+        const date = new Date(row["Prochain contrôle"]);
         if (!isNaN(date)) yearSet.add(date.getFullYear());
       });
 
@@ -194,7 +194,7 @@
 
       const filtered = allData.filter(row => {
         const matchSite = !site || row["Site Intervention"] === site;
-        const date = new Date(row["Date Intervention"]);
+        const date = new Date(row["Prochain contrôle"]);
         const matchYear = !year || (!isNaN(date) && date.getFullYear() == year);
         return matchSite && matchYear;
       });
@@ -217,7 +217,7 @@
           plugins: {
             title: {
               display: true,
-              text: "Taux de conformité préventive"
+              text: "Taux de conformité des maintenances préventives"
             },
             datalabels: {
               formatter: (val, ctx) => {
