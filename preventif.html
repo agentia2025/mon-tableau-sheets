@@ -93,8 +93,9 @@
     </select>
   </div>
 
+  <!-- Phrase ajoutée proprement -->
   <p class="intro">
-    Vos prochaines interventions de maintenance préventive :
+    Vos prochaines interventions de maintenance préventive, filtrées par site :
   </p>
 
   <table id="preventifTable">
@@ -114,7 +115,6 @@
 
   <script>
     const data = [
-      // Exemple de données à remplacer par les vôtres
       { date: "2025-06-10", site: "Paris", machine: "Compresseur A", type: "Préventif", technicien: "Jean" },
       { date: "2025-06-15", site: "Lyon", machine: "Pompe B", type: "Préventif", technicien: "Claire" },
       { date: "2025-06-12", site: "Paris", machine: "Groupe C", type: "Préventif", technicien: "Ali" },
@@ -156,7 +156,6 @@
       nav.style.display = nav.style.display === "flex" ? "none" : "flex";
     }
 
-    // Initialisation
     populateSites();
     applyFilter();
   </script>
