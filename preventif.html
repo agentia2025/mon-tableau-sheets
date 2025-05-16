@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Suivi Préventif</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Chart.js et plugin datalabels -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <style>
@@ -20,6 +21,11 @@
     .field-group label { margin-bottom:5px; font-weight:bold; }
     .field-group select { width:160px; padding:6px; }
     canvas { max-width:400px; margin:40px auto; }
+    @media (max-width:600px) {
+      .filters { flex-direction:column; gap:15px; }
+      .field-group { width:100%; }
+      canvas { width:90vw; height:auto; }
+    }
   </style>
 </head>
 <body>
@@ -45,30 +51,43 @@
     </div>
   </div>
 
-  <canvas id="conformityChart"></canvas>
+  <canvas id="pieChart"></canvas>
 
   <script>
     const url = "https://script.google.com/macros/s/AKfycbydUwbmc5KCQ_WWLCriPcx8AZEpOxDY8THCtLsRWmNY1oE19RaKJVN_cEKo5FjLJDKcLw/exec";
-    let allData = [];
+    let allData = [], pieChart;
 
-    fetch(url)
-      .then(r => r.json())
-      .then(data => {
-        allData = data;
-        populateFilters(data);
-        updateChart();
+    // Menu nav
+    window.onload = () => {
+      const menu = document.getElementById("menu");
+      document.querySelector(".menu-button").onclick = () => {
+        menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+      };
+      document.addEventListener("click", e => {
+        if (!menu.contains(e.target) && !e.target.matches(".menu-button")) {
+          menu.style.display = "none";
+        }
       });
+      // Charge les données
+      fetch(url)
+        .then(r => r.json())
+        .then(data => {
+          allData = data;
+          populateFilters(data);
+          updateChart();
+        });
+    };
 
     function populateFilters(data) {
       const siteSet = new Set(), yearSet = new Set();
-      data.forEach(row => {
-        if (row["Site Intervention"]) siteSet.add(row["Site Intervention"]);
-        const d = new Date(row["Prochain contrôle"]);
+      data.forEach(r => {
+        if (r["Site Intervention"]) siteSet.add(r["Site Intervention"]);
+        const d = new Date(r["Prochain contrôle"]);
         if (!isNaN(d)) yearSet.add(d.getFullYear());
       });
       fillSelect("siteFilter", siteSet);
       fillSelect("yearFilter", yearSet);
-      ["siteFilter","yearFilter"].forEach(id =>
+      ["siteFilter","yearFilter"].forEach(id => 
         document.getElementById(id).addEventListener("change", updateChart)
       );
     }
@@ -77,7 +96,8 @@
       const sel = document.getElementById(id);
       Array.from(values).sort().forEach(v => {
         const o = document.createElement("option");
-        o.value = v; o.textContent = v;
+        o.value = v; 
+        o.textContent = v;
         sel.appendChild(o);
       });
     }
@@ -85,51 +105,45 @@
     function updateChart() {
       const site = document.getElementById("siteFilter").value;
       const year = document.getElementById("yearFilter").value;
-      // Filtrer par site et année
-      const filtered = allData.filter(r => {
+      // Filtre et compte conformités
+      let ok=0, ko=0;
+      allData.forEach(r => {
+        // Site
+        if (site && r["Site Intervention"] !== site) return;
+        // Année
         const d = new Date(r["Prochain contrôle"]);
-        const okSite = !site || r["Site Intervention"] === site;
-        const okYear = !year || (!isNaN(d) && d.getFullYear().toString() === year);
-        return okSite && okYear;
+        if (year && (isNaN(d) || d.getFullYear().toString() !== year)) return;
+        // Conformité
+        if (r["conformité"] === "Conforme") ok++;
+        else if (r["conformité"] === "Non conforme") ko++;
       });
-      // Conformité : utiliser clé "conformité"
-      const confs = filtered.map(r => (r["conformité"]||"").trim().toLowerCase());
-      const conformes = confs.filter(c => c==="conforme").length;
-      const nonConformes = confs.filter(c => c==="non conforme").length;
-      const ctx = document.getElementById("conformityChart").getContext("2d");
-      if (window.conformityChart) window.conformityChart.destroy();
-      window.conformityChart = new Chart(ctx, {
-        type:"doughnut",
-        data:{
-          labels:["Conforme","Non conforme"],
-          datasets:[{ data:[conformes,nonConformes], backgroundColor:["#4caf50","#f44336"] }]
+      const total = ok + ko;
+      const percentOk = total ? Math.round((ok/total)*100) : 0;
+      const percentKo = total ? 100 - percentOk : 0;
+
+      // Dessine le camembert
+      const ctx = document.getElementById("pieChart").getContext("2d");
+      if (pieChart) pieChart.destroy();
+      pieChart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: ["Conforme","Non conforme"],
+          datasets: [{
+            data: [percentOk, percentKo]
+          }]
         },
-        options:{
-          plugins:{
-            title:{ display:true, text:"Taux de conformité préventive" },
-            datalabels:{
-              color:"#fff", font:{ weight:"bold" },
-              formatter:(val,ctx)=>{
-                const sum = ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
-                return sum?`${((val/sum)*100).toFixed(1)}%`:"0%";
-              }
+        options: {
+          plugins: {
+            title: { display:true, text:`Taux de conformité : ${percentOk}%` },
+            datalabels: {
+              formatter: v => v + "%",
+              font: { weight:"bold" }
             }
           }
         },
-        plugins:[ChartDataLabels]
+        plugins: [ChartDataLabels]
       });
     }
-
-    // Menu
-    window.onload = ()=>{
-      const menu = document.getElementById("menu"),
-            btn = document.querySelector(".menu-button");
-      menu.style.display="none";
-      btn.addEventListener("click",()=> menu.style.display = menu.style.display==="flex"?"none":"flex");
-      document.addEventListener("click",e=>{
-        if (!menu.contains(e.target) && e.target!==btn) menu.style.display="none";
-      });
-    };
   </script>
 </body>
 </html>
