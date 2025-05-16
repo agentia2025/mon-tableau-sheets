@@ -102,10 +102,14 @@
     }
 
     th, td {
-      padding: 10px;
-      text-align: center;
-      border-bottom: 1px solid #ddd;
-    }
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+  max-width: 160px;                 /* ⬅️ Limite la largeur */
+  white-space: normal;              /* ⬅️ Autorise les retours à la ligne */
+  word-break: break-word;           /* ⬅️ Coupe les mots si nécessaire */
+}
+
 
     th {
       background-color: #4e79a7;
