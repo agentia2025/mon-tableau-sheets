@@ -10,7 +10,6 @@
       margin: 0;
       background-color: #f2f2f2;
     }
-
     header {
       display: flex;
       align-items: center;
@@ -19,7 +18,6 @@
       color: white;
       position: relative;
     }
-
     .menu-button {
       font-size: 26px;
       cursor: pointer;
@@ -28,12 +26,10 @@
       color: white;
       margin-right: 3ch;
     }
-
     .page-title {
       font-size: 24px;
       margin: 0;
     }
-
     .menu {
       display: none;
       flex-direction: column;
@@ -46,28 +42,18 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
       z-index: 999;
     }
-
     .menu a {
       padding: 10px 20px;
       text-decoration: none;
       color: #333;
       border-bottom: 1px solid #eee;
     }
-
-    .menu a:last-child {
-      border-bottom: none;
-    }
-
-    .menu a:hover {
-      background-color: #f0f0f0;
-    }
-
+    .menu a:last-child { border-bottom: none; }
+    .menu a:hover { background-color: #f0f0f0; }
     h1 {
       text-align: center;
       margin: 30px 0;
     }
-
-    /* … le reste de vos styles existants … */
     .filters {
       display: flex;
       justify-content: center;
@@ -80,10 +66,7 @@
       flex-direction: column;
       align-items: center;
     }
-    .filters label {
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
+    .filters label { margin-bottom: 5px; font-weight: bold; }
     .filters select {
       width: 160px;
       padding: 6px;
@@ -111,12 +94,8 @@
       color: white;
       font-weight: bold;
     }
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-    tr:hover {
-      background-color: #f1f1f1;
-    }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    tr:hover { background-color: #f1f1f1; }
     td:first-child { width: 80px; }
     td:nth-child(2) { text-align: left; width: 120px; }
     a { text-decoration: none; font-size: 18px; }
@@ -157,7 +136,6 @@
       <tr>
         <th>Date</th>
         <th>Machine</th>
-        <th>Type d'intervention</th>
         <th>Type de maintenance</th>
         <th>Rapport</th>
       </tr>
@@ -170,21 +148,102 @@
   <script>
     window.onload = function () {
       const menu = document.getElementById("menu");
-      const button = document.querySelector(".menu-button");
-      menu.style.display = "none"; // état initial
-
-      button.addEventListener("click", () => {
+      const btn = document.querySelector(".menu-button");
+      menu.style.display = "none";
+      btn.addEventListener("click", () => {
         menu.style.display = menu.style.display === "flex" ? "none" : "flex";
       });
-
-      document.addEventListener("click", event => {
-        if (!menu.contains(event.target) && event.target !== button) {
+      document.addEventListener("click", e => {
+        if (!menu.contains(e.target) && e.target !== btn) {
           menu.style.display = "none";
         }
       });
     };
 
-    // … votre script de fetch / filtres / rendu de tableau tel quel …
+    const url = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
+    let allData = [];
+
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        allData = data;
+        populateSiteFilter(data);
+        updateMachineFilter();
+        renderTable(data);
+      });
+
+    function populateSiteFilter(data) {
+      const s = new Set(), m = new Set(), t = new Set();
+      data.forEach(r => {
+        s.add(r["Site Intervention"]);
+        m.add(r["Machine"]);
+        t.add(r["Type d'intervention"]);
+      });
+      fillSelect("siteFilter", s);
+      fillSelect("machineFilter", m);
+      fillSelect("typeFilter", t);
+      document.getElementById("siteFilter").addEventListener("change", () => {
+        updateMachineFilter(); filterTable();
+      });
+      document.getElementById("machineFilter").addEventListener("change", filterTable);
+      document.getElementById("typeFilter").addEventListener("change", filterTable);
+    }
+
+    function updateMachineFilter() {
+      const site = document.getElementById("siteFilter").value, setM = new Set();
+      allData.forEach(r => { if (!site || r["Site Intervention"]===site) setM.add(r["Machine"]); });
+      const sel = document.getElementById("machineFilter");
+      sel.innerHTML = '<option value="">Toutes les machines</option>';
+      fillSelect("machineFilter", setM);
+    }
+
+    function fillSelect(id, values) {
+      const sel = document.getElementById(id);
+      Array.from(values).sort().forEach(v => {
+        const o = document.createElement("option");
+        o.value = v; o.textContent = v;
+        sel.appendChild(o);
+      });
+    }
+
+    function filterTable() {
+      const site = document.getElementById("siteFilter").value;
+      const machine = document.getElementById("machineFilter").value;
+      const type = document.getElementById("typeFilter").value;
+      const filt = allData.filter(r => {
+        return (!site || r["Site Intervention"]===site)
+            && (!machine || r["Machine"]===machine)
+            && (!type || r["Type d'intervention"]===type);
+      });
+      renderTable(filt);
+    }
+
+    function renderTable(data) {
+      const tbody = document.querySelector("#maintenanceTable tbody");
+      tbody.innerHTML = "";
+      data.forEach(r => {
+        const date = r["Date Intervention"]
+          ? (() => {
+              const d=new Date(r["Date Intervention"]);
+              const yy=String(d.getFullYear()).slice(-2);
+              const mm=String(d.getMonth()+1).padStart(2,'0');
+              return `${yy}/${mm}`;
+            })()
+          : "-";
+        const rep = r["Rapport d'intervention"];
+        const html = rep
+          ? `<a href="${rep}" target="_blank" title="Voir le rapport">📄</a>`
+          : "-";
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${date}</td>
+          <td>${r["Machine"]||"-"}</td>
+          <td>${r["Choix du type de maintenance"]||"-"}</td>
+          <td>${html}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
   </script>
 </body>
 </html>
