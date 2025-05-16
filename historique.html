@@ -1,197 +1,83 @@
+<!-- historique.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Suivi Préventif</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <title>Historique des Maintenance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background-color: #f4f4f4;
-    }
-    header {
-      display: flex;
-      align-items: center;
-      padding: 10px 20px;
-      background-color: #4e79a7;
-      color: white;
-    }
-    .menu-button {
-      font-size: 26px;
-      cursor: pointer;
-      background: none;
-      border: none;
-      color: black;
-      margin-right: 3ch;
-    }
-    .page-title {
-      font-size: 24px;
-      margin: 0;
-    }
-    .menu {
-      display: none;
-      flex-direction: column;
-      position: absolute;
-      top: 50px;
-      left: 20px;
-      background-color: white;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      z-index: 999;
-    }
-    .menu a {
-      padding: 10px 20px;
-      text-decoration: none;
-      color: #333;
-      border-bottom: 1px solid #eee;
-    }
-    .menu a:last-child {
-      border-bottom: none;
-    }
-    .menu a:hover {
-      background-color: #f0f0f0;
-    }
-    .filters {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-      margin: 30px 0;
-      flex-wrap: wrap;
-    }
-    .filters .filter-group {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .filters label {
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
-    .filters select {
-      padding: 6px;
-      width: 160px;
-    }
-    .chart-box {
-      width: 90%;
-      max-width: 400px;
-      margin: auto;
-    }
-    canvas {
-      width: 100% !important;
-      height: auto !important;
-    }
-    .stats {
-      text-align: center;
-      margin-top: 10px;
-      font-size: 16px;
-    }
+    body { font-family:Arial,sans-serif; margin:0; background:#f2f2f2; }
+    header { display:flex; align-items:center; padding:10px 20px; background:#4e79a7; color:white; position:relative; }
+    .menu-button { font-size:26px; cursor:pointer; background:none; border:none; color:black; margin-right:3ch; }
+    .page-title { font-size:24px; margin:0; }
+    .menu { display:none; flex-direction:column; position:absolute; top:50px; left:20px;
+            background:#fff; border:1px solid #ccc; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.2); z-index:999; }
+    .menu a { padding:10px 20px; text-decoration:none; color:#333; border-bottom:1px solid #eee; }
+    .menu a:last-child { border-bottom:none; }
+    .menu a:hover { background:#f0f0f0; }
+    h1 { text-align:center; margin:30px 0; }
+    .filters { display:flex; justify-content:center; gap:40px; margin-bottom:30px; flex-wrap:wrap; }
+    .filters .field-group { display:flex; flex-direction:column; align-items:center; }
+    .filters label { margin-bottom:5px; font-weight:bold; }
+    .filters select { width:160px; padding:6px; font-size:14px; }
+    table { width:90%; margin:auto; border-collapse:collapse; background:#fff;
+            box-shadow:0 0 8px rgba(0,0,0,0.1); border-radius:8px; overflow:hidden; }
+    th, td { padding:10px; text-align:center; border-bottom:1px solid #ddd;
+              max-width:160px; white-space:normal; word-break:break-word; }
+    th { background:#4e79a7; color:white; font-weight:bold; }
+    tr:nth-child(even){background:#f9f9f9;} tr:hover{background:#f1f1f1;}
+    td:first-child{width:80px;} td:nth-child(2){text-align:left; width:120px;}
+    @media screen and (max-width:768px){table, thead, tbody, th, td, tr{font-size:11px;}}
   </style>
 </head>
 <body>
   <header>
-    <button class="menu-button">☰</button>
-    <h1 class="page-title">Suivi Préventif</h1>
-    <div class="menu" id="menu">
+    <button class="menu-button" onclick="toggleMenu()">☰</button>
+    <h1 class="page-title">Historique des Maintenance</h1>
+    <nav class="menu" id="menu">
       <a href="index.html">Accueil</a>
       <a href="tableau.html">Tableau de bord</a>
       <a href="historique.html">Historique maintenance</a>
       <a href="preventif.html">Préventif</a>
-    </div>
+    </nav>
   </header>
 
   <div class="filters">
-    <div class="filter-group">
+    <div class="field-group">
       <label for="siteFilter">Site</label>
       <select id="siteFilter"><option value="">Tous les sites</option></select>
     </div>
-    <div class="filter-group">
-      <label for="yearFilter">Année</label>
-      <select id="yearFilter"><option value="">Toutes les années</option></select>
+    <div class="field-group">
+      <label for="machineFilter">Machine</label>
+      <select id="machineFilter"><option value="">Toutes les machines</option></select>
+    </div>
+    <div class="field-group">
+      <label for="typeFilter">Type d'intervention</label>
+      <select id="typeFilter"><option value="">Tous les types</option></select>
     </div>
   </div>
 
-  <div class="chart-box">
-    <canvas id="conformChart"></canvas>
-    <div class="stats" id="statsText"></div>
-  </div>
+  <table id="maintenanceTable">
+    <thead>
+      <tr>
+        <th>Date</th><th>Machine</th><th>Type d'intervention</th>
+        <th>Type de maintenance</th><th>Rapport</th>
+      </tr>
+    </thead>
+    <tbody><!-- dynamiques --></tbody>
+  </table>
 
   <script>
-    window.onload = function() {
-      const menu = document.getElementById("menu"),
-            btn  = document.querySelector(".menu-button");
-      menu.style.display = "none";
-      btn.addEventListener("click", ()=> {
-        menu.style.display = menu.style.display==="flex"?"none":"flex";
-      });
-      document.addEventListener("click", e=> {
-        if(!menu.contains(e.target)&&e.target!==btn) menu.style.display="none";
-      });
+    function toggleMenu() {
+      const m = document.getElementById("menu");
+      m.style.display = m.style.display==="flex"?"none":"flex";
+    }
+    document.addEventListener("click", e=>{
+      const m=document.getElementById("menu"), b=document.querySelector(".menu-button");
+      if(!m.contains(e.target)&&e.target!==b) m.style.display="none";
+    });
 
-      const url = "https://script.google.com/macros/s/AKfycbydUwbmc5KCQ_WWLCriPcx8AZEpOxDY8THCtLsRWmNY1oE19RaKJVN_cEKo5FjLJDKcLw/exec";
-      let allData=[], chart;
-      fetch(url).then(r=>r.json()).then(data=>{
-        allData=data;
-        setupFilters();
-        updateChart();
-      });
-
-      function setupFilters(){
-        const s=new Set(), y=new Set();
-        allData.forEach(r=>{
-          s.add(r["Site Intervention"]);
-          const d=new Date(r["Prochain contrôle"]);
-          if(!isNaN(d)) y.add(d.getFullYear());
-        });
-        fill("siteFilter",s);
-        fill("yearFilter",y);
-        ["siteFilter","yearFilter"].forEach(id=>{
-          document.getElementById(id).addEventListener("change",updateChart);
-        });
-      }
-      function fill(id,set){
-        const sel=document.getElementById(id);
-        Array.from(set).sort().forEach(v=>{
-          const o=document.createElement("option");
-          o.value=v; o.textContent=v;
-          sel.appendChild(o);
-        });
-      }
-
-      function updateChart(){
-        const f={ site:document.getElementById("siteFilter").value,
-                  year:document.getElementById("yearFilter").value };
-        const filtered = allData.filter(r=>{
-          const d=new Date(r["Prochain contrôle"]), y=d.getFullYear();
-          return (!f.site||r["Site Intervention"]===f.site)
-              && (!f.year||y==f.year)
-              && (r["conformité"]==="Conforme"||r["conformité"]==="Non conforme");
-        });
-        let ok=0, ko=0;
-        filtered.forEach(r=>{
-          if(r["conformité"]==="Conforme") ok++;
-          else if(r["conformité"]==="Non conforme") ko++;
-        });
-        const total = ok+ko;
-        const data = total? [ok,ko] : [0,0];
-        const labels = ["Conforme","Non conforme"];
-        const ctx = document.getElementById("conformChart").getContext("2d");
-        if(chart) chart.destroy();
-        chart = new Chart(ctx, {
-          type: "doughnut",
-          data: {
-            labels, datasets:[{ data, backgroundColor:["#76b7b2","#e15759"] }]
-          },
-          options:{ plugins:{ title:{display:true,text:"Taux de conformité (%)"}, tooltip:{callbacks:{label(c){ const v=c.raw, p=(total? v/total*100:0).toFixed(1); return `${c.label}: ${v} (${p}%)`; }}} } }
-        });
-        document.getElementById("statsText").textContent =
-          total
-            ? `Total vérifiés: ${total} (Conforme: ${ok}, Non conforme: ${ko})`
-            : "Aucune donnée";
-      }
-    };
+    // votre script de peuplement / filtrage / rendu du tableau ici...
   </script>
 </body>
 </html>
