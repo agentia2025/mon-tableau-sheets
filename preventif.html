@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <title>Suivi Préventif</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -60,6 +62,45 @@
     .menu a:hover {
       background-color: #f0f0f0;
     }
+
+    .filters {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin: 30px 0;
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .filter-group label {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .filter-group select {
+      width: 160px;
+      padding: 6px;
+      font-size: 14px;
+    }
+
+    #conformiteChart {
+      display: block;
+      margin: 0 auto 50px;
+      max-width: 360px;
+      max-height: 360px;
+    }
+
+    @media (max-width: 600px) {
+      .filters {
+        flex-direction: column;
+        gap: 20px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -75,22 +116,122 @@
     </div>
   </header>
 
-  <!-- Les éléments suivants seront ajoutés dans les prochaines étapes -->
+  <div class="filters">
+    <div class="filter-group">
+      <label for="siteFilter">Site</label>
+      <select id="siteFilter"><option value="">Tous les sites</option></select>
+    </div>
+    <div class="filter-group">
+      <label for="yearFilter">Année</label>
+      <select id="yearFilter"><option value="">Toutes les années</option></select>
+    </div>
+  </div>
+
+  <canvas id="conformiteChart"></canvas>
 
   <script>
+    // Menu responsive
     window.onload = function () {
       const menu = document.getElementById("menu");
       const button = document.querySelector(".menu-button");
+
       menu.style.display = "none";
+
       button.addEventListener("click", function () {
         menu.style.display = menu.style.display === "flex" ? "none" : "flex";
       });
+
       document.addEventListener("click", function (event) {
         if (!menu.contains(event.target) && event.target !== button) {
           menu.style.display = "none";
         }
       });
     };
+
+    // Chargement des données
+    const url = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
+    let allData = [];
+
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        allData = data.filter(row => row["Type d'intervention"]?.toLowerCase().includes("préventif"));
+        populateFilters(allData);
+        updateChart();
+      });
+
+    function populateFilters(data) {
+      const siteSet = new Set();
+      const yearSet = new Set();
+
+      data.forEach(row => {
+        siteSet.add(row["Site Intervention"]);
+        const date = new Date(row["Date Intervention"]);
+        if (!isNaN(date)) yearSet.add(date.getFullYear());
+      });
+
+      fillSelect("siteFilter", siteSet);
+      fillSelect("yearFilter", yearSet);
+
+      document.getElementById("siteFilter").addEventListener("change", updateChart);
+      document.getElementById("yearFilter").addEventListener("change", updateChart);
+    }
+
+    function fillSelect(id, values) {
+      const select = document.getElementById(id);
+      Array.from(values).sort().forEach(val => {
+        const opt = document.createElement("option");
+        opt.value = val;
+        opt.textContent = val;
+        select.appendChild(opt);
+      });
+    }
+
+    let chart;
+    function updateChart() {
+      const site = document.getElementById("siteFilter").value;
+      const year = document.getElementById("yearFilter").value;
+
+      const filtered = allData.filter(row => {
+        const matchSite = !site || row["Site Intervention"] === site;
+        const date = new Date(row["Date Intervention"]);
+        const matchYear = !year || (!isNaN(date) && date.getFullYear() == year);
+        return matchSite && matchYear;
+      });
+
+      const conformes = filtered.filter(r => r["Conformité"]?.toLowerCase() === "conforme").length;
+      const nonConformes = filtered.length - conformes;
+
+      const ctx = document.getElementById("conformiteChart").getContext("2d");
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: ["Conformes", "Non conformes"],
+          datasets: [{
+            data: [conformes, nonConformes],
+            backgroundColor: ["#4caf50", "#f44336"]
+          }]
+        },
+        options: {
+          plugins: {
+            title: {
+              display: true,
+              text: "Taux de conformité préventive"
+            },
+            datalabels: {
+              formatter: (val, ctx) => {
+                const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                return total ? `${((val / total) * 100).toFixed(1)}%` : "0%";
+              },
+              color: "#fff",
+              font: { weight: "bold" }
+            }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+    }
   </script>
 
 </body>
