@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Historique des Maintenance</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <title>Suivi Préventif</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      background-color: #f2f2f2;
+      background-color: #f4f4f4;
     }
-
     header {
       display: flex;
       align-items: center;
@@ -18,7 +18,6 @@
       background-color: #4e79a7;
       color: white;
     }
-
     .menu-button {
       font-size: 26px;
       cursor: pointer;
@@ -27,12 +26,10 @@
       color: black;
       margin-right: 3ch;
     }
-
     .page-title {
       font-size: 24px;
       margin: 0;
     }
-
     .menu {
       display: none;
       flex-direction: column;
@@ -45,274 +42,156 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
       z-index: 999;
     }
-
     .menu a {
       padding: 10px 20px;
       text-decoration: none;
       color: #333;
       border-bottom: 1px solid #eee;
     }
-
     .menu a:last-child {
       border-bottom: none;
     }
-
     .menu a:hover {
       background-color: #f0f0f0;
     }
-
-    h1 {
-      text-align: center;
-      margin: 30px 0;
-    }
-
     .filters {
       display: flex;
       justify-content: center;
       gap: 40px;
-      margin-bottom: 30px;
+      margin: 30px 0;
       flex-wrap: wrap;
     }
-
-    .filters .field-group {
+    .filters .filter-group {
       display: flex;
       flex-direction: column;
       align-items: center;
     }
-
     .filters label {
       margin-bottom: 5px;
       font-weight: bold;
     }
-
     .filters select {
-      width: 160px;
       padding: 6px;
-      font-size: 14px;
+      width: 160px;
     }
-
-    table {
+    .chart-box {
       width: 90%;
+      max-width: 400px;
       margin: auto;
-      border-collapse: collapse;
-      background-color: white;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
-      border-radius: 8px;
-      overflow: hidden;
     }
-
-    th, td {
-  padding: 10px;
-  text-align: center;
-  border-bottom: 1px solid #ddd;
-  max-width: 160px;                 /* ⬅️ Limite la largeur */
-  white-space: normal;              /* ⬅️ Autorise les retours à la ligne */
-  word-break: break-word;           /* ⬅️ Coupe les mots si nécessaire */
-}
-
-
-    th {
-      background-color: #4e79a7;
-      color: white;
-      font-weight: bold;
+    canvas {
+      width: 100% !important;
+      height: auto !important;
     }
-
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-
-    tr:hover {
-      background-color: #f1f1f1;
-    }
-
-    td:first-child {
-      width: 80px;
-    }
-
-    td:nth-child(2) {
-      text-align: left;
-      width: 120px;
-    }
-
-    a {
-      text-decoration: none;
-      font-size: 18px;
-    }
-
-    @media screen and (max-width: 768px) {
-      table, thead, tbody, th, td, tr {
-        font-size: 11px;
-      }
+    .stats {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 16px;
     }
   </style>
 </head>
 <body>
   <header>
     <button class="menu-button">☰</button>
-    <h1 class="page-title">Historique des Maintenance</h1>
+    <h1 class="page-title">Suivi Préventif</h1>
     <div class="menu" id="menu">
       <a href="index.html">Accueil</a>
       <a href="tableau.html">Tableau de bord</a>
       <a href="historique.html">Historique maintenance</a>
+      <a href="preventif.html">Préventif</a>
     </div>
   </header>
 
   <div class="filters">
-    <div class="field-group">
+    <div class="filter-group">
       <label for="siteFilter">Site</label>
       <select id="siteFilter"><option value="">Tous les sites</option></select>
     </div>
-
-    <div class="field-group">
-      <label for="machineFilter">Machine</label>
-      <select id="machineFilter"><option value="">Toutes les machines</option></select>
-    </div>
-
-    <div class="field-group">
-      <label for="typeFilter">Type d'intervention</label>
-      <select id="typeFilter"><option value="">Tous les types</option></select>
+    <div class="filter-group">
+      <label for="yearFilter">Année</label>
+      <select id="yearFilter"><option value="">Toutes les années</option></select>
     </div>
   </div>
 
-  <table id="maintenanceTable">
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Machine</th>
-        <th>Type d'intervention</th>
-        <th>Type de maintenance</th>
-        <th>Rapport</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Lignes dynamiques -->
-    </tbody>
-  </table>
+  <div class="chart-box">
+    <canvas id="conformChart"></canvas>
+    <div class="stats" id="statsText"></div>
+  </div>
 
   <script>
-    window.onload = function () {
-      const menu = document.getElementById("menu");
-      const button = document.querySelector(".menu-button");
-
+    window.onload = function() {
+      const menu = document.getElementById("menu"),
+            btn  = document.querySelector(".menu-button");
       menu.style.display = "none";
-
-      button.addEventListener("click", function () {
-        menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+      btn.addEventListener("click", ()=> {
+        menu.style.display = menu.style.display==="flex"?"none":"flex";
+      });
+      document.addEventListener("click", e=> {
+        if(!menu.contains(e.target)&&e.target!==btn) menu.style.display="none";
       });
 
-      document.addEventListener("click", function (event) {
-        if (!menu.contains(event.target) && event.target !== button) {
-          menu.style.display = "none";
-        }
+      const url = "https://script.google.com/macros/s/AKfycbydUwbmc5KCQ_WWLCriPcx8AZEpOxDY8THCtLsRWmNY1oE19RaKJVN_cEKo5FjLJDKcLw/exec";
+      let allData=[], chart;
+      fetch(url).then(r=>r.json()).then(data=>{
+        allData=data;
+        setupFilters();
+        updateChart();
       });
+
+      function setupFilters(){
+        const s=new Set(), y=new Set();
+        allData.forEach(r=>{
+          s.add(r["Site Intervention"]);
+          const d=new Date(r["Prochain contrôle"]);
+          if(!isNaN(d)) y.add(d.getFullYear());
+        });
+        fill("siteFilter",s);
+        fill("yearFilter",y);
+        ["siteFilter","yearFilter"].forEach(id=>{
+          document.getElementById(id).addEventListener("change",updateChart);
+        });
+      }
+      function fill(id,set){
+        const sel=document.getElementById(id);
+        Array.from(set).sort().forEach(v=>{
+          const o=document.createElement("option");
+          o.value=v; o.textContent=v;
+          sel.appendChild(o);
+        });
+      }
+
+      function updateChart(){
+        const f={ site:document.getElementById("siteFilter").value,
+                  year:document.getElementById("yearFilter").value };
+        const filtered = allData.filter(r=>{
+          const d=new Date(r["Prochain contrôle"]), y=d.getFullYear();
+          return (!f.site||r["Site Intervention"]===f.site)
+              && (!f.year||y==f.year)
+              && (r["conformité"]==="Conforme"||r["conformité"]==="Non conforme");
+        });
+        let ok=0, ko=0;
+        filtered.forEach(r=>{
+          if(r["conformité"]==="Conforme") ok++;
+          else if(r["conformité"]==="Non conforme") ko++;
+        });
+        const total = ok+ko;
+        const data = total? [ok,ko] : [0,0];
+        const labels = ["Conforme","Non conforme"];
+        const ctx = document.getElementById("conformChart").getContext("2d");
+        if(chart) chart.destroy();
+        chart = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels, datasets:[{ data, backgroundColor:["#76b7b2","#e15759"] }]
+          },
+          options:{ plugins:{ title:{display:true,text:"Taux de conformité (%)"}, tooltip:{callbacks:{label(c){ const v=c.raw, p=(total? v/total*100:0).toFixed(1); return `${c.label}: ${v} (${p}%)`; }}} } }
+        });
+        document.getElementById("statsText").textContent =
+          total
+            ? `Total vérifiés: ${total} (Conforme: ${ok}, Non conforme: ${ko})`
+            : "Aucune donnée";
+      }
     };
-
-    const url = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
-    let allData = [];
-
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        allData = data;
-        populateSiteFilter(data);
-        updateMachineFilter();
-        renderTable(data);
-      });
-
-    function populateSiteFilter(data) {
-      const siteSet = new Set();
-      const machineSet = new Set();
-      const typeSet = new Set();
-
-      data.forEach(row => {
-        siteSet.add(row["Site Intervention"]);
-        machineSet.add(row["Machine"]);
-        typeSet.add(row["Type d'intervention"]);
-      });
-
-      fillSelect("siteFilter", siteSet);
-      fillSelect("machineFilter", machineSet);
-      fillSelect("typeFilter", typeSet);
-
-      document.getElementById("siteFilter").addEventListener("change", () => {
-        updateMachineFilter();
-        filterTable();
-      });
-
-      document.getElementById("machineFilter").addEventListener("change", filterTable);
-      document.getElementById("typeFilter").addEventListener("change", filterTable);
-    }
-
-    function updateMachineFilter() {
-      const site = document.getElementById("siteFilter").value;
-      const machineSet = new Set();
-
-      allData.forEach(row => {
-        if (!site || row["Site Intervention"] === site) {
-          machineSet.add(row["Machine"]);
-        }
-      });
-
-      const machineSelect = document.getElementById("machineFilter");
-      machineSelect.innerHTML = '<option value="">Toutes les machines</option>';
-      fillSelect("machineFilter", machineSet);
-    }
-
-    function fillSelect(id, values) {
-      const select = document.getElementById(id);
-      Array.from(values).sort().forEach(value => {
-        const opt = document.createElement("option");
-        opt.value = value;
-        opt.textContent = value;
-        select.appendChild(opt);
-      });
-    }
-
-    function filterTable() {
-      const site = document.getElementById("siteFilter").value;
-      const machine = document.getElementById("machineFilter").value;
-      const type = document.getElementById("typeFilter").value;
-
-      const filtered = allData.filter(row => {
-        const matchSite = !site || row["Site Intervention"] === site;
-        const matchMachine = !machine || row["Machine"] === machine;
-        const matchType = !type || row["Type d'intervention"] === type;
-        return matchSite && matchMachine && matchType;
-      });
-
-      renderTable(filtered);
-    }
-
-    function renderTable(data) {
-      const tbody = document.querySelector("#maintenanceTable tbody");
-      tbody.innerHTML = "";
-
-      data.forEach(row => {
-        const date = row["Date Intervention"]
-          ? (() => {
-              const d = new Date(row["Date Intervention"]);
-              const yy = String(d.getFullYear()).slice(-2);
-              const mm = String(d.getMonth() + 1).padStart(2, '0');
-              return `${yy}/${mm}`;
-            })()
-          : "-";
-
-        const rapport = row["Rapport d'intervention"];
-        const rapportHTML = rapport
-          ? `<a href="${rapport}" target="_blank" title="Voir le rapport">📄</a>`
-          : "-";
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${date}</td>
-          <td>${row["Machine"] || "-"}</td>
-          <td>${row["Type d'intervention"] || "-"}</td>
-          <td>${row["Choix du type de maintenance"] || "-"}</td>
-          <td>${rapportHTML}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
   </script>
 </body>
 </html>
