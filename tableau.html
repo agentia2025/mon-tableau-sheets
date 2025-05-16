@@ -101,6 +101,28 @@
       width: 320px !important;
       height: 320px !important;
     }
+
+    @media (max-width: 600px) {
+      .filters {
+        grid-template-columns: 1fr;
+        padding: 20px;
+        gap: 15px;
+      }
+
+      .filter-group {
+        align-items: stretch;
+        text-align: left;
+      }
+
+      .filter-group label {
+        margin-bottom: 4px;
+      }
+
+      canvas {
+        width: 90vw !important;
+        height: auto !important;
+      }
+    }
   </style>
 </head>
 <body>
