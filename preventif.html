@@ -199,8 +199,9 @@
         return matchSite && matchYear;
       });
 
-const conformes = filtered.filter(r => (r["Conformité"] || "").toLowerCase() === "conforme").length;
-const nonConformes = filtered.filter(r => (r["Conformité"] || "").toLowerCase() === "non conforme").length;
+      const conformes = filtered.filter(r => (r["Conformité"] || "").toString().trim().toLowerCase() === "conforme").length;
+      const nonConformes = filtered.filter(r => (r["Conformité"] || "").toString().trim().toLowerCase() === "non conforme").length;
+
 
 
       const ctx = document.getElementById("conformiteChart").getContext("2d");
