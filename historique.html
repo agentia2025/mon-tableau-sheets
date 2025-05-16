@@ -80,16 +80,12 @@
       width: 160px;
     }
 
-    .historique-wrapper {
-      max-width: 90%;
-      margin: auto;
-    }
-
     table {
-      width: 100%;
+      max-width: 90%;
+      margin: 20px auto;
       border-collapse: collapse;
-      margin: 20px 0;
       background-color: white;
+      width: 100%;
     }
 
     th, td {
@@ -115,10 +111,6 @@
       .filters {
         flex-direction: column;
         align-items: center;
-      }
-
-      .historique-wrapper {
-        width: 95%;
       }
 
       table {
@@ -154,22 +146,20 @@
     </div>
   </div>
 
-  <div class="historique-wrapper">
-    <table id="maintenanceTable">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Machine</th>
-          <th>Type d'intervention</th>
-          <th>Type de maintenance</th>
-          <th>Rapport</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Lignes dynamiques -->
-      </tbody>
-    </table>
-  </div>
+  <table id="maintenanceTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Machine</th>
+        <th>Type d'intervention</th>
+        <th>Type de maintenance</th>
+        <th>Rapport</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Lignes dynamiques -->
+    </tbody>
+  </table>
 
   <script>
     const menu = document.getElementById("menu");
