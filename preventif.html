@@ -11,6 +11,7 @@
       font-family: Arial, sans-serif;
       margin: 0;
       background-color: #f4f4f4;
+      text-align: center;
     }
 
     header {
@@ -44,7 +45,7 @@
       background-color: white;
       border: 1px solid #ccc;
       border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
       z-index: 999;
     }
 
@@ -66,9 +67,9 @@
     .filters {
       display: flex;
       justify-content: center;
+      gap: 30px;
       flex-wrap: wrap;
-      gap: 40px;
-      padding: 30px 10px 10px;
+      margin: 30px 0;
     }
 
     .filters .field-group {
@@ -83,33 +84,20 @@
     }
 
     .filters select {
-      padding: 6px;
       width: 160px;
-    }
-
-    .chart-container {
-      display: flex;
-      justify-content: center;
-      margin: 30px auto 60px;
+      padding: 6px;
     }
 
     canvas {
-      width: 320px !important;
-      height: 320px !important;
-    }
-
-    @media (max-width: 600px) {
-      .filters {
-        flex-direction: column;
-        gap: 20px;
-      }
+      max-width: 400px;
+      margin: 40px auto;
     }
   </style>
 </head>
 <body>
   <header>
     <button class="menu-button">☰</button>
-    <h1 class="page-title">Suivi des préventifs</h1>
+    <h1 class="page-title">Suivi Préventif</h1>
     <div class="menu" id="menu">
       <a href="index.html">Accueil</a>
       <a href="tableau.html">Tableau de bord</a>
@@ -129,33 +117,14 @@
     </div>
   </div>
 
-  <div class="chart-container">
-    <canvas id="conformityChart"></canvas>
-  </div>
+  <canvas id="conformityChart"></canvas>
 
   <script>
-    // Menu
-    window.onload = function () {
-      const menu = document.getElementById("menu");
-      const button = document.querySelector(".menu-button");
-      menu.style.display = "none";
-
-      button.addEventListener("click", function () {
-        menu.style.display = menu.style.display === "flex" ? "none" : "flex";
-      });
-
-      document.addEventListener("click", function (event) {
-        if (!menu.contains(event.target) && event.target !== button) {
-          menu.style.display = "none";
-        }
-      });
-    };
-
     const url = "https://script.google.com/macros/s/AKfycbydUwbmc5KCQ_WWLCriPcx8AZEpOxDY8THCtLsRWmNY1oE19RaKJVN_cEKo5FjLJDKcLw/exec";
     let allData = [];
 
     fetch(url)
-      .then(response => response.json())
+      .then(res => res.json())
       .then(data => {
         allData = data;
         populateFilters(data);
@@ -167,10 +136,13 @@
       const yearSet = new Set();
 
       data.forEach(row => {
-        siteSet.add(row["Site Intervention"]);
-        const date = new Date(row["Prochain contrôle"]);
-        if (!isNaN(date)) {
-          yearSet.add(date.getFullYear());
+        const site = row["Site Intervention"];
+        const date = row["Prochain contrôle"];
+        if (site) siteSet.add(site);
+
+        if (date instanceof Date || !isNaN(new Date(date))) {
+          const d = new Date(date);
+          if (!isNaN(d)) yearSet.add(d.getFullYear());
         }
       });
 
@@ -183,10 +155,10 @@
 
     function fillSelect(id, values) {
       const select = document.getElementById(id);
-      Array.from(values).sort().forEach(value => {
+      Array.from(values).sort().forEach(val => {
         const opt = document.createElement("option");
-        opt.value = value;
-        opt.textContent = value;
+        opt.value = val;
+        opt.textContent = val;
         select.appendChild(opt);
       });
     }
@@ -196,31 +168,20 @@
       const year = document.getElementById("yearFilter").value;
 
       const filtered = allData.filter(row => {
-        const matchSite = !site || row["Site Intervention"] === site;
-        const date = new Date(row["Prochain contrôle"]);
-        const matchYear = !year || (!isNaN(date) && date.getFullYear().toString() === year);
+        const rSite = row["Site Intervention"];
+        const rDate = new Date(row["Prochain contrôle"]);
+        const matchSite = !site || rSite === site;
+        const matchYear = !year || (!isNaN(rDate) && rDate.getFullYear().toString() === year);
         return matchSite && matchYear;
       });
 
-      console.log("Valeurs de conformité filtrées :");
-      filtered.forEach(r => {
-        console.log((r["Conformité"] || "").toString().trim());
-      });
-
-      const conformes = filtered.filter(r =>
-        (r["Conformité"] || "").toString().trim().toLowerCase() === "conforme"
-      ).length;
-
-      const nonConformes = filtered.filter(r =>
-        (r["Conformité"] || "").toString().trim().toLowerCase() === "non conforme"
-      ).length;
-
+      const conformity = filtered.map(r => (r["Conformité"] || "").toString().trim().toLowerCase());
+      const conformes = conformity.filter(c => c === "conforme").length;
+      const nonConformes = conformity.filter(c => c === "non conforme").length;
       const total = conformes + nonConformes;
 
       const ctx = document.getElementById("conformityChart").getContext("2d");
-      if (window.conformityChart) {
-        window.conformityChart.destroy();
-      }
+      if (window.conformityChart) window.conformityChart.destroy();
 
       window.conformityChart = new Chart(ctx, {
         type: "doughnut",
@@ -232,24 +193,41 @@
           }]
         },
         options: {
+          responsive: true,
           plugins: {
             title: {
               display: true,
-              text: "Taux de conformité des maintenances préventives"
+              text: "Taux de conformité préventive"
             },
             datalabels: {
+              color: '#fff',
+              font: { weight: 'bold' },
               formatter: (value, ctx) => {
                 const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
                 return sum ? `${((value / sum) * 100).toFixed(1)}%` : "0%";
-              },
-              color: "#fff",
-              font: { weight: "bold" }
+              }
             }
           }
         },
         plugins: [ChartDataLabels]
       });
     }
+
+    // Menu navigation
+    window.onload = () => {
+      const menu = document.getElementById("menu");
+      const button = document.querySelector(".menu-button");
+
+      menu.style.display = "none";
+      button.addEventListener("click", () => {
+        menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+      });
+      document.addEventListener("click", event => {
+        if (!menu.contains(event.target) && event.target !== button) {
+          menu.style.display = "none";
+        }
+      });
+    };
   </script>
 </body>
 </html>
