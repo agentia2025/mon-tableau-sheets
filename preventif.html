@@ -4,31 +4,128 @@
   <meta charset="UTF-8">
   <title>Suivi Préventif</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Chart.js et plugin datalabels -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin:0; background:#f4f4f4; text-align:center; }
-    header { display:flex; align-items:center; padding:10px 20px; background:#4e79a7; color:white; position:relative; }
-    .menu-button { font-size:26px; cursor:pointer; background:none; border:none; color:black; margin-right:3ch; }
-    .page-title { font-size:24px; margin:0; }
-    .menu { display:none; flex-direction:column; position:absolute; top:50px; left:20px; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.2); z-index:999; }
-    .menu a { padding:10px 20px; text-decoration:none; color:#333; border-bottom:1px solid #eee; }
-    .menu a:last-child { border-bottom:none; }
-    .menu a:hover { background:#f0f0f0; }
-    .filters { display:flex; justify-content:center; gap:30px; flex-wrap:wrap; margin:30px 0; }
-    .field-group { display:flex; flex-direction:column; align-items:center; }
-    .field-group label { margin-bottom:5px; font-weight:bold; }
-    .field-group select { width:160px; padding:6px; }
-    canvas { max-width:400px; margin:40px auto; }
-    @media (max-width:600px) {
-      .filters { flex-direction:column; gap:15px; }
-      .field-group { width:100%; }
-      canvas { width:90vw; height:auto; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #f4f4f4;
+      text-align: center;
+      padding-bottom: 40px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #4e79a7;
+      color: white;
+    }
+    .menu-button {
+      font-size: 26px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: black;
+      margin-right: 3ch;
+    }
+    .page-title {
+      font-size: 24px;
+      margin: 0;
+    }
+    .menu {
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      top: 50px;
+      left: 20px;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 999;
+    }
+    .menu a {
+      padding: 10px 20px;
+      text-decoration: none;
+      color: #333;
+      border-bottom: 1px solid #eee;
+    }
+    .menu a:last-child { border-bottom: none; }
+    .menu a:hover { background-color: #f0f0f0; }
+
+    .filters {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin: 30px 0;
+      flex-wrap: wrap;
+    }
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .filter-group label {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .filter-group select {
+      padding: 6px;
+      width: 160px;
+      font-size: 14px;
+    }
+
+    .chart-container {
+      position: relative;
+      width: 320px;
+      margin: auto;
+    }
+    canvas { width: 100% !important; height: auto !important; }
+
+    .counts {
+      margin-top: 10px;
+      font-size: 16px;
+      color: #333;
+    }
+
+    /* ----------------------- */
+    /* Tableau des 20 à venir  */
+    /* ----------------------- */
+    .upcoming {
+      width: 90%;
+      max-width: 600px;
+      margin: 30px auto;
+      border-collapse: collapse;
+      background-color: white;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .upcoming th, .upcoming td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+      font-size: 14px;
+    }
+    .upcoming th {
+      background-color: #4e79a7;
+      color: white;
+      font-weight: bold;
+    }
+    .upcoming tr:nth-child(even) { background-color: #f9f9f9; }
+    .upcoming tr:hover { background-color: #f1f1f1; }
+
+    @media (max-width: 600px) {
+      .filters { flex-direction: column; gap: 20px; }
+      .chart-container { width: 90vw; }
+      .upcoming { width: 100%; }
+      .upcoming th, .upcoming td { font-size: 12px; padding: 6px; }
     }
   </style>
 </head>
 <body>
+
   <header>
     <button class="menu-button">☰</button>
     <h1 class="page-title">Suivi Préventif</h1>
@@ -41,87 +138,105 @@
   </header>
 
   <div class="filters">
-    <div class="field-group">
+    <div class="filter-group">
       <label for="siteFilter">Site</label>
       <select id="siteFilter"><option value="">Tous les sites</option></select>
     </div>
-    <div class="field-group">
+    <div class="filter-group">
       <label for="yearFilter">Année</label>
       <select id="yearFilter"><option value="">Toutes les années</option></select>
     </div>
   </div>
 
-  <canvas id="pieChart"></canvas>
+  <div class="chart-container">
+    <canvas id="pieChart"></canvas>
+    <div class="counts" id="countsText"></div>
+  </div>
+
+  <!-- Table des 20 prochaines actions -->
+  <table class="upcoming" id="upcomingTable">
+    <thead>
+      <tr>
+        <th>Site</th>
+        <th>Machine</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- rempli dynamiquement -->
+    </tbody>
+  </table>
 
   <script>
-    const url = "https://script.google.com/macros/s/AKfycbydUwbmc5KCQ_WWLCriPcx8AZEpOxDY8THCtLsRWmNY1oE19RaKJVN_cEKo5FjLJDKcLw/exec";
-    let allData = [], pieChart;
-
-    // Menu nav
-    window.onload = () => {
+    // MENU NAV
+    window.onload = function() {
       const menu = document.getElementById("menu");
-      document.querySelector(".menu-button").onclick = () => {
+      const btn  = document.querySelector(".menu-button");
+      menu.style.display = "none";
+      btn.addEventListener("click", () => {
         menu.style.display = menu.style.display === "flex" ? "none" : "flex";
-      };
+      });
       document.addEventListener("click", e => {
-        if (!menu.contains(e.target) && !e.target.matches(".menu-button")) {
+        if (!menu.contains(e.target) && e.target !== btn) {
           menu.style.display = "none";
         }
       });
-      // Charge les données
-      fetch(url)
-        .then(r => r.json())
-        .then(data => {
-          allData = data;
-          populateFilters(data);
-          updateChart();
-        });
     };
 
-    function populateFilters(data) {
-      const siteSet = new Set(), yearSet = new Set();
-      data.forEach(r => {
-        if (r["Site Intervention"]) siteSet.add(r["Site Intervention"]);
-        const d = new Date(r["Prochain contrôle"]);
-        if (!isNaN(d)) yearSet.add(d.getFullYear());
-      });
-      fillSelect("siteFilter", siteSet);
-      fillSelect("yearFilter", yearSet);
-      ["siteFilter","yearFilter"].forEach(id => 
-        document.getElementById(id).addEventListener("change", updateChart)
-      );
-    }
+    const urlPrev = "https://script.google.com/macros/s/AKfycbydUwbmc5KCQ_WWLCriPcx8AZEpOxDY8THCtLsRWmNY1oE19RaKJVN_cEKo5FjLJDKcLw/exec";
+    let allData = [], pieChart;
 
+    // 1) Fetch et init
+    fetch(urlPrev)
+      .then(r => r.json())
+      .then(data => {
+        allData = data.filter(r => r["conformité"] === "Conforme" || r["conformité"] === "Non conforme");
+        populateFilters();
+        updateAll();
+      });
+
+    // 2) Filtres
+    function populateFilters() {
+      const sites = new Set(), years = new Set();
+      allData.forEach(r => {
+        sites.add(r["Site Intervention"]);
+        const d = new Date(r["Prochain contrôle"]);
+        if (!isNaN(d)) years.add(d.getFullYear());
+      });
+      fillSelect("siteFilter", sites);
+      fillSelect("yearFilter", years);
+      document.getElementById("siteFilter").addEventListener("change", updateAll);
+      document.getElementById("yearFilter").addEventListener("change", updateAll);
+    }
     function fillSelect(id, values) {
       const sel = document.getElementById(id);
       Array.from(values).sort().forEach(v => {
         const o = document.createElement("option");
-        o.value = v; 
-        o.textContent = v;
+        o.value = v; o.textContent = v;
         sel.appendChild(o);
       });
     }
 
+    // 3) Mise à jour chart + tableau
+    function updateAll() {
+      updateChart();
+      updateTable();
+    }
+
     function updateChart() {
       const site = document.getElementById("siteFilter").value;
-      const year = document.getElementById("yearFilter").value;
-      // Filtre et compte conformités
+      const yr   = document.getElementById("yearFilter").value;
       let ok=0, ko=0;
       allData.forEach(r => {
-        // Site
         if (site && r["Site Intervention"] !== site) return;
-        // Année
         const d = new Date(r["Prochain contrôle"]);
-        if (year && (isNaN(d) || d.getFullYear().toString() !== year)) return;
-        // Conformité
-        if (r["conformité"] === "Conforme") ok++;
-        else if (r["conformité"] === "Non conforme") ko++;
+        if (yr && d.getFullYear() != yr) return;
+        if (r["conformité"]==="Conforme")      ok++;
+        else if (r["conformité"]==="Non conforme") ko++;
       });
-      const total = ok + ko;
-      const percentOk = total ? Math.round((ok/total)*100) : 0;
-      const percentKo = total ? 100 - percentOk : 0;
-
-      // Dessine le camembert
+      const total = ok+ko;
+      document.getElementById("countsText").textContent =
+        `Conformes : ${ok}  –  Non conformes : ${ko}`;
       const ctx = document.getElementById("pieChart").getContext("2d");
       if (pieChart) pieChart.destroy();
       pieChart = new Chart(ctx, {
@@ -129,21 +244,64 @@
         data: {
           labels: ["Conforme","Non conforme"],
           datasets: [{
-            data: [percentOk, percentKo]
+            data: total ? [ok,ko] : [0,0],
+            backgroundColor: ["#76b7b2","#e15759"]
           }]
         },
         options: {
           plugins: {
-            title: { display:true, text:`Taux de conformité : ${percentOk}%` },
+            title: {
+              display: true,
+              text: total
+                ? `Taux de conformité : ${((ok/total)*100).toFixed(1)} %`
+                : "Aucune donnée"
+            },
             datalabels: {
-              formatter: v => v + "%",
-              font: { weight:"bold" }
-            }
+              formatter: val => total ? `${((val/total)*100).toFixed(1)} %` : "",
+              color: "#fff", font:{ weight:"bold" }
+            },
+            legend: { position: "bottom" }
           }
         },
         plugins: [ChartDataLabels]
       });
     }
+
+    function updateTable() {
+      const site = document.getElementById("siteFilter").value;
+      const tbody = document.querySelector("#upcomingTable tbody");
+      tbody.innerHTML = "";
+      const now = new Date();
+      // filtre, ne garder que futur, par site et par année si souhaité
+      let rows = allData
+        .filter(r => {
+          if (site && r["Site Intervention"]!==site) return false;
+          const d = new Date(r["Prochain contrôle"]);
+          return !isNaN(d) && d >= now;
+        })
+        .sort((a,b) => new Date(a["Prochain contrôle"]) - new Date(b["Prochain contrôle"]))
+        .slice(0,20);
+
+      rows.forEach(r => {
+        const d = new Date(r["Prochain contrôle"]);
+        const dd = String(d.getDate()).padStart(2,'0');
+        const mm = String(d.getMonth()+1).padStart(2,'0');
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${r["Site Intervention"]}</td>
+          <td>${r["Machine"]}</td>
+          <td>${dd}-${mm}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (rows.length===0) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="3" style="text-align:center">Aucune action à venir</td>`;
+        tbody.appendChild(tr);
+      }
+    }
   </script>
+
 </body>
 </html>
