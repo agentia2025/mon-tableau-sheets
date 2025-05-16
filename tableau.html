@@ -65,44 +65,36 @@
 
     .filters {
       display: grid;
-      grid-template-areas:
-        "site type"
-        "machine year";
-      gap: 15px 40px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
       justify-content: center;
-      margin: 30px 0;
+      padding: 30px 20px 10px;
+      max-width: 800px;
+      margin: auto;
     }
 
     .filter-group {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 8px;
     }
 
-    .site-group { grid-area: site; }
-    .type-group { grid-area: type; }
-    .machine-group { grid-area: machine; }
-    .year-group { grid-area: year; }
+    .filter-group label {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
 
-    select {
-      margin: 10px;
-      padding: 5px;
+    .filter-group select {
+      padding: 6px;
       width: 160px;
     }
 
     .chart-container {
       display: flex;
       flex-wrap: wrap;
-      gap: 20px;
       justify-content: center;
-      margin-bottom: 40px;
-    }
-
-    .chart-box {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      gap: 40px;
+      margin: 40px 0;
     }
 
     canvas {
@@ -124,30 +116,31 @@
   </header>
 
   <div class="filters">
-    <div class="filter-group site-group">
-      <label for="siteFilter">Site :</label>
+    <div class="filter-group">
+      <label for="siteFilter">Site</label>
       <select id="siteFilter"><option value="">Tous les sites</option></select>
     </div>
-    <div class="filter-group type-group">
-      <label for="typeFilter">Type :</label>
+    <div class="filter-group">
+      <label for="typeFilter">Type</label>
       <select id="typeFilter"><option value="">Tous les types</option></select>
     </div>
-    <div class="filter-group machine-group">
-      <label for="machineFilter">Machine :</label>
+    <div class="filter-group">
+      <label for="machineFilter">Machine</label>
       <select id="machineFilter"><option value="">Toutes les machines</option></select>
     </div>
-    <div class="filter-group year-group">
-      <label for="yearFilter">Année :</label>
+    <div class="filter-group">
+      <label for="yearFilter">Année</label>
       <select id="yearFilter"><option value="">Toutes les années</option></select>
     </div>
   </div>
 
   <div class="chart-container">
-    <div class="chart-box"><canvas id="pieChart"></canvas></div>
-    <div class="chart-box"><canvas id="barChart"></canvas></div>
+    <canvas id="pieChart"></canvas>
+    <canvas id="barChart"></canvas>
   </div>
 
   <script>
+    // Menu
     window.onload = function () {
       const menu = document.getElementById("menu");
       const button = document.querySelector(".menu-button");
@@ -162,6 +155,7 @@
       });
     };
 
+    // Données & graphiques
     const url = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
     let allData = [];
     let pieChart, barChart;
