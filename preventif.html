@@ -7,91 +7,19 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background-color: #f4f4f4;
-      text-align: center;
-    }
-
-    header {
-      display: flex;
-      align-items: center;
-      padding: 10px 20px;
-      background-color: #4e79a7;
-      color: white;
-    }
-
-    .menu-button {
-      font-size: 26px;
-      cursor: pointer;
-      background: none;
-      border: none;
-      color: black;
-      margin-right: 3ch;
-    }
-
-    .page-title {
-      font-size: 24px;
-      margin: 0;
-    }
-
-    .menu {
-      display: none;
-      flex-direction: column;
-      position: absolute;
-      top: 50px;
-      left: 20px;
-      background-color: white;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      z-index: 999;
-    }
-
-    .menu a {
-      padding: 10px 20px;
-      text-decoration: none;
-      color: #333;
-      border-bottom: 1px solid #eee;
-    }
-
-    .menu a:last-child {
-      border-bottom: none;
-    }
-
-    .menu a:hover {
-      background-color: #f0f0f0;
-    }
-
-    .filters {
-      display: flex;
-      justify-content: center;
-      gap: 30px;
-      flex-wrap: wrap;
-      margin: 30px 0;
-    }
-
-    .filters .field-group {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .filters label {
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
-
-    .filters select {
-      width: 160px;
-      padding: 6px;
-    }
-
-    canvas {
-      max-width: 400px;
-      margin: 40px auto;
-    }
+    body { font-family: Arial, sans-serif; margin:0; background:#f4f4f4; text-align:center; }
+    header { display:flex; align-items:center; padding:10px 20px; background:#4e79a7; color:white; position:relative; }
+    .menu-button { font-size:26px; cursor:pointer; background:none; border:none; color:black; margin-right:3ch; }
+    .page-title { font-size:24px; margin:0; }
+    .menu { display:none; flex-direction:column; position:absolute; top:50px; left:20px; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.2); z-index:999; }
+    .menu a { padding:10px 20px; text-decoration:none; color:#333; border-bottom:1px solid #eee; }
+    .menu a:last-child { border-bottom:none; }
+    .menu a:hover { background:#f0f0f0; }
+    .filters { display:flex; justify-content:center; gap:30px; flex-wrap:wrap; margin:30px 0; }
+    .field-group { display:flex; flex-direction:column; align-items:center; }
+    .field-group label { margin-bottom:5px; font-weight:bold; }
+    .field-group select { width:160px; padding:6px; }
+    canvas { max-width:400px; margin:40px auto; }
   </style>
 </head>
 <body>
@@ -101,7 +29,7 @@
     <div class="menu" id="menu">
       <a href="index.html">Accueil</a>
       <a href="tableau.html">Tableau de bord</a>
-      <a href="historique.html">Historique maintenance</a>
+      <a href="historique.html">Historique</a>
       <a href="preventif.html">Préventif</a>
     </div>
   </header>
@@ -124,7 +52,7 @@
     let allData = [];
 
     fetch(url)
-      .then(res => res.json())
+      .then(r => r.json())
       .then(data => {
         allData = data;
         populateFilters(data);
@@ -132,100 +60,74 @@
       });
 
     function populateFilters(data) {
-      const siteSet = new Set();
-      const yearSet = new Set();
-
+      const siteSet = new Set(), yearSet = new Set();
       data.forEach(row => {
-        const site = row["Site Intervention"];
-        const date = row["Prochain contrôle"];
-        if (site) siteSet.add(site);
-
-        if (date instanceof Date || !isNaN(new Date(date))) {
-          const d = new Date(date);
-          if (!isNaN(d)) yearSet.add(d.getFullYear());
-        }
+        if (row["Site Intervention"]) siteSet.add(row["Site Intervention"]);
+        const d = new Date(row["Prochain contrôle"]);
+        if (!isNaN(d)) yearSet.add(d.getFullYear());
       });
-
       fillSelect("siteFilter", siteSet);
       fillSelect("yearFilter", yearSet);
-
-      document.getElementById("siteFilter").addEventListener("change", updateChart);
-      document.getElementById("yearFilter").addEventListener("change", updateChart);
+      ["siteFilter","yearFilter"].forEach(id =>
+        document.getElementById(id).addEventListener("change", updateChart)
+      );
     }
 
     function fillSelect(id, values) {
-      const select = document.getElementById(id);
-      Array.from(values).sort().forEach(val => {
-        const opt = document.createElement("option");
-        opt.value = val;
-        opt.textContent = val;
-        select.appendChild(opt);
+      const sel = document.getElementById(id);
+      Array.from(values).sort().forEach(v => {
+        const o = document.createElement("option");
+        o.value = v; o.textContent = v;
+        sel.appendChild(o);
       });
     }
 
     function updateChart() {
       const site = document.getElementById("siteFilter").value;
       const year = document.getElementById("yearFilter").value;
-
-      const filtered = allData.filter(row => {
-        const rSite = row["Site Intervention"];
-        const rDate = new Date(row["Prochain contrôle"]);
-        const matchSite = !site || rSite === site;
-        const matchYear = !year || (!isNaN(rDate) && rDate.getFullYear().toString() === year);
-        return matchSite && matchYear;
+      // Filtrer par site et année
+      const filtered = allData.filter(r => {
+        const d = new Date(r["Prochain contrôle"]);
+        const okSite = !site || r["Site Intervention"] === site;
+        const okYear = !year || (!isNaN(d) && d.getFullYear().toString() === year);
+        return okSite && okYear;
       });
-
-      const conformity = filtered.map(r => (r["Conformité"] || "").toString().trim().toLowerCase());
-      const conformes = conformity.filter(c => c === "conforme").length;
-      const nonConformes = conformity.filter(c => c === "non conforme").length;
-      const total = conformes + nonConformes;
-
+      // Conformité : utiliser clé "conformité"
+      const confs = filtered.map(r => (r["conformité"]||"").trim().toLowerCase());
+      const conformes = confs.filter(c => c==="conforme").length;
+      const nonConformes = confs.filter(c => c==="non conforme").length;
       const ctx = document.getElementById("conformityChart").getContext("2d");
       if (window.conformityChart) window.conformityChart.destroy();
-
       window.conformityChart = new Chart(ctx, {
-        type: "doughnut",
-        data: {
-          labels: ["Conforme", "Non conforme"],
-          datasets: [{
-            data: [conformes, nonConformes],
-            backgroundColor: ["#4caf50", "#f44336"]
-          }]
+        type:"doughnut",
+        data:{
+          labels:["Conforme","Non conforme"],
+          datasets:[{ data:[conformes,nonConformes], backgroundColor:["#4caf50","#f44336"] }]
         },
-        options: {
-          responsive: true,
-          plugins: {
-            title: {
-              display: true,
-              text: "Taux de conformité préventive"
-            },
-            datalabels: {
-              color: '#fff',
-              font: { weight: 'bold' },
-              formatter: (value, ctx) => {
-                const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                return sum ? `${((value / sum) * 100).toFixed(1)}%` : "0%";
+        options:{
+          plugins:{
+            title:{ display:true, text:"Taux de conformité préventive" },
+            datalabels:{
+              color:"#fff", font:{ weight:"bold" },
+              formatter:(val,ctx)=>{
+                const sum = ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
+                return sum?`${((val/sum)*100).toFixed(1)}%`:"0%";
               }
             }
           }
         },
-        plugins: [ChartDataLabels]
+        plugins:[ChartDataLabels]
       });
     }
 
-    // Menu navigation
-    window.onload = () => {
-      const menu = document.getElementById("menu");
-      const button = document.querySelector(".menu-button");
-
-      menu.style.display = "none";
-      button.addEventListener("click", () => {
-        menu.style.display = menu.style.display === "flex" ? "none" : "flex";
-      });
-      document.addEventListener("click", event => {
-        if (!menu.contains(event.target) && event.target !== button) {
-          menu.style.display = "none";
-        }
+    // Menu
+    window.onload = ()=>{
+      const menu = document.getElementById("menu"),
+            btn = document.querySelector(".menu-button");
+      menu.style.display="none";
+      btn.addEventListener("click",()=> menu.style.display = menu.style.display==="flex"?"none":"flex");
+      document.addEventListener("click",e=>{
+        if (!menu.contains(e.target) && e.target!==btn) menu.style.display="none";
       });
     };
   </script>
