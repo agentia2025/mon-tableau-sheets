@@ -10,7 +10,7 @@
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      background-color: #f2f2f2;
+      background-color: #f4f4f4;
     }
 
     header {
@@ -44,7 +44,7 @@
       background-color: white;
       border: 1px solid #ccc;
       border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
       z-index: 999;
     }
 
@@ -66,33 +66,36 @@
     .filters {
       display: flex;
       justify-content: center;
-      gap: 40px;
-      margin: 30px 0;
       flex-wrap: wrap;
+      gap: 40px;
+      padding: 30px 10px 10px;
     }
 
-    .filter-group {
+    .filters .field-group {
       display: flex;
       flex-direction: column;
       align-items: center;
     }
 
-    .filter-group label {
+    .filters label {
       margin-bottom: 5px;
       font-weight: bold;
     }
 
-    .filter-group select {
-      width: 160px;
+    .filters select {
       padding: 6px;
-      font-size: 14px;
+      width: 160px;
     }
 
-    #conformiteChart {
-      display: block;
-      margin: 0 auto 50px;
-      max-width: 360px;
-      max-height: 360px;
+    .chart-container {
+      display: flex;
+      justify-content: center;
+      margin: 30px auto 60px;
+    }
+
+    canvas {
+      width: 320px !important;
+      height: 320px !important;
     }
 
     @media (max-width: 600px) {
@@ -104,10 +107,9 @@
   </style>
 </head>
 <body>
-
   <header>
     <button class="menu-button">☰</button>
-    <h1 class="page-title">Suivi des Préventifs</h1>
+    <h1 class="page-title">Suivi des préventifs</h1>
     <div class="menu" id="menu">
       <a href="index.html">Accueil</a>
       <a href="tableau.html">Tableau de bord</a>
@@ -117,24 +119,25 @@
   </header>
 
   <div class="filters">
-    <div class="filter-group">
+    <div class="field-group">
       <label for="siteFilter">Site</label>
       <select id="siteFilter"><option value="">Tous les sites</option></select>
     </div>
-    <div class="filter-group">
+    <div class="field-group">
       <label for="yearFilter">Année</label>
       <select id="yearFilter"><option value="">Toutes les années</option></select>
     </div>
   </div>
 
-  <canvas id="conformiteChart"></canvas>
+  <div class="chart-container">
+    <canvas id="conformityChart"></canvas>
+  </div>
 
   <script>
-    // Menu responsive
+    // Menu
     window.onload = function () {
       const menu = document.getElementById("menu");
       const button = document.querySelector(".menu-button");
-
       menu.style.display = "none";
 
       button.addEventListener("click", function () {
@@ -148,15 +151,14 @@
       });
     };
 
-    // URL vers ton script JSON Préventif
     const url = "https://script.google.com/macros/s/AKfycbydUwbmc5KCQ_WWLCriPcx8AZEpOxDY8THCtLsRWmNY1oE19RaKJVN_cEKo5FjLJDKcLw/exec";
     let allData = [];
 
     fetch(url)
-      .then(res => res.json())
+      .then(response => response.json())
       .then(data => {
-        allData = data.filter(r => r["Prochain contrôle"]);
-        populateFilters(allData);
+        allData = data;
+        populateFilters(data);
         updateChart();
       });
 
@@ -167,7 +169,9 @@
       data.forEach(row => {
         siteSet.add(row["Site Intervention"]);
         const date = new Date(row["Prochain contrôle"]);
-        if (!isNaN(date)) yearSet.add(date.getFullYear());
+        if (!isNaN(date)) {
+          yearSet.add(date.getFullYear());
+        }
       });
 
       fillSelect("siteFilter", siteSet);
@@ -179,15 +183,14 @@
 
     function fillSelect(id, values) {
       const select = document.getElementById(id);
-      Array.from(values).sort().forEach(val => {
+      Array.from(values).sort().forEach(value => {
         const opt = document.createElement("option");
-        opt.value = val;
-        opt.textContent = val;
+        opt.value = value;
+        opt.textContent = value;
         select.appendChild(opt);
       });
     }
 
-    let chart;
     function updateChart() {
       const site = document.getElementById("siteFilter").value;
       const year = document.getElementById("yearFilter").value;
@@ -195,21 +198,34 @@
       const filtered = allData.filter(row => {
         const matchSite = !site || row["Site Intervention"] === site;
         const date = new Date(row["Prochain contrôle"]);
-        const matchYear = !year || (!isNaN(date) && date.getFullYear() == year);
+        const matchYear = !year || (!isNaN(date) && date.getFullYear().toString() === year);
         return matchSite && matchYear;
       });
 
-      const conformes = filtered.filter(r => (r["Conformité"] || "").toString().trim().toLowerCase() === "conforme").length;
-      const nonConformes = filtered.filter(r => (r["Conformité"] || "").toString().trim().toLowerCase() === "non conforme").length;
+      console.log("Valeurs de conformité filtrées :");
+      filtered.forEach(r => {
+        console.log((r["Conformité"] || "").toString().trim());
+      });
 
+      const conformes = filtered.filter(r =>
+        (r["Conformité"] || "").toString().trim().toLowerCase() === "conforme"
+      ).length;
 
+      const nonConformes = filtered.filter(r =>
+        (r["Conformité"] || "").toString().trim().toLowerCase() === "non conforme"
+      ).length;
 
-      const ctx = document.getElementById("conformiteChart").getContext("2d");
-      if (chart) chart.destroy();
-      chart = new Chart(ctx, {
+      const total = conformes + nonConformes;
+
+      const ctx = document.getElementById("conformityChart").getContext("2d");
+      if (window.conformityChart) {
+        window.conformityChart.destroy();
+      }
+
+      window.conformityChart = new Chart(ctx, {
         type: "doughnut",
         data: {
-          labels: ["Conformes", "Non conformes"],
+          labels: ["Conforme", "Non conforme"],
           datasets: [{
             data: [conformes, nonConformes],
             backgroundColor: ["#4caf50", "#f44336"]
@@ -222,9 +238,9 @@
               text: "Taux de conformité des maintenances préventives"
             },
             datalabels: {
-              formatter: (val, ctx) => {
-                const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                return total ? `${((val / total) * 100).toFixed(1)}%` : "0%";
+              formatter: (value, ctx) => {
+                const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                return sum ? `${((value / sum) * 100).toFixed(1)}%` : "0%";
               },
               color: "#fff",
               font: { weight: "bold" }
@@ -235,6 +251,5 @@
       });
     }
   </script>
-
 </body>
 </html>
