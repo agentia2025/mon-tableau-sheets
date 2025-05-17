@@ -73,10 +73,9 @@
       font-size: 14px;
     }
     table {
-      width: 80%;               /* ← 80% de l’écran */
+      width: 90%;
       margin: auto;
       border-collapse: collapse;
-      table-layout: fixed;      /* ← colonnes fixes */
       background-color: white;
       box-shadow: 0 0 8px rgba(0,0,0,0.1);
       border-radius: 8px;
@@ -86,35 +85,22 @@
       padding: 10px;
       text-align: center;
       border-bottom: 1px solid #ddd;
-      white-space: nowrap;      /* ← pas de retour à la ligne */
-      overflow: hidden;
-      text-overflow: ellipsis;  /* ← coupe avec "…" si trop long */
+      max-width: 160px;
+      white-space: normal;
+      word-break: break-word;
     }
     th {
       background-color: #4e79a7;
       color: white;
       font-weight: bold;
     }
-    /* répartir les largeurs */
-    th:nth-child(1), td:nth-child(1) { width: 15%; }  /* Date */
-    th:nth-child(2), td:nth-child(2) { width: 35%; }  /* Machine */
-    th:nth-child(3), td:nth-child(3) { width: 30%; }  /* Type de maintenance */
-    th:nth-child(4), td:nth-child(4) { width: 20%; }  /* Rapport */
-
     tr:nth-child(even) { background-color: #f9f9f9; }
     tr:hover { background-color: #f1f1f1; }
+    td:first-child { width: 80px; }
+    td:nth-child(2) { text-align: left; width: 120px; }
     a { text-decoration: none; font-size: 18px; }
-
     @media screen and (max-width: 768px) {
-      .filters { gap: 20px; }
-      table {
-        width: 100%;            /* mobile : 100% */
-        font-size: 12px;        /* taille de police réduite */
-      }
-      th:nth-child(1), td:nth-child(1) { width: 20%; }
-      th:nth-child(2), td:nth-child(2) { width: 40%; }
-      th:nth-child(3), td:nth-child(3) { width: 25%; }
-      th:nth-child(4), td:nth-child(4) { width: 15%; }
+      table, thead, tbody, th, td, tr { font-size: 11px; }
     }
   </style>
 </head>
@@ -160,9 +146,9 @@
   </table>
 
   <script>
-    window.onload = () => {
+    window.onload = function () {
       const menu = document.getElementById("menu");
-      const btn  = document.querySelector(".menu-button");
+      const btn = document.querySelector(".menu-button");
       menu.style.display = "none";
       btn.addEventListener("click", () => {
         menu.style.display = menu.style.display === "flex" ? "none" : "flex";
@@ -178,7 +164,7 @@
     let allData = [];
 
     fetch(url)
-      .then(r => r.json())
+      .then(res => res.json())
       .then(data => {
         allData = data;
         populateSiteFilter(data);
@@ -196,22 +182,16 @@
       fillSelect("siteFilter", s);
       fillSelect("machineFilter", m);
       fillSelect("typeFilter", t);
-      document.getElementById("siteFilter")
-        .addEventListener("change", () => { updateMachineFilter(); filterTable(); });
-      document.getElementById("machineFilter")
-        .addEventListener("change", filterTable);
-      document.getElementById("typeFilter")
-        .addEventListener("change", filterTable);
+      document.getElementById("siteFilter").addEventListener("change", () => {
+        updateMachineFilter(); filterTable();
+      });
+      document.getElementById("machineFilter").addEventListener("change", filterTable);
+      document.getElementById("typeFilter").addEventListener("change", filterTable);
     }
 
     function updateMachineFilter() {
-      const site = document.getElementById("siteFilter").value;
-      const setM = new Set();
-      allData.forEach(r => {
-        if (!site || r["Site Intervention"] === site) {
-          setM.add(r["Machine"]);
-        }
-      });
+      const site = document.getElementById("siteFilter").value, setM = new Set();
+      allData.forEach(r => { if (!site || r["Site Intervention"]===site) setM.add(r["Machine"]); });
       const sel = document.getElementById("machineFilter");
       sel.innerHTML = '<option value="">Toutes les machines</option>';
       fillSelect("machineFilter", setM);
@@ -221,21 +201,20 @@
       const sel = document.getElementById(id);
       Array.from(values).sort().forEach(v => {
         const o = document.createElement("option");
-        o.value = v;
-        o.textContent = v;
+        o.value = v; o.textContent = v;
         sel.appendChild(o);
       });
     }
 
     function filterTable() {
-      const site    = document.getElementById("siteFilter").value;
+      const site = document.getElementById("siteFilter").value;
       const machine = document.getElementById("machineFilter").value;
-      const type    = document.getElementById("typeFilter").value;
-      const filt = allData.filter(r =>
-        (!site    || r["Site Intervention"]  === site) &&
-        (!machine || r["Machine"]            === machine) &&
-        (!type    || r["Type d'intervention"]=== type)
-      );
+      const type = document.getElementById("typeFilter").value;
+      const filt = allData.filter(r => {
+        return (!site || r["Site Intervention"]===site)
+            && (!machine || r["Machine"]===machine)
+            && (!type || r["Type d'intervention"]===type);
+      });
       renderTable(filt);
     }
 
@@ -243,11 +222,11 @@
       const tbody = document.querySelector("#maintenanceTable tbody");
       tbody.innerHTML = "";
       data.forEach(r => {
-        const d = r["Date Intervention"]
+        const date = r["Date Intervention"]
           ? (() => {
-              const D = new Date(r["Date Intervention"]);
-              const yy = String(D.getFullYear()).slice(-2);
-              const mm = String(D.getMonth()+1).padStart(2,'0');
+              const d=new Date(r["Date Intervention"]);
+              const yy=String(d.getFullYear()).slice(-2);
+              const mm=String(d.getMonth()+1).padStart(2,'0');
               return `${yy}/${mm}`;
             })()
           : "-";
@@ -257,7 +236,7 @@
           : "-";
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${d}</td>
+          <td>${date}</td>
           <td>${r["Machine"]||"-"}</td>
           <td>${r["Choix du type de maintenance"]||"-"}</td>
           <td>${html}</td>
