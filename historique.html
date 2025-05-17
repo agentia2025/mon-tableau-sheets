@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Préventif</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -48,19 +47,29 @@
     }
 
     .filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
       margin-bottom: 20px;
     }
 
-    .filters label {
-      font-weight: bold;
-      margin-right: 5px;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
     }
 
-    canvas {
-      max-width: 100%;
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    p.intro {
+      font-size: 14px;
+      margin-bottom: 10px;
+      color: #555;
     }
   </style>
 </head>
@@ -78,93 +87,76 @@
   </div>
 
   <div class="filters">
-    <div>
-      <label for="siteFilter">Site :</label>
-      <select id="siteFilter" onchange="updateChart()">
-        <option value="Tous">Tous</option>
-      </select>
-    </div>
-    <div>
-      <label for="yearFilter">Année :</label>
-      <select id="yearFilter" onchange="updateChart()">
-        <option value="Toutes">Toutes</option>
-      </select>
-    </div>
+    <label for="siteFilter">Filtrer par site :</label>
+    <select id="siteFilter" onchange="applyFilter()">
+      <option value="Tous">Tous</option>
+    </select>
   </div>
 
-  <canvas id="preventifChart"></canvas>
+  <p class="intro">
+    Vos prochaines interventions de maintenance préventive, filtrées par site :
+  </p>
+
+  <table id="preventifTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Site</th>
+        <th>Machine</th>
+        <th>Type</th>
+        <th>Nom du Technicien</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Contenu injecté par JavaScript -->
+    </tbody>
+  </table>
 
   <script>
-    const rawData = []; // Remplir dynamiquement via importation JSON ou API externe
+    const data = [
+      { date: "2025-06-10", site: "Paris", machine: "Compresseur A", type: "Préventif", technicien: "Jean" },
+      { date: "2025-06-15", site: "Lyon", machine: "Pompe B", type: "Préventif", technicien: "Claire" },
+      { date: "2025-06-12", site: "Paris", machine: "Groupe C", type: "Préventif", technicien: "Ali" },
+    ];
 
-    const ctx = document.getElementById('preventifChart').getContext('2d');
-    let chart;
+    const siteFilter = document.getElementById("siteFilter");
+    const tableBody = document.querySelector("#preventifTable tbody");
+
+    function populateSites() {
+      const sites = [...new Set(data.map(item => item.site))];
+      sites.forEach(site => {
+        const option = document.createElement("option");
+        option.value = site;
+        option.textContent = site;
+        siteFilter.appendChild(option);
+      });
+    }
+
+    function applyFilter() {
+      const selectedSite = siteFilter.value;
+      const filteredData = selectedSite === "Tous" ? data : data.filter(item => item.site === selectedSite);
+
+      tableBody.innerHTML = "";
+      filteredData.forEach(item => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${item.date.slice(2, 7).replace('-', '/')}</td>
+          <td>${item.site}</td>
+          <td>${item.machine}</td>
+          <td>${item.type}</td>
+          <td>${item.technicien}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
 
     function toggleNav() {
       const nav = document.getElementById("navMenu");
       nav.style.display = nav.style.display === "flex" ? "none" : "flex";
     }
 
-    function initFilters() {
-      const siteSet = new Set(rawData.map(d => d.site));
-      siteSet.forEach(site => {
-        const option = document.createElement("option");
-        option.value = site;
-        option.textContent = site;
-        document.getElementById("siteFilter").appendChild(option);
-      });
-
-      const yearSet = new Set(rawData.map(d => d.date.slice(0, 4)));
-      yearSet.forEach(year => {
-        const option = document.createElement("option");
-        option.value = year;
-        option.textContent = year;
-        document.getElementById("yearFilter").appendChild(option);
-      });
-    }
-
-    function updateChart() {
-      const selectedSite = document.getElementById("siteFilter").value;
-      const selectedYear = document.getElementById("yearFilter").value;
-
-      const filtered = rawData.filter(d => {
-        const year = d.date.slice(0, 4);
-        return (selectedSite === "Tous" || d.site === selectedSite) &&
-               (selectedYear === "Toutes" || year === selectedYear);
-      });
-
-      const conformes = filtered.filter(d => d.conformité === "Conforme").length;
-      const nonConformes = filtered.filter(d => d.conformité === "Non conforme").length;
-
-      const data = {
-        labels: ['Conforme', 'Non conforme'],
-        datasets: [{
-          data: [conformes, nonConformes],
-          backgroundColor: ['#4CAF50', '#F44336']
-        }]
-      };
-
-      if (chart) {
-        chart.data = data;
-        chart.update();
-      } else {
-        chart = new Chart(ctx, {
-          type: 'pie',
-          data: data,
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {
-                position: 'bottom'
-              }
-            }
-          }
-        });
-      }
-    }
-
-    initFilters();
-    updateChart();
+    populateSites();
+    applyFilter();
   </script>
 </body>
 </html>
