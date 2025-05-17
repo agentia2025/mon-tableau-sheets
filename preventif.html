@@ -7,24 +7,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family:Arial,sans-serif; margin:0; background:#f2f2f2; }
-    header { display:flex; align-items:center; padding:10px 20px; background:#4e79a7; color:white; position:relative; }
-    .menu-button { font-size:26px; cursor:pointer; background:none; border:none; color:black; margin-right:3ch; }
-    .page-title { font-size:24px; margin:0; }
-    .menu { display:none; flex-direction:column; position:absolute; top:50px; left:20px;
-            background:#fff; border:1px solid #ccc; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.2); z-index:999; }
-    .menu a { padding:10px 20px; text-decoration:none; color:#333; border-bottom:1px solid #eee; }
-    .menu a:last-child { border-bottom:none; }
-    .menu a:hover { background:#f0f0f0; }
-    .filters { display:flex; justify-content:center; gap:40px; margin:30px 0; flex-wrap:wrap; }
-    .filters label { font-weight:bold; margin-right:8px; }
-    .filters select { padding:6px; }
-    .chart-box { text-align:center; margin-bottom:20px; }
-    #pieChart { width:320px!important; height:320px!important; }
-    .stats { text-align:center; margin-top:10px; font-size:16px; }
-    .upcoming { width:90%; max-width:600px; margin:20px auto; border-collapse:collapse; }
-    .upcoming th, .upcoming td { padding:8px; border:1px solid #ddd; text-align:center; }
-    .upcoming th { background:#4e79a7; color:#fff; }
+    body { font-family: Arial, sans-serif; margin: 0; background: #f2f2f2; }
+    header { display: flex; align-items: center; padding: 10px 20px; background: #4e79a7; color: white; position: relative; }
+    .menu-button { font-size: 26px; cursor: pointer; background: none; border: none; color: black; margin-right: 3ch; }
+    .page-title { font-size: 24px; margin: 0; }
+    .menu { display: none; flex-direction: column; position: absolute; top: 50px; left: 20px;
+            background: #fff; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 999; }
+    .menu a { padding: 10px 20px; text-decoration: none; color: #333; border-bottom: 1px solid #eee; }
+    .menu a:last-child { border-bottom: none; }
+    .menu a:hover { background: #f0f0f0; }
+    .filters { display: flex; justify-content: center; gap: 40px; margin: 30px 0; flex-wrap: wrap; }
+    .filters label { font-weight: bold; margin-right: 8px; }
+    .filters select { padding: 6px; }
+    .chart-box { text-align: center; margin-bottom: 20px; }
+    #pieChart { width: 320px !important; height: 320px !important; }
+    .stats { text-align: center; margin-top: 10px; font-size: 16px; }
+    h2.upcoming-title { text-align: center; margin-top: 20px; font-size: 20px; color: #333; }
+    .upcoming { width: 90%; max-width: 600px; margin: 20px auto; border-collapse: collapse; }
+    .upcoming th, .upcoming td { padding: 8px; border: 1px solid #ddd; text-align: center; }
+    .upcoming th { background: #4e79a7; color: #fff; }
   </style>
 </head>
 <body>
@@ -55,99 +56,126 @@
     <div class="stats" id="stats"></div>
   </div>
 
+  <!-- Titre ajouté -->
+  <h2 class="upcoming-title">Les prochains préventifs :</h2>
+
   <table class="upcoming" id="upcomingTable">
     <thead>
-      <tr><th>Site</th><th>Machine</th><th>Date (JJ-MM)</th></tr>
+      <tr>
+        <th>Site</th>
+        <th>Machine</th>
+        <th>Date (JJ-MM)</th>
+      </tr>
     </thead>
     <tbody></tbody>
   </table>
 
   <script>
-    // menu
+    // Menu
     function toggleMenu() {
       const m = document.getElementById("menu");
-      m.style.display = m.style.display==="flex"?"none":"flex";
+      m.style.display = m.style.display === "flex" ? "none" : "flex";
     }
-    document.addEventListener("click", e=>{
-      const m=document.getElementById("menu"), b=document.querySelector(".menu-button");
-      if(!m.contains(e.target)&&e.target!==b) m.style.display="none";
+    document.addEventListener("click", e => {
+      const m = document.getElementById("menu");
+      const b = document.querySelector(".menu-button");
+      if (!m.contains(e.target) && e.target !== b) m.style.display = "none";
     });
 
-    // récupère JSON préventif
+    // Récupération des données JSON
     const url = "https://script.google.com/macros/s/AKfycbydUwbmc5KCQ_WWLCriPcx8AZEpOxDY8THCtLsRWmNY1oE19RaKJVN_cEKo5FjLJDKcLw/exec";
     let dataAll = [];
-    fetch(url).then(r=>r.json()).then(data=>{
-      dataAll=data;
+    fetch(url).then(r => r.json()).then(data => {
+      dataAll = data;
       initFilters();
       updateChart();
       fillUpcoming();
     });
 
-    function initFilters(){
-      const s=new Set(), y=new Set();
-      dataAll.forEach(r=>{
+    function initFilters() {
+      const s = new Set(), y = new Set();
+      dataAll.forEach(r => {
         s.add(r["Site Intervention"]);
-        const d=new Date(r["Prochain contrôle"]);
-        if(!isNaN(d)) y.add(d.getFullYear());
+        const d = new Date(r["Prochain contrôle"]);
+        if (!isNaN(d)) y.add(d.getFullYear());
       });
-      fill("siteFilter",s); fill("yearFilter",y);
-      ["siteFilter","yearFilter"].forEach(id=>
-        document.getElementById(id).addEventListener("change",()=>{
-          updateChart(); fillUpcoming();
+      fill("siteFilter", s);
+      fill("yearFilter", y);
+      ["siteFilter", "yearFilter"].forEach(id =>
+        document.getElementById(id).addEventListener("change", () => {
+          updateChart();
+          fillUpcoming();
         })
       );
     }
-    function fill(id,set){
-      const sel=document.getElementById(id);
-      Array.from(set).sort().forEach(v=>{
-        const o=document.createElement("option"); o.value=v; o.textContent=v; sel.appendChild(o);
+
+    function fill(id, set) {
+      const sel = document.getElementById(id);
+      Array.from(set).sort().forEach(v => {
+        const o = document.createElement("option");
+        o.value = v;
+        o.textContent = v;
+        sel.appendChild(o);
       });
     }
 
-    function updateChart(){
-      const site=document.getElementById("siteFilter").value;
-      const year=document.getElementById("yearFilter").value;
-      let ok=0, ko=0;
-      dataAll.forEach(r=>{
-        if(r.conformité!=="") {
-          if(site&&r["Site Intervention"]!==site) return;
-          const d=new Date(r["Prochain contrôle"]);
-          if(year&&d.getFullYear()!=year) return;
-          r.conformité==="Conforme"?ok++:ko++;
+    function updateChart() {
+      const site = document.getElementById("siteFilter").value;
+      const year = document.getElementById("yearFilter").value;
+      let ok = 0, ko = 0;
+      dataAll.forEach(r => {
+        if (r.conformité !== "") {
+          if (site && r["Site Intervention"] !== site) return;
+          const d = new Date(r["Prochain contrôle"]);
+          if (year && d.getFullYear() != year) return;
+          r.conformité === "Conforme" ? ok++ : ko++;
         }
       });
-      const total=ok+ko;
-      const percOK = total?Math.round(ok/total*100):0;
-      const ctx=document.getElementById("pieChart").getContext("2d");
-      if(window.pie) window.pie.destroy();
-      window.pie=new Chart(ctx,{type:"doughnut",
-        data:{labels:["Conforme","Non conforme"],datasets:[{data:[ok,ko]}]},
-        options:{plugins:{title:{display:true,text:`Conformité – ${percOK}%`}}}
+      const total = ok + ko;
+      const percOK = total ? Math.round(ok / total * 100) : 0;
+      const ctx = document.getElementById("pieChart").getContext("2d");
+      if (window.pie) window.pie.destroy();
+      window.pie = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: ["Conforme", "Non conforme"],
+          datasets: [{ data: [ok, ko] }]
+        },
+        options: {
+          plugins: {
+            title: {
+              display: true,
+              text: `Conformité – ${percOK}%`
+            }
+          }
+        }
       });
       document.getElementById("stats").textContent = `Conformes : ${ok} / Non conformes : ${ko}`;
     }
 
-    function fillUpcoming(){
-      const tbody=document.querySelector("#upcomingTable tbody");
-      tbody.innerHTML="";
-      const site=document.getElementById("siteFilter").value;
-      const today=new Date();
+    function fillUpcoming() {
+      const tbody = document.querySelector("#upcomingTable tbody");
+      tbody.innerHTML = "";
+      const site = document.getElementById("siteFilter").value;
+      const today = new Date();
       const list = dataAll
-        .filter(r=>{
-          if(site&&r["Site Intervention"]!==site) return false;
-          const d=new Date(r["Prochain contrôle"]);
-          return d>=today;
+        .filter(r => {
+          if (site && r["Site Intervention"] !== site) return false;
+          const d = new Date(r["Prochain contrôle"]);
+          return d >= today;
         })
-        .sort((a,b)=>new Date(a["Prochain contrôle"])-new Date(b["Prochain contrôle"]))
-        .slice(0,20);
-      list.forEach(r=>{
-        const d=new Date(r["Prochain contrôle"]);
-        const dd = String(d.getDate()).padStart(2,'0');
-        const mm = String(d.getMonth()+1).padStart(2,'0');
-        const tr=document.createElement("tr");
-        tr.innerHTML = `<td>${r["Site Intervention"]}</td>
-                        <td>${r.Machine}</td>
-                        <td>${dd}-${mm}</td>`;
+        .sort((a, b) => new Date(a["Prochain contrôle"]) - new Date(b["Prochain contrôle"]))
+        .slice(0, 20);
+      list.forEach(r => {
+        const d = new Date(r["Prochain contrôle"]);
+        const dd = String(d.getDate()).padStart(2, "0");
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${r["Site Intervention"]}</td>
+          <td>${r.Machine}</td>
+          <td>${dd}-${mm}</td>
+        `;
         tbody.appendChild(tr);
       });
     }
