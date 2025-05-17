@@ -1,160 +1,190 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Préventif</title>
+  <meta charset="UTF-8">
+  <title>Historique des Maintenance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
-      background-color: #f9f9f9;
+      margin: 0;
+      background-color: #f2f2f2;
     }
 
     header {
       display: flex;
       align-items: center;
-      margin-bottom: 20px;
+      padding: 10px 20px;
+      background-color: #4e79a7;
+      color: white;
+      position: relative;
     }
 
     .menu-button {
-      font-size: 24px;
+      font-size: 26px;
       cursor: pointer;
-      margin-right: 15px;
+      background: none;
+      border: none;
+      color: white;
+      margin-right: 3ch;
     }
 
-    h1 {
+    .page-title {
       font-size: 24px;
-      color: #333;
       margin: 0;
     }
 
-    .nav {
+    .menu {
       display: none;
       flex-direction: column;
       position: absolute;
-      top: 50px;
+      top: 100%;
       left: 20px;
       background-color: white;
       border: 1px solid #ccc;
-      padding: 10px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 999;
     }
 
-    .nav a {
+    .menu a {
+      padding: 10px 20px;
       text-decoration: none;
       color: #333;
-      margin: 5px 0;
+      border-bottom: 1px solid #eee;
     }
 
+    .menu a:last-child {
+      border-bottom: none;
+    }
+
+    .menu a:hover {
+      background-color: #f0f0f0;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 30px 0;
+    }
+
+    /* … le reste de vos styles existants … */
     .filters {
-      margin-bottom: 10px;
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
     }
-
-    p.intro {
+    .filters .field-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .filters label {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .filters select {
+      width: 160px;
+      padding: 6px;
       font-size: 14px;
-      margin-bottom: 10px;
-      color: #555;
     }
-
     table {
-      width: 100%;
+      width: 90%;
+      margin: auto;
       border-collapse: collapse;
       background-color: white;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      overflow: hidden;
     }
-
     th, td {
       padding: 10px;
-      border: 1px solid #ddd;
       text-align: center;
+      border-bottom: 1px solid #ddd;
+      max-width: 160px;
+      white-space: normal;
+      word-break: break-word;
     }
-
     th {
-      background-color: #f2f2f2;
+      background-color: #4e79a7;
+      color: white;
+      font-weight: bold;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    td:first-child { width: 80px; }
+    td:nth-child(2) { text-align: left; width: 120px; }
+    a { text-decoration: none; font-size: 18px; }
+    @media screen and (max-width: 768px) {
+      table, thead, tbody, th, td, tr { font-size: 11px; }
     }
   </style>
 </head>
 <body>
   <header>
-    <div class="menu-button" onclick="toggleNav()">☰</div>
-    <h1>Maintenance Armitec</h1>
+    <button class="menu-button">☰</button>
+    <h1 class="page-title">Historique des Maintenance</h1>
+    <div class="menu" id="menu">
+      <a href="index.html">Accueil</a>
+      <a href="tableau.html">Tableau de bord</a>
+      <a href="historique.html">Historique maintenance</a>
+      <a href="preventif.html">Préventif</a>
+    </div>
   </header>
 
-  <div class="nav" id="navMenu">
-    <a href="index.html">Accueil</a>
-    <a href="tableau.html">Tableau de bord</a>
-    <a href="historique.html">Historique des maintenances</a>
-    <a href="preventif.html">Préventif</a>
-  </div>
-
   <div class="filters">
-    <label for="siteFilter">Filtrer par site :</label>
-    <select id="siteFilter" onchange="applyFilter()">
-      <option value="Tous">Tous</option>
-    </select>
+    <div class="field-group">
+      <label for="siteFilter">Site</label>
+      <select id="siteFilter"><option value="">Tous les sites</option></select>
+    </div>
+    <div class="field-group">
+      <label for="machineFilter">Machine</label>
+      <select id="machineFilter"><option value="">Toutes les machines</option></select>
+    </div>
+    <div class="field-group">
+      <label for="typeFilter">Type d'intervention</label>
+      <select id="typeFilter"><option value="">Tous les types</option></select>
+    </div>
   </div>
 
-  <p class="intro">Les prochains préventifs</p>
-
-  <table id="preventifTable">
+  <table id="maintenanceTable">
     <thead>
       <tr>
         <th>Date</th>
-        <th>Site</th>
         <th>Machine</th>
-        <th>Type</th>
-        <th>Nom du Technicien</th>
+        <th>Type d'intervention</th>
+        <th>Type de maintenance</th>
+        <th>Rapport</th>
       </tr>
     </thead>
     <tbody>
-      <!-- Contenu injecté par JavaScript -->
+      <!-- Lignes dynamiques -->
     </tbody>
   </table>
 
   <script>
-    const data = [
-      { date: "2025-06-10", site: "Paris", machine: "Compresseur A", type: "Préventif", technicien: "Jean" },
-      { date: "2025-06-15", site: "Lyon", machine: "Pompe B", type: "Préventif", technicien: "Claire" },
-      { date: "2025-06-12", site: "Paris", machine: "Groupe C", type: "Préventif", technicien: "Ali" },
-    ];
+    window.onload = function () {
+      const menu = document.getElementById("menu");
+      const button = document.querySelector(".menu-button");
+      menu.style.display = "none"; // état initial
 
-    const siteFilter = document.getElementById("siteFilter");
-    const tableBody = document.querySelector("#preventifTable tbody");
-
-    function populateSites() {
-      const sites = [...new Set(data.map(item => item.site))];
-      sites.forEach(site => {
-        const option = document.createElement("option");
-        option.value = site;
-        option.textContent = site;
-        siteFilter.appendChild(option);
+      button.addEventListener("click", () => {
+        menu.style.display = menu.style.display === "flex" ? "none" : "flex";
       });
-    }
 
-    function applyFilter() {
-      const selectedSite = siteFilter.value;
-      const filteredData = selectedSite === "Tous" ? data : data.filter(item => item.site === selectedSite);
-
-      tableBody.innerHTML = "";
-      filteredData.forEach(item => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${item.date.slice(2, 7).replace('-', '/')}</td>
-          <td>${item.site}</td>
-          <td>${item.machine}</td>
-          <td>${item.type}</td>
-          <td>${item.technicien}</td>
-        `;
-        tableBody.appendChild(row);
+      document.addEventListener("click", event => {
+        if (!menu.contains(event.target) && event.target !== button) {
+          menu.style.display = "none";
+        }
       });
-    }
+    };
 
-    function toggleNav() {
-      const nav = document.getElementById("navMenu");
-      nav.style.display = nav.style.display === "flex" ? "none" : "flex";
-    }
-
-    populateSites();
-    applyFilter();
+    // … votre script de fetch / filtres / rendu de tableau tel quel …
   </script>
 </body>
 </html>
