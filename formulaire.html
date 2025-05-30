@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pointeuse GPS Armitec</title>
+    <style>
+      html { font-size: 16px; }
+      body {
+        font-family: 'Segoe UI', sans-serif;
+        background: #1c1c1c;
+        color: #e0e0e0;
+        margin: 0;
+      }
+      .nav, .container {
+        width: 60%;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .nav {
+        display: flex;
+        justify-content: space-around;
+        background: #333;
+        padding: 1em;
+        border-radius: 8px;
+      }
+      .nav button {
+        flex: 1;
+        font-size: 1.2em;
+        padding: 1em;
+        border: none;
+        background: #444;
+        color: white;
+        cursor: pointer;
+      }
+      .nav button.active { background: #007bff; }
+      .container { display: none; padding: 2em; }
+      .container.active { display: block; }
+      .step { display: none; margin-bottom: 1em; }
+      .step.active { display: block; }
+      input, select, button {
+        width: 100%;
+        padding: 1em;
+        font-size: 1em;
+        margin-top: 0.5em;
+        border-radius: 6px;
+        border: 1px solid #555;
+        background-color: #2a2a2a;
+        color: white;
+      }
+      label { display: block; margin-top: 1em; }
+      button[type="submit"], .validate-btn {
+        background-color: #007bff;
+        color: white;
+        font-weight: bold;
+      }
+      #message {
+        margin-top: 1em;
+        font-weight: bold;
+        color: #ffcc00;
+        text-align: center;
+      }
+      .reset-manual-btn {
+        background-color: #6c757d; /* Une couleur grise par exemple */
+        color: white;
+        font-weight: normal; /* Moins gras que les boutons de validation */
+      }
+      .reset-manual-btn:hover {
+        background-color: #5a6268;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="nav">
+      <button id="btn-pointer" class="active">Pointer</button>
+      <button id="btn-report">Mes pointages</button>
+    </div>
+
+    <div id="page-pointer" class="container active">
+      <div id="pointageForm"></div>
+      <div id="message"></div>
+      <button id="btn-reset-manual" class="reset-manual-btn" onclick="resetForm()" style="margin-top: 1em;">Effacer / Nouvelle Saisie</button>
+    </div>
+
+    <script>
+      const OPTION_LIST = ["Rien", "1/2 Zone", "Zone", "Astreinte semaine", "Astreinte weekend", "Déplacement"];
+      let formData = {};
+
+      function updateOptionChoices(targetId, ...excludedIds) {
+        const excludedValues = excludedIds.map(id => document.getElementById(id)?.value);
+        const select = document.getElementById(targetId);
+        select.innerHTML = '<option value="">-- Choisir --</option>';
+        OPTION_LIST.filter(opt => !excludedValues.includes(opt)).forEach(opt => {
+          const optElem = document.createElement('option');
+          optElem.value = opt;
+          optElem.textContent = opt;
+          select.appendChild(optElem);
+        });
+      }
+
+      function resetForm() {
+        document.getElementById('pointageForm').innerHTML = '';
+        document.getElementById('message').textContent = '';
+        formData = {};
+        formData.hasZone = false; // Initialisation de hasZone
+        addStepIdentifiant();
+      }
+
+      function addValidationButton(stepId, label, callback) {
+        const container = document.getElementById('step-' + stepId);
+        const btn = document.createElement('button');
+        btn.textContent = label;
+        btn.type = 'button';
+        btn.className = 'validate-btn';
+        btn.style.marginTop = '1em';
+        btn.addEventListener('click', callback);
+        container.appendChild(btn);
+      }
+
+      function createStep(id, labelText, inputHtml) {
+        const container = document.getElementById('pointageForm');
+        container.innerHTML = `
+          <div id="step-${id}" class="step active">
+            <label>${labelText}${inputHtml}</label>
+          </div>`;
+      }
+
+      function addStepIdentifiant() {
+        createStep('identifiant', 'Identifiant salarié', '<input type="text" id="identifiant" />');
+        addValidationButton('identifiant', 'Valider', () => {
+          const idValue = document.getElementById('identifiant').value.trim();
+          if (!idValue) {
+            showMsg('Veuillez saisir un identifiant.');
+            return;
+          }
+
+          formData.identifiant = idValue; // Set formData.identifiant here
+          showMsg("Vérification de l'identifiant en cours..."); // Loading message
+
+          google.script.run
+            .withSuccessHandler(handleCheckIdentifiantResponse)
+            .withFailureHandler(handleGasError)
+            .checkIdentifiant(idValue);
+        });
+      }
+
+      function handleCheckIdentifiantResponse(isValid) {
+        if (isValid) {
+          showMsg("Identifiant valide. Obtention de la position GPS..."); // Informative message
+          navigator.geolocation.getCurrentPosition(pos => {
+            formData.latitude = pos.coords.latitude;
+            formData.longitude = pos.coords.longitude;
+            showMsg(''); // Clear message
+            addStepType();
+          }, () => {
+            showMsg("⚠️ Impossible d'obtenir la position GPS. Veuillez vérifier les autorisations et réessayer.");
+            // Optional: consider resetting part of the form or allowing another attempt for ID
+          });
+        } else {
+          showMsg("Identifiant non autorisé ou invalide. Veuillez corriger.");
+          // Optional: clear formData.identifiant or reset form state if needed
+        }
+      }
+
+      function handleGasError(error) {
+        showMsg("Erreur de communication avec le serveur : " + error.message + ". Veuillez réessayer.");
+      }
+
+      function addStepType() {
+        createStep('type_pointage', 'Type de pointage', `
+          <select id="type_pointage">
+            <option value="">-- Choisir --</option>
+            <option>Début</option>
+            <option>Fin de journée</option>
+            <option>Fin d'OF</option>
+          </select>`);
+        addValidationButton('type_pointage', 'Valider', () => {
+          const val = document.getElementById('type_pointage').value;
+          if (!val) return showMsg('Veuillez choisir un type de pointage.');
+          formData.type_pointage = val;
+          if (val === 'Début') {
+            addStepPointer(); // MODIFIED BEHAVIOR
+          } else {
+            addStepTypeIntervention();
+          }
+        });
+      }
+
+      function addStepTypeIntervention() {
+        createStep('type_intervention', 'Type d’intervention', `
+          <select id="type_intervention">
+            <option value="">-- Choisir --</option>
+            <option>Usinage</option>
+            <option>Maintenance</option>
+            <option>Chaudronnerie</option>
+          </select>`);
+        addValidationButton('type_intervention', 'Valider', () => {
+          const val = document.getElementById('type_intervention').value;
+          if (!val) return showMsg('Veuillez choisir un type d’intervention.');
+          formData.type_intervention = val;
+          addStepOF();
+        });
+      }
+
+      function addStepOF() {
+        createStep('of', 'N° OF', `
+          <select id="of">
+            <option value="">-- Choisir --</option>
+            <option value="Rien">Rien</option>
+            <option value="SAISIE">Saisie libre</option>
+            <option>OF001</option>
+            <option>OF002</option>
+          </select>`);
+        addValidationButton('of', 'Valider', () => {
+          const val = document.getElementById('of').value;
+          if (!val) return showMsg('Veuillez choisir un N° OF');
+
+          if (val === 'SAISIE') {
+            addStepOFText();
+          } else if (val === 'Rien') {
+            formData.of = 'Rien';
+            addStepOption1();
+          } else {
+            formData.of = val;
+            addStepOption1();
+          }
+        });
+      }
+
+      function addStepOFText() {
+        createStep('of_text', 'Préciser N° OF', '<input type="text" id="of_text" />');
+        addValidationButton('of_text', 'Valider', () => {
+          const val = document.getElementById('of_text').value.trim();
+          if (!val) return showMsg('Veuillez saisir un N° OF');
+          formData.of = val;
+          addStepOption1();
+        });
+      }
+
+      function addStepOption1() {
+        createStep('option1', 'Option 1', '<select id="option1"></select>');
+        updateOptionChoices('option1');
+        addValidationButton('option1', 'Valider', () => {
+          const val = document.getElementById('option1').value;
+          if (!val) {
+            showMsg('Choix requis.');
+            return;
+          }
+
+          if (val === "Rien") {
+            formData.option1 = "Rien";
+            formData.option2 = "Rien";
+            formData.option3 = "Rien";
+            formData.option4 = "Rien";
+            formData.option5 = "Rien";
+            formData.hasZone = false; // Explicitement pas de zone
+            pointerFinal();
+          } else if (val.includes("Zone")) { // Pour "Zone" ou "1/2 Zone"
+            formData.option1 = val;
+            formData.hasZone = true;
+            addStepOption2();
+          } else { // Pour tout autre choix comme "Astreinte", "Déplacement"
+            formData.option1 = val;
+            formData.hasZone = false; // S'assure que hasZone est bien false
+            addStepOption2();
+          }
+        });
+      }
+
+      function addStepOption2() {
+        createStep('option2', 'Option 2', '<select id="option2"></select>');
+        updateOptionChoices('option2', 'option1');
+        addValidationButton('option2', 'Valider', () => {
+          const val = document.getElementById('option2').value;
+          if (!val) {
+            showMsg('Choix requis.');
+            return;
+          }
+
+          if (val === "Rien") {
+            formData.option2 = "Rien";
+            formData.option3 = "Rien";
+            formData.option4 = "Rien";
+            formData.option5 = "Rien";
+            // Si formData.hasZone est true (défini par Option 1), alors addStepDosimetrie()
+            // Sinon (si formData.hasZone est false), pointerFinal()
+            if (formData.hasZone) {
+              addStepDosimetrie();
+            } else {
+              pointerFinal();
+            }
+          } else if (val.includes("Zone")) {
+            formData.option2 = val;
+            formData.hasZone = true; // Met ou maintient hasZone à true
+            addStepOption3();
+          } else { // Pour tout autre choix
+            formData.option2 = val;
+            // Ne modifie pas formData.hasZone ici
+            addStepOption3();
+          }
+        });
+      }
+
+      function addStepOption3() {
+        createStep('option3', 'Option 3', '<select id="option3"></select>');
+        updateOptionChoices('option3', 'option1', 'option2');
+        addValidationButton('option3', 'Valider', () => {
+          const val = document.getElementById('option3').value;
+          if (!val) {
+            showMsg('Choix requis.');
+            return;
+          }
+
+          if (val === "Rien") {
+            formData.option3 = "Rien";
+            formData.option4 = "Rien";
+            formData.option5 = "Rien";
+            if (formData.hasZone) {
+              addStepDosimetrie();
+            } else {
+              pointerFinal();
+            }
+          } else if (val.includes("Zone")) {
+            formData.option3 = val;
+            formData.hasZone = true;
+            addStepOption4();
+          } else { // Pour tout autre choix
+            formData.option3 = val;
+            // Ne modifie pas formData.hasZone ici
+            addStepOption4();
+          }
+        });
+      }
+
+      function addStepOption4() {
+        createStep('option4', 'Option 4', '<select id="option4"></select>');
+        updateOptionChoices('option4', 'option1', 'option2', 'option3');
+        addValidationButton('option4', 'Valider', () => {
+          const val = document.getElementById('option4').value;
+          if (!val) {
+            showMsg('Choix requis.');
+            return;
+          }
+
+          if (val === "Rien") {
+            formData.option4 = "Rien";
+            formData.option5 = "Rien";
+            if (formData.hasZone) {
+              addStepDosimetrie();
+            } else {
+              pointerFinal();
+            }
+          } else if (val.includes("Zone")) {
+            formData.option4 = val;
+            formData.hasZone = true;
+            addStepOption5();
+          } else { // Pour tout autre choix
+            formData.option4 = val;
+            // Ne modifie pas formData.hasZone ici
+            addStepOption5();
+          }
+        });
+      }
+
+      function addStepOption5() {
+        createStep('option5', 'Option 5', '<select id="option5"></select>');
+        updateOptionChoices('option5', 'option1', 'option2', 'option3', 'option4');
+        addValidationButton('option5', 'Valider', handleOption5Validation);
+      }
+
+      function handleOption5Validation() {
+        const val = document.getElementById('option5').value;
+        if (!val) {
+          showMsg('Choix requis pour Option 5.');
+          return;
+        }
+        formData.option5 = val;
+
+        if (val === "Rien") {
+          // formData.option5 est déjà "Rien".
+          // Si formData.hasZone est true (défini par une option précédente), alors addStepDosimetrie();
+          // Sinon (si formData.hasZone est false), pointerFinal();
+          if (formData.hasZone) {
+            addStepDosimetrie();
+          } else {
+            pointerFinal();
+          }
+        } else if (val.includes("Zone")) {
+          // formData.option5 est déjà la valeur contenant "Zone".
+          formData.hasZone = true;
+          addStepDosimetrie();
+        } else { // Pour tout autre choix
+          // formData.option5 est déjà cette autre valeur.
+          // Si formData.hasZone est true (défini par une option précédente), alors addStepDosimetrie();
+          // Sinon (si formData.hasZone est false), addStepRTR();
+          if (formData.hasZone) {
+            addStepDosimetrie();
+          } else {
+            addStepRTR();
+          }
+        }
+      }
+
+      // function addStepOption6() IS REMOVED
+
+      function addStepDosimetrie() {
+        createStep('dosimetrie', 'Dosimétrie (mSv)', '<input type="text" id="dosimetrie" />');
+        addValidationButton('dosimetrie', 'Valider', () => {
+          const val = document.getElementById('dosimetrie').value.trim();
+          if (!val) return showMsg('Saisie requise.');
+          formData.dosimetrie = val;
+          addStepRTR();
+        });
+      }
+
+      function addStepRTR() {
+        createStep('rtr', 'N° RTR', '<input type="text" id="rtr" />');
+        addValidationButton('rtr', 'Pointer', () => {
+          const val = document.getElementById('rtr').value.trim();
+          if (!val) return showMsg('RTR requis.');
+          formData.rtr = val;
+          pointerFinal();
+        });
+      }
+
+      function addStepPointer() {
+        createStep('pointer', 'Prêt à pointer ?', '');
+        addValidationButton('pointer', 'Pointer', () => pointerFinal());
+      }
+
+      function pointerFinal() {
+        showMsg('⏳ Envoi en cours...');
+        google.script.run
+          .withSuccessHandler(function (msg) {
+            showMsg(msg); // Affiche toujours le message retourné par le serveur
+            // Vérifie si le message commence par le caractère d'erreur '❌'
+            // (ou un autre préfixe que vous utilisez pour les erreurs, comme "Erreur:")
+            // Vous pouvez utiliser msg.startsWith("❌") ou une expression régulière si c'est plus robuste.
+            // Pour cet exemple, nous utiliserons startsWith. L'emoji est pratique ici.
+            if (msg && msg.startsWith("❌")) {
+              // C'est un message d'erreur (par exemple, erreur GPS, identifiant non reconnu côté serveur si la vérif client a été bypassée, etc.)
+              // Ne pas réinitialiser le formulaire pour que l'utilisateur voie le contexte et l'erreur.
+              // On pourrait ajouter une action spécifique ici si nécessaire,
+              // comme par exemple re-activer le bouton "Pointer" si on l'avait désactivé.
+              // Pour l'instant, on se contente d'afficher le message et de ne pas réinitialiser.
+            } else {
+              // C'est un message de succès
+              resetForm(); // Réinitialise le formulaire uniquement en cas de succès.
+            }
+          })
+          .withFailureHandler(function(error) {
+            // Gère les erreurs techniques de communication avec google.script.run
+            showMsg("Erreur de communication avec le serveur: " + error.message);
+            // Ici aussi, on pourrait vouloir ne pas réinitialiser, ou gérer différemment.
+          })
+          .submitPointage(formData);
+      }
+
+      function showMsg(msg) {
+        document.getElementById('message').textContent = msg;
+      }
+
+      window.onload = resetForm;
+    </script>
+  </body>
+</html>
+```
