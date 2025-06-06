@@ -2,36 +2,120 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Historique Maintenance</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Accueil</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f4; }
-    header { display: flex; align-items: center; padding: 10px 20px; background-color: #4e79a7; color: white; }
+    body { font-family: Arial, sans-serif; margin: 0; background: #f2f2f2; }
+    header { display: flex; align-items: center; padding: 10px 20px; background: #4e79a7; color: white; position: relative; }
     .menu-button { font-size: 26px; cursor: pointer; background: none; border: none; color: black; margin-right: 3ch; }
     .page-title { font-size: 24px; margin: 0; }
-    .menu { display: none; flex-direction: column; position: absolute; top: 50px; left: 20px; background-color: white; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 999; }
-    .menu a { padding: 10px 20px; text-decoration: none; color: #333; border-bottom: 1px solid #eee; }
+    .menu {
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      top: 50px;
+      left: 20px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 999;
+    }
+    .menu a {
+      padding: 10px 20px;
+      text-decoration: none;
+      color: #333;
+      border-bottom: 1px solid #eee;
+      background: none;
+      cursor: pointer;
+      display: block;
+      text-align: left;
+    }
     .menu a:last-child { border-bottom: none; }
-    .menu a:hover { background-color: #f0f0f0; }
-    .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; justify-content: center; padding: 30px 20px 10px; max-width: 800px; margin: auto; }
-    .filter-group { display: flex; flex-direction: column; align-items: center; }
-    .filter-group label { margin-bottom: 5px; font-weight: bold; }
-    .filter-group select { padding: 6px; width: 160px; }
-    .history-table-container { max-width: 1000px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow-x: auto; padding: 18px 12px 18px 12px; }
-    table { border-collapse: collapse; width: 100%; min-width: 700px; }
-    th, td { padding: 8px 8px; border-bottom: 1px solid #eee; text-align: left; }
-    th { background: #f7f9fa; font-weight: bold; }
-    tr:hover { background: #f5f5ff; }
-    .rapport-icon { font-size: 18px; text-align: center; }
-    #login-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-    #login-box { background: #fff; padding: 30px 40px 20px 40px; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.15); max-width: 340px; width: 90%; text-align: center; }
-    #login-box input[type="password"] { width: 90%; padding: 10px; font-size: 18px; margin-bottom: 16px; border: 1px solid #aaa; border-radius: 5px; }
-    #login-box button { padding: 8px 26px; font-size: 18px; background: #4e79a7; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
+    .menu a:hover { background: #f0f0f0; }
+    .main-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 60px;
+    }
+    .main-container h2 {
+      font-size: 28px;
+      color: #4e79a7;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .dashboard-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 32px;
+      justify-content: center;
+    }
+    .dashboard-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.09);
+      padding: 32px 36px 24px 36px;
+      font-size: 18px;
+      color: #222;
+      text-decoration: none;
+      transition: box-shadow 0.2s, background 0.2s;
+      min-width: 180px;
+    }
+    .dashboard-link:hover {
+      background: #f7faff;
+      box-shadow: 0 4px 18px rgba(78,121,167,0.18);
+    }
+    .dashboard-link span {
+      font-size: 45px;
+      margin-bottom: 10px;
+      color: #4e79a7;
+    }
+    #login-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+    #login-box {
+      background: #fff;
+      padding: 30px 40px 20px 40px;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+      max-width: 340px;
+      width: 90%;
+      text-align: center;
+    }
+    #login-box input[type="password"] {
+      width: 90%;
+      padding: 10px;
+      font-size: 18px;
+      margin-bottom: 16px;
+      border: 1px solid #aaa;
+      border-radius: 5px;
+    }
+    #login-box button {
+      padding: 8px 26px;
+      font-size: 18px;
+      background: #4e79a7;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
     #login-box button:hover { background: #355270; }
     #login-error { color: #c00; margin-bottom: 10px; min-height: 22px; }
-    @media (max-width: 800px) {
-      table { min-width: 500px; }
-      .history-table-container { padding: 6px; }
+    @media (max-width: 700px) {
+      .dashboard-links { flex-direction: column; gap: 18px; }
+      .main-container { margin-top: 25px; }
+      .dashboard-link { min-width: unset; width: 85%; padding: 22px 0 18px 0; }
+      .main-container h2 { font-size: 21px; }
     }
   </style>
 </head>
@@ -46,66 +130,47 @@
     </form>
   </div>
   <header>
-    <button class="menu-button">☰</button>
-    <h1 class="page-title">Historique Maintenance</h1>
+    <button class="menu-button" onclick="toggleMenu()">☰</button>
+    <h1 class="page-title">Accueil</h1>
     <div class="menu" id="menu">
       <a href="index.html">Accueil</a>
       <a href="tableau.html">Tableau de bord</a>
       <a href="historique.html">Historique maintenance</a>
       <a href="preventif.html">Préventif</a>
+      <a href="#" id="logout-link" onclick="logout();return false;" style="color:#c00;">Déconnexion</a>
     </div>
   </header>
-  <div class="filters">
-    <div class="filter-group">
-      <label for="siteFilter">Site</label>
-      <select id="siteFilter"></select>
+  <div class="main-container">
+    <h2>Bienvenue sur la plateforme de maintenance !<br>
+      Choisissez un module :</h2>
+    <div class="dashboard-links">
+      <a href="tableau.html" class="dashboard-link"><span>📊</span>Tableau de bord</a>
+      <a href="historique.html" class="dashboard-link"><span>📜</span>Historique maintenance</a>
+      <a href="preventif.html" class="dashboard-link"><span>🛠️</span>Préventif</a>
     </div>
-    <div class="filter-group">
-      <label for="typeFilter">Type</label>
-      <select id="typeFilter"><option value="">Tous les types</option></select>
-    </div>
-    <div class="filter-group">
-      <label for="machineFilter">Machine</label>
-      <select id="machineFilter"><option value="">Toutes les machines</option></select>
-    </div>
-    <div class="filter-group">
-      <label for="yearFilter">Année</label>
-      <select id="yearFilter"><option value="">Toutes les années</option></select>
-    </div>
-  </div>
-  <div class="history-table-container">
-    <table id="historyTable">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Site</th>
-          <th>Machine</th>
-          <th>Type de maintenance</th>
-          <th>Rapport</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Données injectées dynamiquement -->
-      </tbody>
-    </table>
   </div>
   <script>
+    // Gestion du menu déroulant
+    function toggleMenu() {
+      const m = document.getElementById("menu");
+      m.style.display = m.style.display === "flex" ? "none" : "flex";
+    }
+    document.addEventListener("click", function(e) {
+      const m = document.getElementById("menu");
+      const b = document.querySelector(".menu-button");
+      if (!m.contains(e.target) && e.target !== b) m.style.display = "none";
+    });
+
+    // Gestion des mots de passe (V7)
     const PASSWORDS = {
       "Armitec2025": ["commun", "lidec", "atelier", "scr"],
       "commun*d*sit": ["commun"],
       "lidecbelli": ["lidec", "atelier"],
       "scrfuture": ["scr"]
     };
-    const SITES = [
-      { id: "commun", label: "Commun de site" },
-      { id: "lidec", label: "Lidec" },
-      { id: "atelier", label: "Atelier Bélliparc" },
-      { id: "scr", label: "SCR" }
-    ];
     let userRights = [];
-    let allData = [];
 
-    document.getElementById("login-box").onsubmit = function() {
+    document.getElementById("login-box").onsubmit = function () {
       const pass = document.getElementById("password").value;
       if (PASSWORDS[pass]) {
         userRights = PASSWORDS[pass];
@@ -118,153 +183,24 @@
       }
     };
 
-    function showSiteFilterSites() {
-      const select = document.getElementById("siteFilter");
-      if (!select) return;
-      select.innerHTML = "";
-      const siteSet = new Set();
-      allData.forEach(row => {
-        const siteId = SITES.find(s => s.label === row["Site Intervention"])?.id;
-        if (siteId && userRights.includes(siteId)) {
-          siteSet.add(row["Site Intervention"]);
-        }
-      });
-      const siteList = Array.from(siteSet).sort();
-      if (siteList.length > 1) {
-        const optAll = document.createElement("option");
-        optAll.value = "";
-        optAll.textContent = "Tous les sites";
-        select.appendChild(optAll);
-      }
-      siteList.forEach(siteValue => {
-        const opt = document.createElement("option");
-        opt.value = siteValue;
-        opt.textContent = siteValue;
-        select.appendChild(opt);
-      });
-      if (siteList.length === 1) {
-        select.selectedIndex = 0;
-        select.disabled = true;
-      } else {
-        select.disabled = false;
-      }
-      updateTable();
+    // Déconnexion
+    function logout() {
+      sessionStorage.removeItem("userRights");
+      document.getElementById("login-overlay").style.display = "flex";
+      document.getElementById("password").value = "";
+      document.getElementById("password").focus();
     }
 
+    // Affiche toujours l'overlay de login au chargement si non connecté
     window.onload = function () {
-      const menu = document.getElementById("menu");
-      const button = document.querySelector(".menu-button");
-      menu.style.display = "none";
-      button.addEventListener("click", function () {
-        menu.style.display = menu.style.display === "flex" ? "none" : "flex";
-      });
-      document.addEventListener("click", function (event) {
-        if (!menu.contains(event.target) && event.target !== button) {
-          menu.style.display = "none";
-        }
-      });
-      const stored = sessionStorage.getItem("userRights");
-      if (stored) {
-        userRights = JSON.parse(stored);
+      const rights = sessionStorage.getItem("userRights");
+      if (!rights) {
+        document.getElementById("login-overlay").style.display = "flex";
+        document.getElementById("password").focus();
+      } else {
         document.getElementById("login-overlay").style.display = "none";
       }
-      fetchData();
     };
-
-    function fetchData() {
-      const url = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
-      fetch(url)
-        .then(r => r.json())
-        .then(data => {
-          allData = data;
-          populateFilters(data);
-          showSiteFilterSites();
-          updateTable();
-        });
-    }
-
-    function populateFilters(data) {
-      const typeSet = new Set();
-      const machineSet = new Set();
-      const yearSet = new Set();
-      data.forEach(row => {
-        // Utilise le champ "Choix du type de maintenance" si présent, sinon "Type d'intervention"
-        typeSet.add(row["Choix du type de maintenance"] || row["Type d'intervention"]);
-        machineSet.add(row["Machine"]);
-        const date = new Date(row["Date Intervention"]);
-        if (!isNaN(date)) yearSet.add(date.getFullYear());
-      });
-      fillSelect("typeFilter", typeSet, "Tous les types");
-      fillSelect("machineFilter", machineSet, "Toutes les machines");
-      fillSelect("yearFilter", yearSet, "Toutes les années");
-      document.querySelectorAll("select").forEach(select => {
-        if (select.id !== "siteFilter") {
-          select.addEventListener("change", updateTable);
-        }
-      });
-    }
-
-    function fillSelect(id, values, label) {
-      const select = document.getElementById(id);
-      select.innerHTML = `<option value="">${label}</option>`;
-      Array.from(values).sort().forEach(value => {
-        const opt = document.createElement("option");
-        opt.value = value;
-        opt.textContent = value;
-        select.appendChild(opt);
-      });
-    }
-
-    function updateTable() {
-      const site = document.getElementById("siteFilter").value;
-      const type = document.getElementById("typeFilter").value;
-      const machine = document.getElementById("machineFilter").value;
-      const year = document.getElementById("yearFilter").value;
-      const rights = userRights.length ? userRights : JSON.parse(sessionStorage.getItem("userRights") || "[]");
-      const tbody = document.getElementById("historyTable").querySelector("tbody");
-      tbody.innerHTML = "";
-
-      allData.filter(row => {
-        const siteId = SITES.find(s => s.label === row["Site Intervention"])?.id;
-        if (!siteId || !rights.includes(siteId)) return false;
-        const matchSite = !site || row["Site Intervention"] === site;
-        // Compare "Choix du type de maintenance" si présent, sinon "Type d'intervention"
-        const rowType = row["Choix du type de maintenance"] || row["Type d'intervention"];
-        const matchType = !type || rowType === type;
-        const matchMachine = !machine || row["Machine"] === machine;
-        const rowDate = new Date(row["Date Intervention"]);
-        const matchYear = !year || (!isNaN(rowDate) && rowDate.getFullYear() == year);
-        return matchSite && matchType && matchMachine && matchYear;
-      }).forEach(row => {
-        // Format date (JJ/MM/AAAA ou la date d'origine si vide)
-        let d = row["Date Intervention"] || "";
-        if (d) {
-          const D = new Date(d);
-          if (!isNaN(D)) {
-            const day = String(D.getDate()).padStart(2, "0");
-            const month = String(D.getMonth() + 1).padStart(2, "0");
-            const year = D.getFullYear();
-            d = `${day}/${month}/${year}`;
-          }
-        }
-        // Type d'intervention : choisir champ selon dispo
-        const typeValue = row["Choix du type de maintenance"] || row["Type d'intervention"] || "-";
-        // Rapport d'intervention sous forme d'icône
-        let rapportHtml = "-";
-        if (row["Rapport d'intervention"] && row["Rapport d'intervention"].trim() && row["Rapport d'intervention"].startsWith("http")) {
-          rapportHtml = `<a class="rapport-icon" href="${row["Rapport d'intervention"]}" target="_blank" title="Voir le rapport"><span>📄</span></a>`;
-        }
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${d}</td>
-          <td>${row["Site Intervention"] || "-"}</td>
-          <td>${row["Machine"] || "-"}</td>
-          <td>${typeValue}</td>
-          <td style="text-align:center;">${rapportHtml}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
   </script>
 </body>
 </html>
