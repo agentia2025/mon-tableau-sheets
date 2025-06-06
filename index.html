@@ -127,26 +127,6 @@
       margin-bottom: 10px;
       min-height: 22px;
     }
-    .site-filter-block {
-      margin: 30px auto 0 auto;
-      text-align: left;
-      max-width: 400px;
-      background: #fff;
-      border-radius: 10px;
-      padding: 18px 30px 8px 30px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      font-size: 17px;
-    }
-    .site-filter-block label {
-      font-weight: bold;
-      margin-right: 0.8em;
-    }
-    #site-filter {
-      font-size: 17px;
-      padding: 7px 12px;
-      border-radius: 5px;
-      border: 1px solid #aaa;
-    }
   </style>
 </head>
 <body>
@@ -173,12 +153,6 @@
 
   <div class="logo-container">
     <img src="logo_maintenance.png" alt="Logo Maintenance" />
-  </div>
-
-  <!-- Bloc de filtre site -->
-  <div class="site-filter-block" id="site-filter-block" style="display:none">
-    <label for="site-filter">Filtrer par site :</label>
-    <select id="site-filter"></select>
   </div>
 
   <div class="intro">
@@ -211,34 +185,7 @@
       "scrfuture": ["scr"]
     };
 
-    // Liste des sites filtrables
-    const SITES = [
-      { id: "commun", label: "Commun de Site" },
-      { id: "lidec", label: "Lidec" },
-      { id: "atelier", label: "Atelier Belliparc" },
-      { id: "scr", label: "SCR" }
-    ];
-
     let userRights = [];
-
-    // Affichage du filtre site selon droits
-    function showSiteFilter() {
-      const block = document.getElementById("site-filter-block");
-      const select = document.getElementById("site-filter");
-      if (!select) return;
-      select.innerHTML = "";
-      let hasSites = false;
-      SITES.forEach(site => {
-        if (userRights.includes(site.id)) {
-          const opt = document.createElement("option");
-          opt.value = site.id;
-          opt.textContent = site.label;
-          select.appendChild(opt);
-          hasSites = true;
-        }
-      });
-      block.style.display = hasSites ? "" : "none";
-    }
 
     // Gestion du login
     document.getElementById("login-box").onsubmit = function() {
@@ -247,7 +194,6 @@
         userRights = PASSWORDS[pass];
         sessionStorage.setItem("userRights", JSON.stringify(userRights));
         document.getElementById("login-overlay").style.display = "none";
-        showSiteFilter();
       } else {
         document.getElementById("login-error").innerText = "Mot de passe incorrect.";
         document.getElementById("password").value = "";
@@ -269,12 +215,10 @@
         }
       });
 
-      // Restaure droits si déjà authentifié
       const stored = sessionStorage.getItem("userRights");
       if (stored) {
         userRights = JSON.parse(stored);
         document.getElementById("login-overlay").style.display = "none";
-        showSiteFilter();
       }
     };
   </script>
