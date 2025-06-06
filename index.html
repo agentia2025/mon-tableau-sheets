@@ -181,6 +181,7 @@
         document.getElementById("password").value = "";
         document.getElementById("password").focus();
       }
+      return false; // EMPÊCHE la soumission du formulaire (bloque le rechargement et le bug "bloqué")
     };
 
     // Déconnexion
@@ -191,7 +192,7 @@
       document.getElementById("password").focus();
     }
 
-    // Affiche toujours l'overlay de login au chargement si non connecté
+    // Affiche l'overlay login si non connecté
     window.onload = function () {
       const rights = sessionStorage.getItem("userRights");
       if (!rights) {
