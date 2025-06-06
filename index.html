@@ -1,88 +1,54 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Maintenance Armitec</title>
+  <meta charset="UTF-8" />
+  <title>Accueil</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      text-align: center;
-    }
-    header {
+    body { font-family: Arial, sans-serif; margin: 0; background: #f2f2f2; }
+    header { display: flex; align-items: center; padding: 10px 20px; background: #4e79a7; color: white; position: relative; }
+    .menu-button { font-size: 26px; cursor: pointer; background: none; border: none; color: black; margin-right: 3ch; }
+    .page-title { font-size: 24px; margin: 0; }
+    .main-container {
       display: flex;
-      align-items: center;
-      padding: 10px 20px;
-      background-color: #4e79a7;
-      color: white;
-    }
-    .menu-button {
-      font-size: 26px;
-      cursor: pointer;
-      background: none;
-      border: none;
-      color: black;
-      margin-right: 3ch;
-    }
-    .page-title {
-      font-size: 24px;
-      margin: 0;
-    }
-    .menu {
-      display: none;
       flex-direction: column;
-      position: absolute;
-      top: 50px;
-      left: 20px;
-      background-color: white;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      z-index: 999;
-    }
-    .menu a {
-      padding: 10px 20px;
-      text-decoration: none;
-      color: #333;
-      border-bottom: 1px solid #eee;
-    }
-    .menu a:last-child {
-      border-bottom: none;
-    }
-    .menu a:hover {
-      background-color: #f0f0f0;
-    }
-    .logo-container {
+      align-items: center;
       margin-top: 60px;
     }
-    .logo-container img {
-      width: 250px;
-      max-width: 90%;
-      height: auto;
+    .main-container h2 {
+      font-size: 28px;
+      color: #4e79a7;
+      margin-bottom: 32px;
+      text-align: center;
     }
-    .intro {
-      max-width: 720px;
-      margin: 40px auto;
-      padding: 20px 30px;
-      background-color: #ffffff;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      font-size: 16px;
-      line-height: 1.7;
-      color: #333;
-      text-align: left;
+    .dashboard-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 32px;
+      justify-content: center;
     }
-    .intro p {
-      margin-bottom: 18px;
+    .dashboard-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.09);
+      padding: 32px 36px 24px 36px;
+      font-size: 18px;
+      color: #222;
+      text-decoration: none;
+      transition: box-shadow 0.2s, background 0.2s;
+      min-width: 180px;
     }
-    .intro ul {
-      padding-left: 20px;
-      margin: 0;
+    .dashboard-link:hover {
+      background: #f7faff;
+      box-shadow: 0 4px 18px rgba(78,121,167,0.18);
     }
-    .intro li {
+    .dashboard-link span {
+      font-size: 45px;
       margin-bottom: 10px;
+      color: #4e79a7;
     }
     #login-overlay {
       position: fixed;
@@ -119,13 +85,13 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    #login-box button:hover {
-      background: #355270;
-    }
-    #login-error {
-      color: #c00;
-      margin-bottom: 10px;
-      min-height: 22px;
+    #login-box button:hover { background: #355270; }
+    #login-error { color: #c00; margin-bottom: 10px; min-height: 22px; }
+    @media (max-width: 700px) {
+      .dashboard-links { flex-direction: column; gap: 18px; }
+      .main-container { margin-top: 25px; }
+      .dashboard-link { min-width: unset; width: 85%; padding: 22px 0 18px 0; }
+      .main-container h2 { font-size: 21px; }
     }
   </style>
 </head>
@@ -139,54 +105,32 @@
       <button type="submit">Entrer</button>
     </form>
   </div>
-
   <header>
-    <button class="menu-button">☰</button>
-    <h1 class="page-title">Maintenance Armitec</h1>
-    <div class="menu" id="menu">
-      <a href="index.html">Accueil</a>
-      <a href="tableau.html">Tableau de bord</a>
-      <a href="historique.html">Historique maintenance</a>
-      <a href="preventif.html">Préventif</a>
-    </div>
+    <h1 class="page-title">Accueil</h1>
   </header>
-
-  <div class="logo-container">
-    <img src="logo_maintenance.png" alt="Logo Maintenance" />
+  <div class="main-container">
+    <h2>Bienvenue sur la plateforme de maintenance !<br>
+      Choisissez un module :</h2>
+    <div class="dashboard-links">
+      <a href="tableau.html" class="dashboard-link"><span>📊</span>Tableau de bord</a>
+      <a href="historique.html" class="dashboard-link"><span>📜</span>Historique maintenance</a>
+      <a href="preventif.html" class="dashboard-link"><span>🛠️</span>Préventif</a>
+    </div>
   </div>
-
-  <div class="intro">
-    <p>
-      <strong>Bienvenue sur l'application Maintenance Armitec</strong><br>
-      Cette interface vous permet de <strong>suivre</strong> et <strong>visualiser</strong> les interventions de maintenance réalisées sur l'ensemble de vos sites.
-    </p>
-    <p>
-      Utilisez le <strong>menu ☰</strong> en haut à gauche pour accéder aux différentes sections :
-    </p>
-    <ul>
-      <li>
-        <strong>Tableau de bord</strong> : statistiques synthétiques par site et par type d’intervention.
-      </li>
-      <li>
-        <strong>Historique maintenance</strong> : liste complète des interventions avec filtres dynamiques (site, machine, type) et <strong>accès direct aux rapports d’intervention</strong>.
-      </li>
-      <li>
-        <strong>Préventif</strong> : suivi de la conformité des maintenances préventives à venir.
-      </li>
-    </ul>
-  </div>
-
   <script>
+    // Toujours réinitialiser les droits lors de l'arrivée sur l'accueil
+    sessionStorage.removeItem("userRights");
+
+    // Gestion des mots de passe (V7)
     const PASSWORDS = {
       "Armitec2025": ["commun", "lidec", "atelier", "scr"],
       "commun*d*sit": ["commun"],
       "lidecbelli": ["lidec", "atelier"],
       "scrfuture": ["scr"]
     };
-
     let userRights = [];
 
-    document.getElementById("login-box").onsubmit = function() {
+    document.getElementById("login-box").onsubmit = function () {
       const pass = document.getElementById("password").value;
       if (PASSWORDS[pass]) {
         userRights = PASSWORDS[pass];
@@ -199,24 +143,10 @@
       }
     };
 
+    // Pour qu'à chaque retour sur la page (même via navigation), l'overlay soit affiché.
     window.onload = function () {
-      const menu = document.getElementById("menu");
-      const button = document.querySelector(".menu-button");
-      menu.style.display = "none";
-      button.addEventListener("click", () => {
-        menu.style.display = menu.style.display === "flex" ? "none" : "flex";
-      });
-      document.addEventListener("click", event => {
-        if (!menu.contains(event.target) && event.target !== button) {
-          menu.style.display = "none";
-        }
-      });
-
-      const stored = sessionStorage.getItem("userRights");
-      if (stored) {
-        userRights = JSON.parse(stored);
-        document.getElementById("login-overlay").style.display = "none";
-      }
+      document.getElementById("login-overlay").style.display = "flex";
+      document.getElementById("password").focus();
     };
   </script>
 </body>
