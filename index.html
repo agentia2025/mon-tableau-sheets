@@ -9,6 +9,30 @@
     header { display: flex; align-items: center; padding: 10px 20px; background: #4e79a7; color: white; position: relative; }
     .menu-button { font-size: 26px; cursor: pointer; background: none; border: none; color: black; margin-right: 3ch; }
     .page-title { font-size: 24px; margin: 0; }
+    .menu {
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      top: 50px;
+      left: 20px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 999;
+    }
+    .menu a {
+      padding: 10px 20px;
+      text-decoration: none;
+      color: #333;
+      border-bottom: 1px solid #eee;
+      background: none;
+      cursor: pointer;
+      display: block;
+      text-align: left;
+    }
+    .menu a:last-child { border-bottom: none; }
+    .menu a:hover { background: #f0f0f0; }
     .main-container {
       display: flex;
       flex-direction: column;
@@ -106,7 +130,15 @@
     </form>
   </div>
   <header>
+    <button class="menu-button" onclick="toggleMenu()">☰</button>
     <h1 class="page-title">Accueil</h1>
+    <div class="menu" id="menu">
+      <a href="index.html">Accueil</a>
+      <a href="tableau.html">Tableau de bord</a>
+      <a href="historique.html">Historique maintenance</a>
+      <a href="preventif.html">Préventif</a>
+      <a href="#" id="logout-link" onclick="logout();return false;" style="color:#c00;">Déconnexion</a>
+    </div>
   </header>
   <div class="main-container">
     <h2>Bienvenue sur la plateforme de maintenance !<br>
@@ -118,8 +150,16 @@
     </div>
   </div>
   <script>
-    // Toujours réinitialiser les droits lors de l'arrivée sur l'accueil
-    sessionStorage.removeItem("userRights");
+    // Gestion du menu déroulant
+    function toggleMenu() {
+      const m = document.getElementById("menu");
+      m.style.display = m.style.display === "flex" ? "none" : "flex";
+    }
+    document.addEventListener("click", function(e) {
+      const m = document.getElementById("menu");
+      const b = document.querySelector(".menu-button");
+      if (!m.contains(e.target) && e.target !== b) m.style.display = "none";
+    });
 
     // Gestion des mots de passe (V7)
     const PASSWORDS = {
@@ -143,10 +183,23 @@
       }
     };
 
-    // Pour qu'à chaque retour sur la page (même via navigation), l'overlay soit affiché.
-    window.onload = function () {
+    // Déconnexion
+    function logout() {
+      sessionStorage.removeItem("userRights");
       document.getElementById("login-overlay").style.display = "flex";
+      document.getElementById("password").value = "";
       document.getElementById("password").focus();
+    }
+
+    // Affiche toujours l'overlay de login au chargement si non connecté
+    window.onload = function () {
+      const rights = sessionStorage.getItem("userRights");
+      if (!rights) {
+        document.getElementById("login-overlay").style.display = "flex";
+        document.getElementById("password").focus();
+      } else {
+        document.getElementById("login-overlay").style.display = "none";
+      }
     };
   </script>
 </body>
