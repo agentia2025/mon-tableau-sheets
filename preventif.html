@@ -31,6 +31,19 @@
     #login-box button { padding: 8px 26px; font-size: 18px; background: #4e79a7; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
     #login-box button:hover { background: #355270; }
     #login-error { color: #c00; margin-bottom: 10px; min-height: 22px; }
+    .chart-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px;
+}
+#pieChart {
+  width: 320px !important;
+  height: 320px !important;
+  max-width: 90vw;
+  max-height: 90vw;
+}
   </style>
 </head>
 <body>
@@ -58,11 +71,10 @@
     <select id="siteFilter"><option value="">Tous les sites</option></select>
     <label for="yearFilter">Année</label>
     <select id="yearFilter"><option value="">Toutes les années</option></select>
-  </div>
-  <div class="chart-box">
-    <canvas id="pieChart"></canvas>
-    <div class="stats" id="stats"></div>
-  </div>
+ <div class="chart-center">
+  <canvas id="pieChart"></canvas>
+</div>
+<div class="stats" id="stats"></div>
 
   <h2 class="upcoming-title">Les prochains préventifs :</h2>
 
