@@ -96,6 +96,7 @@
       <a href="tableau.html">Tableau de bord</a>
       <a href="historique.html">Historique maintenance</a>
       <a href="preventif.html">Préventif</a>
+      <a href="#" id="logout-link" onclick="logout();return false;" style="color:#c00;">Déconnexion</a>
     </div>
   </header>
   <div class="filters">
@@ -163,6 +164,14 @@
         document.getElementById("password").focus();
       }
     };
+
+    function logout() {
+      sessionStorage.removeItem("userRights");
+      document.getElementById("login-overlay").style.display = "flex";
+      document.getElementById("password").value = "";
+      document.getElementById("password").focus();
+    }
+
     window.onload = function () {
       const stored = sessionStorage.getItem("userRights");
       if (stored) {
@@ -222,7 +231,6 @@
     function initFilters() {
       const s = new Set(), y = new Set();
       dataAll.forEach(r => {
-        // filtre sites accessibles uniquement
         const siteId = SITES.find(s => s.label === r["Site Intervention"])?.id;
         if (siteId && (!userRights.length || userRights.includes(siteId))) {
           s.add(r["Site Intervention"]);
@@ -258,7 +266,6 @@
       const year = document.getElementById("yearFilter").value;
       let ok = 0, ko = 0;
       dataAll.forEach(r => {
-        // filtrage par droits utilisateur
         const siteId = SITES.find(s => s.label === r["Site Intervention"])?.id;
         if (site && r["Site Intervention"] !== site) return;
         if (siteId && userRights.length && !userRights.includes(siteId)) return;
