@@ -150,7 +150,6 @@
   </style>
 </head>
 <body>
-
   <div id="login-overlay">
     <form id="login-box" autocomplete="off" onsubmit="return false;">
       <h2>Connexion</h2>
@@ -165,7 +164,10 @@
     <button class="menu-button">☰</button>
     <h1 class="page-title">Maintenance Armitec</h1>
     <div class="menu" id="menu">
-      <!-- les liens seront injectés par JS selon les droits -->
+      <a href="index.html">Accueil</a>
+      <a href="tableau.html">Tableau de bord</a>
+      <a href="historique.html">Historique maintenance</a>
+      <a href="preventif.html">Préventif</a>
     </div>
   </header>
 
@@ -203,18 +205,10 @@
   <script>
     // Liste des mots de passe et droits associés
     const PASSWORDS = {
-      "Armitec2025": ["commun", "lidec", "atelier", "scr"], // accès à tout
+      "Armitec2025": ["commun", "lidec", "atelier", "scr"],
       "commun*d*sit": ["commun"],
       "lidecbelli": ["lidec", "atelier"],
       "scrfuture": ["scr"]
-    };
-
-    // Liens du menu selon droits
-    const MENU_LINKS = {
-      "commun": { href: "index.html", label: "Accueil" },
-      "lidec": { href: "tableau.html", label: "Tableau de bord" },
-      "atelier": { href: "historique.html", label: "Historique maintenance" },
-      "scr": { href: "preventif.html", label: "Préventif" }
     };
 
     // Liste des sites filtrables
@@ -226,26 +220,6 @@
     ];
 
     let userRights = [];
-
-    function showMenuLinks() {
-      const menu = document.getElementById("menu");
-      menu.innerHTML = "";
-      getLinksForRights(userRights).forEach(link => {
-        const a = document.createElement("a");
-        a.href = link.href;
-        a.textContent = link.label;
-        menu.appendChild(a);
-      });
-    }
-
-    function getLinksForRights(rights) {
-      const links = [];
-      if(rights.includes("commun")) links.push(MENU_LINKS["commun"]);
-      if(rights.includes("lidec")) links.push(MENU_LINKS["lidec"]);
-      if(rights.includes("atelier")) links.push(MENU_LINKS["atelier"]);
-      if(rights.includes("scr")) links.push(MENU_LINKS["scr"]);
-      return links;
-    }
 
     // Affichage du filtre site selon droits
     function showSiteFilter() {
@@ -273,7 +247,6 @@
         userRights = PASSWORDS[pass];
         sessionStorage.setItem("userRights", JSON.stringify(userRights));
         document.getElementById("login-overlay").style.display = "none";
-        showMenuLinks();
         showSiteFilter();
       } else {
         document.getElementById("login-error").innerText = "Mot de passe incorrect.";
@@ -284,7 +257,6 @@
 
     // Au chargement, si déjà loggé, restaurer droits et affichages
     window.onload = function () {
-      // Désactive menu au chargement
       const menu = document.getElementById("menu");
       const button = document.querySelector(".menu-button");
       menu.style.display = "none";
@@ -302,10 +274,7 @@
       if (stored) {
         userRights = JSON.parse(stored);
         document.getElementById("login-overlay").style.display = "none";
-        showMenuLinks();
         showSiteFilter();
-      } else {
-        showMenuLinks();
       }
     };
   </script>
