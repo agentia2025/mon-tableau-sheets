@@ -177,7 +177,6 @@
   </div>
 
   <script>
-    // Liste des mots de passe et droits associés
     const PASSWORDS = {
       "Armitec2025": ["commun", "lidec", "atelier", "scr"],
       "commun*d*sit": ["commun"],
@@ -187,7 +186,6 @@
 
     let userRights = [];
 
-    // Gestion du login
     document.getElementById("login-box").onsubmit = function() {
       const pass = document.getElementById("password").value;
       if (PASSWORDS[pass]) {
@@ -201,7 +199,6 @@
       }
     };
 
-    // Au chargement, si déjà loggé, restaurer droits et affichages
     window.onload = function () {
       const menu = document.getElementById("menu");
       const button = document.querySelector(".menu-button");
