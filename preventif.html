@@ -5,149 +5,32 @@
   <title>Préventif Maintenance</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background-color: #f4f4f4;
-    }
-    header {
-      display: flex;
-      align-items: center;
-      padding: 10px 20px;
-      background-color: #4e79a7;
-      color: white;
-    }
-    .menu-button {
-      font-size: 26px;
-      cursor: pointer;
-      background: none;
-      border: none;
-      color: black;
-      margin-right: 3ch;
-    }
-    .page-title {
-      font-size: 24px;
-      margin: 0;
-    }
-    .menu {
-      display: none;
-      flex-direction: column;
-      position: absolute;
-      top: 50px;
-      left: 20px;
-      background-color: white;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      z-index: 999;
-    }
-    .menu a {
-      padding: 10px 20px;
-      text-decoration: none;
-      color: #333;
-      border-bottom: 1px solid #eee;
-    }
-    .menu a:last-child {
-      border-bottom: none;
-    }
-    .menu a:hover {
-      background-color: #f0f0f0;
-    }
-    .filters {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 20px;
-      justify-content: center;
-      padding: 30px 20px 10px;
-      max-width: 800px;
-      margin: auto;
-    }
-    .filter-group {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .filter-group label {
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
-    .filter-group select {
-      padding: 6px;
-      width: 160px;
-    }
-    .preventif-table-container {
-      max-width: 1000px;
-      margin: 40px auto;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      overflow-x: auto;
-      padding: 18px 12px 18px 12px;
-    }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      min-width: 700px;
-    }
-    th, td {
-      padding: 8px 8px;
-      border-bottom: 1px solid #eee;
-      text-align: left;
-    }
-    th {
-      background: #f7f9fa;
-      font-weight: bold;
-    }
-    tr:hover {
-      background: #f5f5ff;
-    }
-    #login-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.45);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-    }
-    #login-box {
-      background: #fff;
-      padding: 30px 40px 20px 40px;
-      border-radius: 12px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.15);
-      max-width: 340px;
-      width: 90%;
-      text-align: center;
-    }
-    #login-box input[type="password"] {
-      width: 90%;
-      padding: 10px;
-      font-size: 18px;
-      margin-bottom: 16px;
-      border: 1px solid #aaa;
-      border-radius: 5px;
-    }
-    #login-box button {
-      padding: 8px 26px;
-      font-size: 18px;
-      background: #4e79a7;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    #login-box button:hover {
-      background: #355270;
-    }
-    #login-error {
-      color: #c00;
-      margin-bottom: 10px;
-      min-height: 22px;
-    }
+    body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f4; }
+    header { display: flex; align-items: center; padding: 10px 20px; background-color: #4e79a7; color: white; }
+    .menu-button { font-size: 26px; cursor: pointer; background: none; border: none; color: black; margin-right: 3ch; }
+    .page-title { font-size: 24px; margin: 0; }
+    .menu { display: none; flex-direction: column; position: absolute; top: 50px; left: 20px; background-color: white; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 999; }
+    .menu a { padding: 10px 20px; text-decoration: none; color: #333; border-bottom: 1px solid #eee; }
+    .menu a:last-child { border-bottom: none; }
+    .menu a:hover { background-color: #f0f0f0; }
+    .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; justify-content: center; padding: 30px 20px 10px; max-width: 800px; margin: auto; }
+    .filter-group { display: flex; flex-direction: column; align-items: center; }
+    .filter-group label { margin-bottom: 5px; font-weight: bold; }
+    .filter-group select { padding: 6px; width: 160px; }
+    .preventif-table-container { max-width: 1000px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow-x: auto; padding: 18px 12px 18px 12px; }
+    table { border-collapse: collapse; width: 100%; min-width: 700px; }
+    th, td { padding: 8px 8px; border-bottom: 1px solid #eee; text-align: left; }
+    th { background: #f7f9fa; font-weight: bold; }
+    tr:hover { background: #f5f5ff; }
+    #login-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+    #login-box { background: #fff; padding: 30px 40px 20px 40px; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.15); max-width: 340px; width: 90%; text-align: center; }
+    #login-box input[type="password"] { width: 90%; padding: 10px; font-size: 18px; margin-bottom: 16px; border: 1px solid #aaa; border-radius: 5px; }
+    #login-box button { padding: 8px 26px; font-size: 18px; background: #4e79a7; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
+    #login-box button:hover { background: #355270; }
+    #login-error { color: #c00; margin-bottom: 10px; min-height: 22px; }
   </style>
 </head>
 <body>
-  <!-- Overlay de connexion -->
   <div id="login-overlay">
     <form id="login-box" autocomplete="off" onsubmit="return false;">
       <h2>Connexion</h2>
@@ -205,7 +88,6 @@
   </div>
 
   <script>
-    // --- Authentification et droits par site ---
     const PASSWORDS = {
       "Armitec2025": ["commun", "lidec", "atelier", "scr"],
       "commun*d*sit": ["commun"],
@@ -240,14 +122,25 @@
       const select = document.getElementById("siteFilter");
       if (!select) return;
       select.innerHTML = "";
+
+      let accessibleSites = [];
       SITES.forEach(site => {
-        if (userRights.includes(site.id)) {
-          const opt = document.createElement("option");
-          opt.value = site.label;
-          opt.textContent = site.label;
-          select.appendChild(opt);
-        }
+        if (userRights.includes(site.id)) accessibleSites.push(site);
       });
+
+      accessibleSites.forEach(site => {
+        const opt = document.createElement("option");
+        opt.value = site.label;
+        opt.textContent = site.label;
+        select.appendChild(opt);
+      });
+
+      if (accessibleSites.length === 1) {
+        select.selectedIndex = 0;
+        select.disabled = true;
+      } else {
+        select.disabled = false;
+      }
       updateTable();
     }
 
@@ -272,8 +165,6 @@
       }
     };
 
-    // --- Données (exemple) ---
-    // Remplace cette URL par ton vrai backend ou Google Sheets si besoin
     const url = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
     let allData = [];
 
@@ -328,7 +219,6 @@
       tbody.innerHTML = "";
 
       allData.filter(row => {
-        // Filtrage d'accès site
         const siteDroit = SITES.find(s => s.label === row["Site Intervention"]);
         if (!siteDroit || !rights.includes(siteDroit.id)) {
           return false;
