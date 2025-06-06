@@ -92,19 +92,19 @@
       "scrfuture": ["scr"]
     };
     const SITES = [
-      { id: "commun", label: "Commun de Site" },
+      { id: "commun", label: "Commun de site" },
       { id: "lidec", label: "Lidec" },
-      { id: "atelier", label: "Atelier Belliparc" },
+      { id: "atelier", label: "Atelier Bélliparc" },
       { id: "scr", label: "SCR" }
     ];
     let userRights = [];
+    let allData = [];
     document.getElementById("login-box").onsubmit = function() {
       const pass = document.getElementById("password").value;
       if (PASSWORDS[pass]) {
         userRights = PASSWORDS[pass];
         sessionStorage.setItem("userRights", JSON.stringify(userRights));
         document.getElementById("login-overlay").style.display = "none";
-        showSiteFilterSites();
       } else {
         document.getElementById("login-error").innerText = "Mot de passe incorrect.";
         document.getElementById("password").value = "";
@@ -115,23 +115,27 @@
       const select = document.getElementById("siteFilter");
       if (!select) return;
       select.innerHTML = "";
-      let accessibleSites = [];
-      SITES.forEach(site => {
-        if (userRights.includes(site.id)) accessibleSites.push(site);
+      const siteSet = new Set();
+      allData.forEach(row => {
+        const siteId = SITES.find(s => s.label === row["Site Intervention"])?.id;
+        if (siteId && userRights.includes(siteId)) {
+          siteSet.add(row["Site Intervention"]);
+        }
       });
-      if (accessibleSites.length > 1) {
+      const siteList = Array.from(siteSet).sort();
+      if (siteList.length > 1) {
         const optAll = document.createElement("option");
         optAll.value = "";
         optAll.textContent = "Tous les sites";
         select.appendChild(optAll);
       }
-      accessibleSites.forEach(site => {
+      siteList.forEach(siteValue => {
         const opt = document.createElement("option");
-        opt.value = site.label;
-        opt.textContent = site.label;
+        opt.value = siteValue;
+        opt.textContent = siteValue;
         select.appendChild(opt);
       });
-      if (accessibleSites.length === 1) {
+      if (siteList.length === 1) {
         select.selectedIndex = 0;
         select.disabled = true;
       } else {
@@ -155,18 +159,20 @@
       if (stored) {
         userRights = JSON.parse(stored);
         document.getElementById("login-overlay").style.display = "none";
-        showSiteFilterSites();
       }
+      fetchData();
     };
-    const url = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
-    let allData = [];
-    fetch(url)
-      .then(r => r.json())
-      .then(data => {
-        allData = data;
-        populateFilters(data);
-        updateTable();
-      });
+    function fetchData() {
+      const url = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
+      fetch(url)
+        .then(r => r.json())
+        .then(data => {
+          allData = data;
+          populateFilters(data);
+          showSiteFilterSites();
+          updateTable();
+        });
+    }
     function populateFilters(data) {
       const typeSet = new Set();
       const machineSet = new Set();
@@ -181,12 +187,14 @@
       fillSelect("machineFilter", machineSet);
       fillSelect("yearFilter", yearSet);
       document.querySelectorAll("select").forEach(select => {
-        select.addEventListener("change", updateTable);
+        if (select.id !== "siteFilter") {
+          select.addEventListener("change", updateTable);
+        }
       });
     }
     function fillSelect(id, values) {
       const select = document.getElementById(id);
-      if (id === "siteFilter") return;
+      select.innerHTML = `<option value="">${id === "yearFilter" ? "Toutes les années" : id === "typeFilter" ? "Tous les types" : "Toutes les machines"}</option>`;
       Array.from(values).sort().forEach(value => {
         const opt = document.createElement("option");
         opt.value = value;
@@ -203,8 +211,8 @@
       const tbody = document.getElementById("historyTable").querySelector("tbody");
       tbody.innerHTML = "";
       allData.filter(row => {
-        const siteDroit = SITES.find(s => s.label === row["Site Intervention"]);
-        if (!siteDroit || !rights.includes(siteDroit.id)) return false;
+        const siteId = SITES.find(s => s.label === row["Site Intervention"])?.id;
+        if (!siteId || !rights.includes(siteId)) return false;
         const matchSite = !site || row["Site Intervention"] === site;
         const matchType = !type || row["Type d'intervention"] === type;
         const matchMachine = !machine || row["Machine"] === machine;
