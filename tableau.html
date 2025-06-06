@@ -85,46 +85,55 @@
       "scrfuture": ["scr"]
     };
     const SITES = [
-      { id: "commun", label: "Commun de Site" },
+      { id: "commun", label: "Commun de site" },
       { id: "lidec", label: "Lidec" },
-      { id: "atelier", label: "Atelier Belliparc" },
+      { id: "atelier", label: "Atelier Bélliparc" }, // accent !
       { id: "scr", label: "SCR" }
     ];
     let userRights = [];
+    let allData = [];
+    let pieChart, barChart;
+
     document.getElementById("login-box").onsubmit = function() {
       const pass = document.getElementById("password").value;
       if (PASSWORDS[pass]) {
         userRights = PASSWORDS[pass];
         sessionStorage.setItem("userRights", JSON.stringify(userRights));
         document.getElementById("login-overlay").style.display = "none";
-        showSiteFilterSites();
+        // fetchData will call showSiteFilterSites
       } else {
         document.getElementById("login-error").innerText = "Mot de passe incorrect.";
         document.getElementById("password").value = "";
         document.getElementById("password").focus();
       }
     };
+
     function showSiteFilterSites() {
       const select = document.getElementById("siteFilter");
       if (!select) return;
       select.innerHTML = "";
-      let accessibleSites = [];
-      SITES.forEach(site => {
-        if (userRights.includes(site.id)) accessibleSites.push(site);
+      // Récupération dynamique des sites accessibles présents dans les données
+      const siteSet = new Set();
+      allData.forEach(row => {
+        const siteId = SITES.find(s => s.label === row["Site Intervention"])?.id;
+        if (siteId && userRights.includes(siteId)) {
+          siteSet.add(row["Site Intervention"]);
+        }
       });
-      if (accessibleSites.length > 1) {
+      const siteList = Array.from(siteSet).sort();
+      if (siteList.length > 1) {
         const optAll = document.createElement("option");
         optAll.value = "";
         optAll.textContent = "Tous les sites";
         select.appendChild(optAll);
       }
-      accessibleSites.forEach(site => {
+      siteList.forEach(siteValue => {
         const opt = document.createElement("option");
-        opt.value = site.label;
-        opt.textContent = site.label;
+        opt.value = siteValue;
+        opt.textContent = siteValue;
         select.appendChild(opt);
       });
-      if (accessibleSites.length === 1) {
+      if (siteList.length === 1) {
         select.selectedIndex = 0;
         select.disabled = true;
       } else {
@@ -132,6 +141,7 @@
       }
       updateCharts();
     }
+
     window.onload = function () {
       const menu = document.getElementById("menu");
       const button = document.querySelector(".menu-button");
@@ -144,23 +154,27 @@
           menu.style.display = "none";
         }
       });
+
       const stored = sessionStorage.getItem("userRights");
       if (stored) {
         userRights = JSON.parse(stored);
         document.getElementById("login-overlay").style.display = "none";
-        showSiteFilterSites();
       }
+      fetchData();
     };
-    const url = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
-    let allData = [];
-    let pieChart, barChart;
-    fetch(url)
-      .then(response => response.json())
-      .then(data => {
-        allData = data;
-        populateFilters(data);
-        updateCharts();
-      });
+
+    function fetchData() {
+      const url = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          allData = data;
+          populateFilters(data);
+          showSiteFilterSites();
+          updateCharts();
+        });
+    }
+
     function populateFilters(data) {
       const typeSet = new Set();
       const machineSet = new Set();
@@ -175,12 +189,14 @@
       fillSelect("machineFilter", machineSet);
       fillSelect("yearFilter", yearSet);
       document.querySelectorAll("select").forEach(select => {
-        select.addEventListener("change", updateCharts);
+        if (select.id !== "siteFilter") {
+          select.addEventListener("change", updateCharts);
+        }
       });
     }
     function fillSelect(id, values) {
       const select = document.getElementById(id);
-      if (id === "siteFilter") return;
+      select.innerHTML = `<option value="">${id === "yearFilter" ? "Toutes les années" : id === "typeFilter" ? "Tous les types" : "Toutes les machines"}</option>`;
       Array.from(values).sort().forEach(value => {
         const opt = document.createElement("option");
         opt.value = value;
@@ -195,8 +211,8 @@
       const year = document.getElementById("yearFilter").value;
       const rights = userRights.length ? userRights : JSON.parse(sessionStorage.getItem("userRights") || "[]");
       const filtered = allData.filter(row => {
-        const siteDroit = SITES.find(s => s.label === row["Site Intervention"]);
-        if (!siteDroit || !rights.includes(siteDroit.id)) return false;
+        const siteId = SITES.find(s => s.label === row["Site Intervention"])?.id;
+        if (!siteId || !rights.includes(siteId)) return false;
         const matchSite = !site || row["Site Intervention"] === site;
         const matchType = !type || row["Type d'intervention"] === type;
         const matchMachine = !machine || row["Machine"] === machine;
@@ -208,9 +224,9 @@
       const siteCounts = {};
       filtered.forEach(row => {
         const type = row["Type d'intervention"] || "Inconnu";
-        const site = row["Site Intervention"] || "Inconnu";
+        const siteVal = row["Site Intervention"] || "Inconnu";
         typeCounts[type] = (typeCounts[type] || 0) + 1;
-        siteCounts[site] = (siteCounts[site] || 0) + 1;
+        siteCounts[siteVal] = (siteCounts[siteVal] || 0) + 1;
       });
       const total = Object.values(typeCounts).reduce((a, b) => a + b, 0);
       const pieCtx = document.getElementById("pieChart").getContext("2d");
@@ -221,14 +237,14 @@
           labels: Object.keys(typeCounts),
           datasets: [{
             data: Object.values(typeCounts),
-            backgroundColor: ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2"]
+            backgroundColor: ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#b07aa1", "#59a14f", "#edc949"]
           }]
         },
         options: {
           plugins: {
             title: { display: true, text: "Répartition des types d'intervention" },
             datalabels: {
-              formatter: (value) => `${((value / total) * 100).toFixed(1)}%`,
+              formatter: (value) => `${total ? ((value / total) * 100).toFixed(1) : 0}%`,
               color: '#fff',
               font: { weight: 'bold' }
             }
