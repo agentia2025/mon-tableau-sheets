@@ -50,7 +50,6 @@
       <a href="preventif.html">Préventif</a>
     </div>
   </header>
-
   <div class="filters">
     <div class="filter-group">
       <label for="siteFilter">Site</label>
@@ -69,7 +68,6 @@
       <select id="yearFilter"><option value="">Toutes les années</option></select>
     </div>
   </div>
-
   <div class="history-table-container">
     <table id="historyTable">
       <thead>
@@ -86,7 +84,6 @@
       </tbody>
     </table>
   </div>
-
   <script>
     const PASSWORDS = {
       "Armitec2025": ["commun", "lidec", "atelier", "scr"],
@@ -94,16 +91,13 @@
       "lidecbelli": ["lidec", "atelier"],
       "scrfuture": ["scr"]
     };
-
     const SITES = [
       { id: "commun", label: "Commun de Site" },
       { id: "lidec", label: "Lidec" },
       { id: "atelier", label: "Atelier Belliparc" },
       { id: "scr", label: "SCR" }
     ];
-
     let userRights = [];
-
     document.getElementById("login-box").onsubmit = function() {
       const pass = document.getElementById("password").value;
       if (PASSWORDS[pass]) {
@@ -117,24 +111,26 @@
         document.getElementById("password").focus();
       }
     };
-
     function showSiteFilterSites() {
       const select = document.getElementById("siteFilter");
       if (!select) return;
       select.innerHTML = "";
-
       let accessibleSites = [];
       SITES.forEach(site => {
         if (userRights.includes(site.id)) accessibleSites.push(site);
       });
-
+      if (accessibleSites.length > 1) {
+        const optAll = document.createElement("option");
+        optAll.value = "";
+        optAll.textContent = "Tous les sites";
+        select.appendChild(optAll);
+      }
       accessibleSites.forEach(site => {
         const opt = document.createElement("option");
         opt.value = site.label;
         opt.textContent = site.label;
         select.appendChild(opt);
       });
-
       if (accessibleSites.length === 1) {
         select.selectedIndex = 0;
         select.disabled = true;
@@ -143,7 +139,6 @@
       }
       updateTable();
     }
-
     window.onload = function () {
       const menu = document.getElementById("menu");
       const button = document.querySelector(".menu-button");
@@ -156,7 +151,6 @@
           menu.style.display = "none";
         }
       });
-
       const stored = sessionStorage.getItem("userRights");
       if (stored) {
         userRights = JSON.parse(stored);
@@ -164,11 +158,8 @@
         showSiteFilterSites();
       }
     };
-
-    // --- Données ---
     const url = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
     let allData = [];
-
     fetch(url)
       .then(r => r.json())
       .then(data => {
@@ -176,28 +167,23 @@
         populateFilters(data);
         updateTable();
       });
-
     function populateFilters(data) {
       const typeSet = new Set();
       const machineSet = new Set();
       const yearSet = new Set();
-
       data.forEach(row => {
         typeSet.add(row["Type d'intervention"]);
         machineSet.add(row["Machine"]);
         const date = new Date(row["Date Intervention"]);
         if (!isNaN(date)) yearSet.add(date.getFullYear());
       });
-
       fillSelect("typeFilter", typeSet);
       fillSelect("machineFilter", machineSet);
       fillSelect("yearFilter", yearSet);
-
       document.querySelectorAll("select").forEach(select => {
         select.addEventListener("change", updateTable);
       });
     }
-
     function fillSelect(id, values) {
       const select = document.getElementById(id);
       if (id === "siteFilter") return;
@@ -208,22 +194,17 @@
         select.appendChild(opt);
       });
     }
-
     function updateTable() {
       const site = document.getElementById("siteFilter").value;
       const type = document.getElementById("typeFilter").value;
       const machine = document.getElementById("machineFilter").value;
       const year = document.getElementById("yearFilter").value;
       const rights = userRights.length ? userRights : JSON.parse(sessionStorage.getItem("userRights") || "[]");
-
       const tbody = document.getElementById("historyTable").querySelector("tbody");
       tbody.innerHTML = "";
-
       allData.filter(row => {
         const siteDroit = SITES.find(s => s.label === row["Site Intervention"]);
-        if (!siteDroit || !rights.includes(siteDroit.id)) {
-          return false;
-        }
+        if (!siteDroit || !rights.includes(siteDroit.id)) return false;
         const matchSite = !site || row["Site Intervention"] === site;
         const matchType = !type || row["Type d'intervention"] === type;
         const matchMachine = !machine || row["Machine"] === machine;
