@@ -177,7 +177,7 @@
   <div class="filters">
     <div class="filter-group">
       <label for="siteFilter">Site</label>
-      <select id="siteFilter"><option value="">Tous les sites</option></select>
+      <select id="siteFilter"></select>
     </div>
     <div class="filter-group">
       <label for="typeFilter">Type</label>
@@ -201,13 +201,12 @@
   <script>
     // --- Authentification et droits par site ---
     const PASSWORDS = {
-      "Armitec2025": ["commun", "lidec", "atelier", "scr"], // accès à tout
+      "Armitec2025": ["commun", "lidec", "atelier", "scr"],
       "commun*d*sit": ["commun"],
       "lidecbelli": ["lidec", "atelier"],
       "scrfuture": ["scr"]
     };
 
-    // Liste des sites filtrables
     const SITES = [
       { id: "commun", label: "Commun de Site" },
       { id: "lidec", label: "Lidec" },
@@ -215,10 +214,8 @@
       { id: "scr", label: "SCR" }
     ];
 
-    // Au login : toutes les pages sont accessibles, le menu est complet
     let userRights = [];
 
-    // Gestion du login
     document.getElementById("login-box").onsubmit = function() {
       const pass = document.getElementById("password").value;
       if (PASSWORDS[pass]) {
@@ -233,36 +230,33 @@
       }
     };
 
-    // Affichage du filtre site selon droits
     function showSiteFilterSites() {
       const select = document.getElementById("siteFilter");
       if (!select) return;
-      // On sauvegarde la valeur actuelle (pour garder le filtre si déjà sélectionné)
-      const oldValue = select.value;
-      // On supprime toutes les options sauf la première
       select.innerHTML = "";
-      const allOpt = document.createElement("option");
-      allOpt.value = "";
-      allOpt.textContent = "Tous les sites";
-      select.appendChild(allOpt);
+
+      let accessibleSites = [];
       SITES.forEach(site => {
-        if (userRights.includes(site.id)) {
-          const opt = document.createElement("option");
-          opt.value = site.label;
-          opt.textContent = site.label;
-          select.appendChild(opt);
-        }
+        if (userRights.includes(site.id)) accessibleSites.push(site);
       });
-      // On tente de rétablir le filtre sélectionné
-      if (Array.from(select.options).some(o => o.value === oldValue)) {
-        select.value = oldValue;
+
+      accessibleSites.forEach(site => {
+        const opt = document.createElement("option");
+        opt.value = site.label;
+        opt.textContent = site.label;
+        select.appendChild(opt);
+      });
+
+      if (accessibleSites.length === 1) {
+        select.selectedIndex = 0;
+        select.disabled = true;
+      } else {
+        select.disabled = false;
       }
-      updateCharts(); // recharge les données
+      updateCharts();
     }
 
-    // Au chargement, restauration session si déjà loggé
     window.onload = function () {
-      // Gestion du menu déroulant
       const menu = document.getElementById("menu");
       const button = document.querySelector(".menu-button");
       menu.style.display = "none";
@@ -275,7 +269,6 @@
         }
       });
 
-      // Restaure droits si déjà authentifié
       const stored = sessionStorage.getItem("userRights");
       if (stored) {
         userRights = JSON.parse(stored);
@@ -313,7 +306,6 @@
       fillSelect("machineFilter", machineSet);
       fillSelect("yearFilter", yearSet);
 
-      // Site : filtré dynamiquement donc géré ailleurs
       document.querySelectorAll("select").forEach(select => {
         select.addEventListener("change", updateCharts);
       });
@@ -335,16 +327,13 @@
       const type = document.getElementById("typeFilter").value;
       const machine = document.getElementById("machineFilter").value;
       const year = document.getElementById("yearFilter").value;
-      // Droits de sites
       const rights = userRights.length ? userRights : JSON.parse(sessionStorage.getItem("userRights") || "[]");
 
       const filtered = allData.filter(row => {
-        // Filtrage d'accès site : seuls les sites autorisés
         const siteDroit = SITES.find(s => s.label === row["Site Intervention"]);
         if (!siteDroit || !rights.includes(siteDroit.id)) {
           return false;
         }
-        // Filtrage utilisateur
         const matchSite = !site || row["Site Intervention"] === site;
         const matchType = !type || row["Type d'intervention"] === type;
         const matchMachine = !machine || row["Machine"] === machine;
@@ -353,7 +342,6 @@
         return matchSite && matchType && matchMachine && matchYear;
       });
 
-      // Comptages pour graphiques
       const typeCounts = {};
       const siteCounts = {};
       filtered.forEach(row => {
