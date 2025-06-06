@@ -84,23 +84,99 @@
     .intro li {
       margin-bottom: 10px;
     }
+    #login-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+    #login-box {
+      background: #fff;
+      padding: 30px 40px 20px 40px;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+      max-width: 340px;
+      width: 90%;
+      text-align: center;
+    }
+    #login-box input[type="password"] {
+      width: 90%;
+      padding: 10px;
+      font-size: 18px;
+      margin-bottom: 16px;
+      border: 1px solid #aaa;
+      border-radius: 5px;
+    }
+    #login-box button {
+      padding: 8px 26px;
+      font-size: 18px;
+      background: #4e79a7;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #login-box button:hover {
+      background: #355270;
+    }
+    #login-error {
+      color: #c00;
+      margin-bottom: 10px;
+      min-height: 22px;
+    }
+    .site-filter-block {
+      margin: 30px auto 0 auto;
+      text-align: left;
+      max-width: 400px;
+      background: #fff;
+      border-radius: 10px;
+      padding: 18px 30px 8px 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      font-size: 17px;
+    }
+    .site-filter-block label {
+      font-weight: bold;
+      margin-right: 0.8em;
+    }
+    #site-filter {
+      font-size: 17px;
+      padding: 7px 12px;
+      border-radius: 5px;
+      border: 1px solid #aaa;
+    }
   </style>
 </head>
 <body>
+
+  <div id="login-overlay">
+    <form id="login-box" autocomplete="off" onsubmit="return false;">
+      <h2>Connexion</h2>
+      <div id="login-error"></div>
+      <input type="password" id="password" placeholder="Mot de passe" autofocus />
+      <br>
+      <button type="submit">Entrer</button>
+    </form>
+  </div>
 
   <header>
     <button class="menu-button">☰</button>
     <h1 class="page-title">Maintenance Armitec</h1>
     <div class="menu" id="menu">
-      <a href="index.html">Accueil</a>
-      <a href="tableau.html">Tableau de bord</a>
-      <a href="historique.html">Historique maintenance</a>
-      <a href="preventif.html">Préventif</a>
+      <!-- les liens seront injectés par JS selon les droits -->
     </div>
   </header>
 
   <div class="logo-container">
     <img src="logo_maintenance.png" alt="Logo Maintenance" />
+  </div>
+
+  <!-- Bloc de filtre site -->
+  <div class="site-filter-block" id="site-filter-block" style="display:none">
+    <label for="site-filter">Filtrer par site :</label>
+    <select id="site-filter"></select>
   </div>
 
   <div class="intro">
@@ -125,7 +201,90 @@
   </div>
 
   <script>
+    // Liste des mots de passe et droits associés
+    const PASSWORDS = {
+      "Armitec2025": ["commun", "lidec", "atelier", "scr"], // accès à tout
+      "commun*d*sit": ["commun"],
+      "lidecbelli": ["lidec", "atelier"],
+      "scrfuture": ["scr"]
+    };
+
+    // Liens du menu selon droits
+    const MENU_LINKS = {
+      "commun": { href: "index.html", label: "Accueil" },
+      "lidec": { href: "tableau.html", label: "Tableau de bord" },
+      "atelier": { href: "historique.html", label: "Historique maintenance" },
+      "scr": { href: "preventif.html", label: "Préventif" }
+    };
+
+    // Liste des sites filtrables
+    const SITES = [
+      { id: "commun", label: "Commun de Site" },
+      { id: "lidec", label: "Lidec" },
+      { id: "atelier", label: "Atelier Belliparc" },
+      { id: "scr", label: "SCR" }
+    ];
+
+    let userRights = [];
+
+    function showMenuLinks() {
+      const menu = document.getElementById("menu");
+      menu.innerHTML = "";
+      getLinksForRights(userRights).forEach(link => {
+        const a = document.createElement("a");
+        a.href = link.href;
+        a.textContent = link.label;
+        menu.appendChild(a);
+      });
+    }
+
+    function getLinksForRights(rights) {
+      const links = [];
+      if(rights.includes("commun")) links.push(MENU_LINKS["commun"]);
+      if(rights.includes("lidec")) links.push(MENU_LINKS["lidec"]);
+      if(rights.includes("atelier")) links.push(MENU_LINKS["atelier"]);
+      if(rights.includes("scr")) links.push(MENU_LINKS["scr"]);
+      return links;
+    }
+
+    // Affichage du filtre site selon droits
+    function showSiteFilter() {
+      const block = document.getElementById("site-filter-block");
+      const select = document.getElementById("site-filter");
+      if (!select) return;
+      select.innerHTML = "";
+      let hasSites = false;
+      SITES.forEach(site => {
+        if (userRights.includes(site.id)) {
+          const opt = document.createElement("option");
+          opt.value = site.id;
+          opt.textContent = site.label;
+          select.appendChild(opt);
+          hasSites = true;
+        }
+      });
+      block.style.display = hasSites ? "" : "none";
+    }
+
+    // Gestion du login
+    document.getElementById("login-box").onsubmit = function() {
+      const pass = document.getElementById("password").value;
+      if (PASSWORDS[pass]) {
+        userRights = PASSWORDS[pass];
+        sessionStorage.setItem("userRights", JSON.stringify(userRights));
+        document.getElementById("login-overlay").style.display = "none";
+        showMenuLinks();
+        showSiteFilter();
+      } else {
+        document.getElementById("login-error").innerText = "Mot de passe incorrect.";
+        document.getElementById("password").value = "";
+        document.getElementById("password").focus();
+      }
+    };
+
+    // Au chargement, si déjà loggé, restaurer droits et affichages
     window.onload = function () {
+      // Désactive menu au chargement
       const menu = document.getElementById("menu");
       const button = document.querySelector(".menu-button");
       menu.style.display = "none";
@@ -137,6 +296,17 @@
           menu.style.display = "none";
         }
       });
+
+      // Restaure droits si déjà authentifié
+      const stored = sessionStorage.getItem("userRights");
+      if (stored) {
+        userRights = JSON.parse(stored);
+        document.getElementById("login-overlay").style.display = "none";
+        showMenuLinks();
+        showSiteFilter();
+      } else {
+        showMenuLinks();
+      }
     };
   </script>
 </body>
