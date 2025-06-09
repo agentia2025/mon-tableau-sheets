@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Historique Maintenance</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f4; }
     header { display: flex; align-items: center; padding: 10px 20px; background-color: #4e79a7; color: white; position: relative; }
@@ -23,6 +24,7 @@
     th { background: #f7f9fa; font-weight: bold; }
     tr:hover { background: #f5f5ff; }
     .rapport-icon { font-size: 18px; text-align: center; }
+    .pie-container { display: flex; justify-content: center; margin: 32px 0 20px 0; }
     #login-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 2000; }
     #login-box { background: #fff; padding: 30px 40px 20px 40px; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.15); max-width: 340px; width: 90%; text-align: center; }
     #login-box input[type="password"] { width: 90%; padding: 10px; font-size: 18px; margin-bottom: 16px; border: 1px solid #aaa; border-radius: 5px; }
@@ -32,6 +34,7 @@
     @media (max-width: 800px) {
       table { min-width: 500px; }
       .history-table-container { padding: 6px; }
+      .pie-container { margin: 14px 0 14px 0; }
     }
   </style>
 </head>
@@ -74,6 +77,10 @@
       <select id="yearFilter"><option value="">Toutes les années</option></select>
     </div>
   </div>
+  <!-- Graphe camembert pour la répartition correctif/préventif -->
+  <div class="pie-container">
+    <canvas id="pieChartHistory" width="320" height="320"></canvas>
+  </div>
   <div class="history-table-container">
     <table id="historyTable">
       <thead>
@@ -115,8 +122,22 @@
       { id: "atelier", label: "Atelier Bélliparc" },
       { id: "scr", label: "SCR" }
     ];
+    function normalize(str) {
+      return (str || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+    }
+    function isAllowedSite(siteLabel) {
+      for (const s of SITES) {
+        if (normalize(s.label) === normalize(siteLabel) && userRights.includes(s.id)) return true;
+      }
+      return false;
+    }
     let userRights = [];
     let allData = [];
+    let pieChartHistory = null;
 
     document.getElementById("login-box").onsubmit = function() {
       const pass = document.getElementById("password").value;
@@ -170,8 +191,7 @@
       select.innerHTML = "";
       const siteSet = new Set();
       allData.forEach(row => {
-        const siteId = SITES.find(s => s.label === row["Site Intervention"])?.id;
-        if (siteId && userRights.includes(siteId)) {
+        if (isAllowedSite(row["Site Intervention"])) {
           siteSet.add(row["Site Intervention"]);
         }
       });
@@ -237,9 +257,9 @@
       const tbody = document.getElementById("historyTable").querySelector("tbody");
       tbody.innerHTML = "";
 
-      allData.filter(row => {
-        const siteId = SITES.find(s => s.label === row["Site Intervention"])?.id;
-        if (!siteId || !rights.includes(siteId)) return false;
+      // Filtrage des lignes selon accès et filtres
+      const filteredRows = allData.filter(row => {
+        if (!isAllowedSite(row["Site Intervention"])) return false;
         const matchSite = !site || row["Site Intervention"] === site;
         const rowType = row["Choix du type de maintenance"] || row["Type d'intervention"];
         const matchType = !type || rowType === type;
@@ -247,7 +267,12 @@
         const rowDate = new Date(row["Date Intervention"]);
         const matchYear = !year || (!isNaN(rowDate) && rowDate.getFullYear() == year);
         return matchSite && matchType && matchMachine && matchYear;
-      }).forEach(row => {
+      });
+
+      // Met à jour le graphe camembert sur la répartition correctif/préventif
+      updatePieChartHistory(filteredRows);
+
+      filteredRows.forEach(row => {
         let d = row["Date Intervention"] || "";
         if (d) {
           const D = new Date(d);
@@ -272,6 +297,50 @@
           <td style="text-align:center;">${rapportHtml}</td>
         `;
         tbody.appendChild(tr);
+      });
+    }
+
+    // Ajout du graphe camembert correctif/préventif
+    function updatePieChartHistory(filteredRows) {
+      let correctif = 0, preventif = 0;
+      filteredRows.forEach(row => {
+        const type = (row["Choix du type de maintenance"] || row["Type d'intervention"] || "").toLowerCase();
+        if (type.includes("correctif") || type.includes("modif")) correctif++;
+        else if (type.includes("preventif")) preventif++;
+      });
+      const total = correctif + preventif;
+      const data = [correctif, preventif];
+      const labels = ["Correctif/Modification", "Préventif"];
+      const colors = ["#e15759", "#4e79a7"];
+
+      const ctx = document.getElementById("pieChartHistory").getContext("2d");
+      if (pieChartHistory) pieChartHistory.destroy();
+      pieChartHistory = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: colors
+          }]
+        },
+        options: {
+          plugins: {
+            title: {
+              display: true,
+              text: "Répartition interventions Correctif/Préventif (%)"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed;
+                  const percent = total ? (value / total * 100).toFixed(1) : 0;
+                  return `${context.label}: ${value} (${percent}%)`;
+                }
+              }
+            }
+          }
+        }
       });
     }
   </script>
