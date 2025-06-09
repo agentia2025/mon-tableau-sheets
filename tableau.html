@@ -7,6 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <style>
+    /* ... (tout ton CSS inchangé) ... */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -54,12 +55,8 @@
       display: block;
       text-align: left;
     }
-    .menu a:last-child {
-      border-bottom: none;
-    }
-    .menu a:hover {
-      background-color: #f0f0f0;
-    }
+    .menu a:last-child { border-bottom: none; }
+    .menu a:hover { background-color: #f0f0f0; }
     .filters {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -74,14 +71,8 @@
       flex-direction: column;
       align-items: center;
     }
-    .filter-group label {
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
-    .filter-group select {
-      padding: 6px;
-      width: 160px;
-    }
+    .filter-group label { margin-bottom: 5px; font-weight: bold; }
+    .filter-group select { padding: 6px; width: 160px; }
     .chart-container {
       display: flex;
       flex-wrap: wrap;
@@ -89,31 +80,15 @@
       gap: 40px;
       margin: 40px 0;
     }
-    canvas {
-      width: 320px !important;
-      height: 320px !important;
-    }
+    canvas { width: 320px !important; height: 320px !important; }
     @media (max-width: 600px) {
-      .filters {
-        grid-template-columns: 1fr;
-        padding: 20px;
-        gap: 15px;
-      }
-      .filter-group {
-        align-items: stretch;
-        text-align: left;
-      }
-      .filter-group label {
-        margin-bottom: 4px;
-      }
-      canvas {
-        width: 90vw !important;
-        height: auto !important;
-      }
+      .filters { grid-template-columns: 1fr; padding: 20px; gap: 15px; }
+      .filter-group { align-items: stretch; text-align: left; }
+      .filter-group label { margin-bottom: 4px; }
+      canvas { width: 90vw !important; height: auto !important; }
     }
     #login-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.45);
       display: flex;
       align-items: center;
@@ -205,7 +180,17 @@
       "lidecbelli": ["lidec", "atelier"],
       "scrfuture": ["scr"]
     };
+    // Liens entre les id droits et les labels utilisés dans les données
+    const SITES = [
+      { id: "commun", label: "Commun de site" },
+      { id: "lidec", label: "Lidec" },
+      { id: "atelier", label: "Atelier Bélliparc" },
+      { id: "scr", label: "SCR" }
+    ];
+
     let userRights = [];
+    let allData = [];
+    let pieChart, barChart;
 
     document.getElementById("login-box").onsubmit = function () {
       const pass = document.getElementById("password").value;
@@ -213,8 +198,7 @@
         userRights = PASSWORDS[pass];
         sessionStorage.setItem("userRights", JSON.stringify(userRights));
         document.getElementById("login-overlay").style.display = "none";
-        // Relance les fonctions métiers après connexion
-        if (typeof afterLogin === "function") afterLogin();
+        afterLogin();
       } else {
         document.getElementById("login-error").innerText = "Mot de passe incorrect.";
         document.getElementById("password").value = "";
@@ -252,15 +236,12 @@
       } else {
         userRights = JSON.parse(rights);
         document.getElementById("login-overlay").style.display = "none";
-        // Relance les fonctions métiers après chargement
         afterLogin();
       }
     };
 
-    // --- MÉTIER (inchangé) ---
+    // --- MÉTIER ---
     const url = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
-    let allData = [];
-    let pieChart, barChart;
 
     function afterLogin() {
       fetch(url)
@@ -273,13 +254,19 @@
     }
 
     function populateFilters(data) {
+      // Restriction : ne montrer que les sites autorisés
       const siteSet = new Set();
       const typeSet = new Set();
       const machineSet = new Set();
       const yearSet = new Set();
 
       data.forEach(row => {
-        siteSet.add(row["Site Intervention"]);
+        // On ne propose ce site que s'il est autorisé pour l'utilisateur
+        const siteObj = SITES.find(s => s.label === row["Site Intervention"]);
+        if (siteObj && userRights.includes(siteObj.id)) {
+          siteSet.add(row["Site Intervention"]);
+        }
+        // Les autres filtres restent globaux
         typeSet.add(row["Type d'intervention"]);
         machineSet.add(row["Machine"]);
         const date = new Date(row["Date Intervention"]);
@@ -294,6 +281,15 @@
       document.querySelectorAll("select").forEach(select => {
         select.addEventListener("change", updateCharts);
       });
+
+      // Si l'utilisateur n'a accès qu'à un seul site : sélection automatique, filtre désactivé
+      const siteSelect = document.getElementById("siteFilter");
+      if (siteSet.size === 1) {
+        siteSelect.selectedIndex = 1;
+        siteSelect.disabled = true;
+      } else {
+        siteSelect.disabled = false;
+      }
     }
 
     function fillSelect(id, values) {
@@ -316,7 +312,10 @@
       const machine = document.getElementById("machineFilter").value;
       const year = document.getElementById("yearFilter").value;
 
+      // Restriction : on ne garde que les données accessibles pour l'utilisateur
       const filtered = allData.filter(row => {
+        const siteObj = SITES.find(s => s.label === row["Site Intervention"]);
+        if (!siteObj || !userRights.includes(siteObj.id)) return false;
         const matchSite = !site || row["Site Intervention"] === site;
         const matchType = !type || row["Type d'intervention"] === type;
         const matchMachine = !machine || row["Machine"] === machine;
