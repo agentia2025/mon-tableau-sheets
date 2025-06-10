@@ -25,7 +25,15 @@
     tr:hover { background: #f5f5ff; }
     .rapport-icon { font-size: 18px; text-align: center; }
     .pie-container { display: flex; justify-content: center; margin: 22px 0 16px 0; }
-    #pieChartHistory { width: 220px !important; height: 220px !important; max-width: 95vw; max-height: 220px; }
+    #pieChartHistory {
+      display: block;
+      max-width: 320px;
+      max-height: 320px;
+      aspect-ratio: 1 / 1;
+      width: 100%;
+      height: auto;
+      margin: 0 auto;
+    }
     #login-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 2000; }
     #login-box { background: #fff; padding: 30px 40px 20px 40px; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.15); max-width: 340px; width: 90%; text-align: center; }
     #login-box input[type="password"] { width: 90%; padding: 10px; font-size: 18px; margin-bottom: 16px; border: 1px solid #aaa; border-radius: 5px; }
@@ -36,6 +44,7 @@
       table { min-width: 500px; }
       .history-table-container { padding: 6px; }
       .pie-container { margin: 10px 0 10px 0; }
+      #pieChartHistory { max-width: 98vw; max-height: 240px; }
     }
   </style>
 </head>
@@ -78,9 +87,8 @@
       <select id="yearFilter"><option value="">Toutes les années</option></select>
     </div>
   </div>
-  <!-- Graphe camembert pour la répartition correctif/modification/préventif -->
   <div class="pie-container">
-    <canvas id="pieChartHistory" width="220" height="220"></canvas>
+    <canvas id="pieChartHistory"></canvas>
   </div>
   <div class="history-table-container">
     <table id="historyTable">
@@ -306,8 +314,12 @@
       let correctif = 0, modif = 0, preventif = 0;
       filteredRows.forEach(row => {
         const type = (row["Choix du type de maintenance"] || row["Type d'intervention"] || "").toLowerCase();
-        if (type.includes("modif")) modif++;
-        else if (type.includes("correctif")) correctif++;
+        if (
+          type.includes("modif")
+        ) modif++;
+        else if (
+          type.includes("correctif")
+        ) correctif++;
         else if (
           type.includes("1 mois") ||
           type.includes("6 mois") ||
