@@ -2,80 +2,198 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Suivi Préventif</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Préventif Maintenance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #f2f2f2; }
-    header { display: flex; align-items: center; padding: 10px 20px; background: #4e79a7; color: white; position: relative; }
-    .menu-button { font-size: 26px; cursor: pointer; background: none; border: none; color: black; margin-right: 3ch; }
-    .page-title { font-size: 24px; margin: 0; }
-    .menu { display: none; flex-direction: column; position: absolute; top: 50px; left: 20px;
-            background: #fff; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 999; }
-    .menu a { padding: 10px 20px; text-decoration: none; color: #333; border-bottom: 1px solid #eee; }
-    .menu a:last-child { border-bottom: none; }
-    .menu a:hover { background: #f0f0f0; }
-    .filters {
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      min-height: 100vh;
+      position: relative;
+      color: #222;
+      font-family: Arial, sans-serif;
+      z-index: 1;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 0;
+      background: url('Capture d’écran 2025-06-12 à 18.32.34.png') center center / cover no-repeat;
+      opacity: 1;
+      pointer-events: none;
+    }
+    main, header, .filters, .preventif-table-container {
+      position: relative;
+      z-index: 1;
+    }
+    header {
       display: flex;
-      justify-content: center;
-      gap: 40px;
-      margin: 30px 0 0 0;
-      flex-wrap: wrap;
-      text-align: center;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #4e79a7;
+      color: #fff !important;
+      text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
+      z-index: 2;
     }
-    .filters label {
+    .menu-button {
+      font-size: 26px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: #fff !important;
+      margin-right: 3ch;
+      text-shadow: 0 1px 3px #222, 0 0 6px #4e79a7;
+    }
+    .page-title {
+      font-size: 24px;
+      margin: 0;
+      color: #fff !important;
+      text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
+    }
+    .menu {
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      top: 50px;
+      left: 20px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      z-index: 999;
+    }
+    .menu a {
+      padding: 10px 20px;
+      text-decoration: none;
+      color: #222 !important;
+      border-bottom: 1px solid #eee;
+      background: none;
+      cursor: pointer;
+      display: block;
+      text-align: left;
       font-weight: bold;
-      margin-right: 8px;
+      text-shadow: 0 1px 3px #fff, 0 0 3px #fff;
     }
-    .filters select { padding: 6px; }
-    .chart-center {
+    .menu a:last-child { border-bottom: none; }
+    .menu a:hover { background-color: #f0f0f0; }
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+      justify-content: center;
+      padding: 30px 20px 10px;
+      max-width: 800px;
+      margin: auto;
+      color: #222;
+      text-shadow: 0 1px 2px #fff;
+    }
+    .filter-group {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      width: 100%;
-      margin: 32px 0 32px 0;
     }
-    #pieChart {
+    .filter-group label {
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #222;
+      text-shadow: 0 1px 2px #fff;
+    }
+    .filter-group select {
+      padding: 6px;
+      width: 160px;
+      background: #fff;
+      color: #222;
+      border: 1px solid #4e79a7;
+      font-weight: bold;
+      text-shadow: 0 1px 2px #fff;
+    }
+    .chart-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 40px 0;
+      gap: 40px;
+    }
+    canvas {
       width: 320px !important;
       height: 320px !important;
-      max-width: 90vw;
-      max-height: 90vw;
-      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+      z-index: 2;
       display: block;
+      margin: 0 auto;
     }
-    .stats {
-      margin-top: 14px;
-      font-size: 16px;
-      text-align: center;
-      color: #333;
+    .preventif-table-container {
+      max-width: 1000px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      overflow-x: auto;
+      padding: 18px 12px 18px 12px;
+      position: relative;
+      z-index: 1;
     }
-    h2.upcoming-title {
-      text-align: center;
-      margin-top: 28px;
-      font-size: 20px;
-      color: #333;
-      margin-bottom: 10px;
+    table { border-collapse: collapse; width: 100%; min-width: 700px; }
+    th, td { padding: 8px 8px; border-bottom: 1px solid #eee; text-align: left; }
+    th { background: #f7f9fa; font-weight: bold; }
+    tr:hover { background: #f5f5ff; }
+    .rapport-icon { font-size: 18px; text-align: center; }
+    #login-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
     }
-    .upcoming {
+    #login-box {
+      background: #fff;
+      padding: 30px 40px 20px 40px;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+      max-width: 340px;
       width: 90%;
-      max-width: 600px;
-      margin: 20px auto;
-      border-collapse: collapse;
       text-align: center;
     }
-    .upcoming th, .upcoming td {
-      padding: 8px;
-      border: 1px solid #ddd;
-      text-align: center;
+    #login-box input[type="password"] {
+      width: 90%;
+      padding: 10px;
+      font-size: 18px;
+      margin-bottom: 16px;
+      border: 1px solid #aaa;
+      border-radius: 5px;
+      color: #222;
+      background: #fff;
     }
-    .upcoming th { background: #4e79a7; color: #fff; }
-    #login-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-    #login-box { background: #fff; padding: 30px 40px 20px 40px; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.15); max-width: 340px; width: 90%; text-align: center; }
-    #login-box input[type="password"] { width: 90%; padding: 10px; font-size: 18px; margin-bottom: 16px; border: 1px solid #aaa; border-radius: 5px; }
-    #login-box button { padding: 8px 26px; font-size: 18px; background: #4e79a7; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
+    #login-box button {
+      padding: 8px 26px;
+      font-size: 18px;
+      background: #4e79a7;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
     #login-box button:hover { background: #355270; }
     #login-error { color: #c00; margin-bottom: 10px; min-height: 22px; }
+    @media (max-width: 600px) {
+      .filters { grid-template-columns: 1fr; padding: 20px; gap: 15px; }
+      .filter-group { align-items: stretch; text-align: left; }
+      .filter-group label { margin-bottom: 4px; }
+      canvas { width: 90vw !important; height: auto !important; }
+      table { min-width: 500px; }
+      .preventif-table-container { padding: 6px; }
+      .chart-container { padding: 12px 0; }
+    }
   </style>
 </head>
 <body>
@@ -90,7 +208,7 @@
   </div>
   <header>
     <button class="menu-button" onclick="toggleMenu()">☰</button>
-    <h1 class="page-title">Suivi Préventif</h1>
+    <h1 class="page-title">Préventif Maintenance</h1>
     <div class="menu" id="menu">
       <a href="index.html">Accueil</a>
       <a href="tableau.html">Tableau de bord</a>
@@ -100,43 +218,57 @@
     </div>
   </header>
   <div class="filters">
-    <label for="siteFilter">Site</label>
-    <select id="siteFilter"><option value="">Tous les sites</option></select>
-    <label for="yearFilter">Année</label>
-    <select id="yearFilter"><option value="">Toutes les années</option></select>
+    <div class="filter-group">
+      <label for="siteFilter">Site</label>
+      <select id="siteFilter"></select>
+    </div>
+    <div class="filter-group">
+      <label for="typeFilter">Type</label>
+      <select id="typeFilter"><option value="">Tous les types</option></select>
+    </div>
+    <div class="filter-group">
+      <label for="machineFilter">Machine</label>
+      <select id="machineFilter"><option value="">Toutes les machines</option></select>
+    </div>
+    <div class="filter-group">
+      <label for="yearFilter">Année</label>
+      <select id="yearFilter"><option value="">Toutes les années</option></select>
+    </div>
   </div>
-
-  <div class="chart-center">
-    <canvas id="pieChart"></canvas>
-    <div class="stats" id="stats"></div>
-  </div>
-
-  <h2 class="upcoming-title">Les prochains préventifs :</h2>
-
-  <table class="upcoming" id="upcomingTable">
-    <thead>
-      <tr>
-        <th>Site</th>
-        <th>Machine</th>
-        <th>Date (JJ-MM)</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
+  <main>
+    <div class="chart-container">
+      <canvas id="pieChartPreventif"></canvas>
+    </div>
+    <div class="preventif-table-container">
+      <table id="preventifTable">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Site</th>
+            <th>Machine</th>
+            <th>Type de préventif</th>
+            <th>Rapport</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Données injectées dynamiquement -->
+        </tbody>
+      </table>
+    </div>
+  </main>
   <script>
-    // Gestion du menu (identique à la V7)
+    // Menu
     function toggleMenu() {
       const m = document.getElementById("menu");
       m.style.display = m.style.display === "flex" ? "none" : "flex";
     }
-    document.addEventListener("click", e => {
+    document.addEventListener("click", function(e) {
       const m = document.getElementById("menu");
       const b = document.querySelector(".menu-button");
       if (!m.contains(e.target) && e.target !== b) m.style.display = "none";
     });
 
-    // Gestion des mots de passe V7
+    // Connexion/déconnexion
     const PASSWORDS = {
       "Armitec2025": ["commun", "lidec", "atelier", "scr"],
       "commun*d*sit": ["commun"],
@@ -149,15 +281,30 @@
       { id: "atelier", label: "Atelier Bélliparc" },
       { id: "scr", label: "SCR" }
     ];
+    function normalize(str) {
+      return (str || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+    }
+    function isAllowedSite(siteLabel) {
+      for (const s of SITES) {
+        if (normalize(s.label) === normalize(siteLabel) && userRights.includes(s.id)) return true;
+      }
+      return false;
+    }
     let userRights = [];
+    let allData = [];
+    let pieChartPreventif = null;
 
-    document.getElementById("login-box").onsubmit = function () {
+    document.getElementById("login-box").onsubmit = function() {
       const pass = document.getElementById("password").value;
       if (PASSWORDS[pass]) {
         userRights = PASSWORDS[pass];
         sessionStorage.setItem("userRights", JSON.stringify(userRights));
         document.getElementById("login-overlay").style.display = "none";
-        showSiteFilterSites();
+        fetchData();
       } else {
         document.getElementById("login-error").innerText = "Mot de passe incorrect.";
         document.getElementById("password").value = "";
@@ -173,37 +320,37 @@
     }
 
     window.onload = function () {
-      const stored = sessionStorage.getItem("userRights");
-      if (stored) {
-        userRights = JSON.parse(stored);
+      const rights = sessionStorage.getItem("userRights");
+      if (!rights) {
+        document.getElementById("login-overlay").style.display = "flex";
+        document.getElementById("password").focus();
+      } else {
+        userRights = JSON.parse(rights);
         document.getElementById("login-overlay").style.display = "none";
+        fetchData();
       }
-      fetchData();
     };
 
-    // Données
-    const url = "https://script.google.com/macros/s/AKfycbydUwbmc5KCQ_WWLCriPcx8AZEpOxDY8THCtLsRWmNY1oE19RaKJVN_cEKo5FjLJDKcLw/exec";
-    let dataAll = [];
     function fetchData() {
-      fetch(url).then(r => r.json()).then(data => {
-        dataAll = data;
-        initFilters();
-        showSiteFilterSites();
-        updateChart();
-        fillUpcoming();
-      });
+      const url = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
+      fetch(url)
+        .then(r => r.json())
+        .then(data => {
+          allData = data;
+          populateFilters(data);
+          showSiteFilterSites();
+          updateMachineFilter();
+          updateTable();
+        });
     }
 
-    // Affichage dynamique des sites accessibles selon les droits (V7)
     function showSiteFilterSites() {
       const select = document.getElementById("siteFilter");
       if (!select) return;
       select.innerHTML = "";
-      // Récupère tous les sites réels présents ET accessibles
       const siteSet = new Set();
-      dataAll.forEach(row => {
-        const siteId = SITES.find(s => s.label === row["Site Intervention"])?.id;
-        if (siteId && userRights.includes(siteId)) {
+      allData.forEach(row => {
+        if (isAllowedSite(row["Site Intervention"])) {
           siteSet.add(row["Site Intervention"]);
         }
       });
@@ -228,101 +375,158 @@
       }
     }
 
-    function initFilters() {
-      const s = new Set(), y = new Set();
-      dataAll.forEach(r => {
-        const siteId = SITES.find(s => s.label === r["Site Intervention"])?.id;
-        if (siteId && (!userRights.length || userRights.includes(siteId))) {
-          s.add(r["Site Intervention"]);
+    function populateFilters(data) {
+      const typeSet = new Set();
+      const yearSet = new Set();
+      data.forEach(row => {
+        if (row["Choix du type de maintenance"] && (
+          row["Choix du type de maintenance"].toLowerCase().includes("préventif") ||
+          row["Choix du type de maintenance"].toLowerCase().includes("preventif") ||
+          row["Choix du type de maintenance"].toLowerCase().includes("mois")
+        )) {
+          typeSet.add(row["Choix du type de maintenance"]);
+          const date = new Date(row["Date Intervention"]);
+          if (!isNaN(date)) yearSet.add(date.getFullYear());
         }
-        const d = new Date(r["Prochain contrôle"]);
-        if (!isNaN(d)) y.add(d.getFullYear());
       });
-      fill("yearFilter", y);
-      document.getElementById("yearFilter").addEventListener("change", () => {
-        updateChart();
-        fillUpcoming();
-      });
-      document.getElementById("siteFilter").addEventListener("change", () => {
-        updateChart();
-        fillUpcoming();
+      fillSelect("typeFilter", typeSet, "Tous les types");
+      fillSelect("yearFilter", yearSet, "Toutes les années");
+
+      document.querySelectorAll("select").forEach(select => {
+        if (select.id !== "siteFilter") {
+          select.addEventListener("change", updateTable);
+        }
       });
     }
 
-    function fill(id, set) {
-      const sel = document.getElementById(id);
-      const label = (id === "yearFilter" ? "Toutes les années" : "Tous les sites");
-      sel.innerHTML = `<option value="">${label}</option>`;
-      Array.from(set).sort().forEach(v => {
-        const o = document.createElement("option");
-        o.value = v;
-        o.textContent = v;
-        sel.appendChild(o);
-      });
-    }
-
-    function updateChart() {
+    function updateMachineFilter() {
       const site = document.getElementById("siteFilter").value;
-      const year = document.getElementById("yearFilter").value;
-      let ok = 0, ko = 0;
-      dataAll.forEach(r => {
-        const siteId = SITES.find(s => s.label === r["Site Intervention"])?.id;
-        if (site && r["Site Intervention"] !== site) return;
-        if (siteId && userRights.length && !userRights.includes(siteId)) return;
-        if (r.conformité !== "") {
-          const d = new Date(r["Prochain contrôle"]);
-          if (year && d.getFullYear() != year) return;
-          r.conformité === "Conforme" ? ok++ : ko++;
+      let machineSet = new Set();
+      allData.forEach(row => {
+        if ((row["Choix du type de maintenance"] || "").toLowerCase().includes("prév")
+          || (row["Choix du type de maintenance"] || "").toLowerCase().includes("mois")) {
+          if ((!site && isAllowedSite(row["Site Intervention"])) ||
+              (site && row["Site Intervention"] === site)) {
+            machineSet.add(row["Machine"]);
+          }
         }
       });
-      const total = ok + ko;
-      const percOK = total ? Math.round(ok / total * 100) : 0;
-      const ctx = document.getElementById("pieChart").getContext("2d");
-      if (window.pie) window.pie.destroy();
-      window.pie = new Chart(ctx, {
+      fillSelect("machineFilter", machineSet, "Toutes les machines");
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById("siteFilter").addEventListener("change", function() {
+        updateMachineFilter();
+        updateTable();
+      });
+    });
+
+    function fillSelect(id, values, label) {
+      const select = document.getElementById(id);
+      select.innerHTML = `<option value="">${label}</option>`;
+      Array.from(values).sort().forEach(value => {
+        const opt = document.createElement("option");
+        opt.value = value;
+        opt.textContent = value;
+        select.appendChild(opt);
+      });
+    }
+
+    function updateTable() {
+      const site = document.getElementById("siteFilter").value;
+      const type = document.getElementById("typeFilter").value;
+      const machine = document.getElementById("machineFilter").value;
+      const year = document.getElementById("yearFilter").value;
+      const rights = userRights.length ? userRights : JSON.parse(sessionStorage.getItem("userRights") || "[]");
+      const tbody = document.getElementById("preventifTable").querySelector("tbody");
+      tbody.innerHTML = "";
+
+      const filteredRows = allData.filter(row => {
+        if (!isAllowedSite(row["Site Intervention"])) return false;
+        const typeMaint = (row["Choix du type de maintenance"] || "").toLowerCase();
+        if (!(typeMaint.includes("prév") || typeMaint.includes("mois"))) return false;
+        const matchSite = !site || row["Site Intervention"] === site;
+        const matchType = !type || row["Choix du type de maintenance"] === type;
+        const matchMachine = !machine || row["Machine"] === machine;
+        const rowDate = new Date(row["Date Intervention"]);
+        const matchYear = !year || (!isNaN(rowDate) && rowDate.getFullYear() == year);
+        return matchSite && matchType && matchMachine && matchYear;
+      });
+
+      updatePieChartPreventif(filteredRows);
+
+      filteredRows.forEach(row => {
+        let d = row["Date Intervention"] || "";
+        if (d) {
+          const D = new Date(d);
+          if (!isNaN(D)) {
+            const day = String(D.getDate()).padStart(2, "0");
+            const month = String(D.getMonth() + 1).padStart(2, "0");
+            const year = D.getFullYear();
+            d = `${day}/${month}/${year}`;
+          }
+        }
+        const typeValue = row["Choix du type de maintenance"] || "-";
+        let rapportHtml = "-";
+        const lienPdf = row["PDF URL"];
+        if (lienPdf && lienPdf.trim() && lienPdf.startsWith("http")) {
+          rapportHtml = `<a class="rapport-icon" href="${lienPdf}" target="_blank" title="Voir le PDF"><span>📄</span></a>`;
+        }
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${d}</td>
+          <td>${row["Site Intervention"] || "-"}</td>
+          <td>${row["Machine"] || "-"}</td>
+          <td>${typeValue}</td>
+          <td style="text-align:center;">${rapportHtml}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updatePieChartPreventif(filteredRows) {
+      let mois1 = 0, mois6 = 0, mois12 = 0, autre = 0;
+      filteredRows.forEach(row => {
+        const type = (row["Choix du type de maintenance"] || "").toLowerCase();
+        if (type.includes("1 mois")) mois1++;
+        else if (type.includes("6 mois")) mois6++;
+        else if (type.includes("12 mois")) mois12++;
+        else autre++;
+      });
+      const data = [mois1, mois6, mois12, autre];
+      const labels = ["1 mois", "6 mois", "12 mois", "Autre"];
+      const colors = ["#4e79a7", "#f28e2b", "#76b7b2", "#e15759"];
+      const ctx = document.getElementById("pieChartPreventif").getContext("2d");
+      if (pieChartPreventif) pieChartPreventif.destroy();
+      pieChartPreventif = new Chart(ctx, {
         type: "doughnut",
         data: {
-          labels: ["Conforme", "Non conforme"],
-          datasets: [{ data: [ok, ko] }]
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: colors
+          }]
         },
         options: {
           plugins: {
             title: {
               display: true,
-              text: `Conformité – ${percOK}%`
-            }
-          }
-        }
-      });
-      document.getElementById("stats").textContent = `Conformes : ${ok} / Non conformes : ${ko}`;
-    }
-
-    function fillUpcoming() {
-      const tbody = document.querySelector("#upcomingTable tbody");
-      tbody.innerHTML = "";
-      const site = document.getElementById("siteFilter").value;
-      const today = new Date();
-      const list = dataAll
-        .filter(r => {
-          const siteId = SITES.find(s => s.label === r["Site Intervention"])?.id;
-          if (site && r["Site Intervention"] !== site) return false;
-          if (siteId && userRights.length && !userRights.includes(siteId)) return false;
-          const d = new Date(r["Prochain contrôle"]);
-          return d >= today;
-        })
-        .sort((a, b) => new Date(a["Prochain contrôle"]) - new Date(b["Prochain contrôle"]))
-        .slice(0, 20);
-      list.forEach(r => {
-        const d = new Date(r["Prochain contrôle"]);
-        const dd = String(d.getDate()).padStart(2, "0");
-        const mm = String(d.getMonth() + 1).padStart(2, "0");
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${r["Site Intervention"]}</td>
-          <td>${r.Machine}</td>
-          <td>${dd}-${mm}</td>
-        `;
-        tbody.appendChild(tr);
+              text: "Répartition des préventifs (%)"
+            },
+            datalabels: {
+              formatter: (value, ctx) => {
+                const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                if (!total) return '';
+                return ((value / total) * 100).toFixed(1) + '%';
+              },
+              color: '#fff',
+              font: { weight: 'bold' }
+            },
+            legend: { display: true }
+          },
+          cutout: "55%"
+        },
+        plugins: [ChartDataLabels]
       });
     }
   </script>
