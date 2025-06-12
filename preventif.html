@@ -197,6 +197,20 @@
       .preventif-table-container { padding: 6px; }
       .chart-container { padding: 12px 0; }
     }
+    /* DEBUG display */
+    #debug-conformite {
+      background: #ffc;
+      color: #111;
+      font-size: 14px;
+      padding: 10px;
+      margin: 15px auto 0 auto;
+      max-width: 1200px;
+      border: 1px solid #bbb;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      box-shadow: 0 2px 6px #0001;
+    }
   </style>
 </head>
 <body>
@@ -257,6 +271,7 @@
       </table>
     </div>
   </main>
+  <div id="debug-conformite"></div>
   <script>
     // Menu
     function toggleMenu() {
@@ -342,6 +357,7 @@
           showSiteFilterSites();
           updateMachineFilter();
           updateTable();
+          showDebugConformite();
         });
     }
 
@@ -416,6 +432,7 @@
       document.getElementById("siteFilter").addEventListener("change", function() {
         updateMachineFilter();
         updateTable();
+        showDebugConformite();
       });
     });
 
@@ -440,8 +457,11 @@
       return null;
     }
     function isConforme(row) {
-      const conforme = (row["Conforme"] || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
-      return (conforme === "oui" || conforme === "yes" || conforme === "conforme");
+      // Attention ! colonne "conformité" (minuscule, sans accent)
+      const conf = (row["conformité"] || "")
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .trim().toLowerCase();
+      return conf === "conforme";
     }
     function statutCalcule(row, today) {
       if (isConforme(row)) return null;
@@ -571,6 +591,21 @@
       let taux = (total ? (conformes / total * 100) : 0).toFixed(1);
       document.getElementById("conformite").textContent = total ? `Taux de conformité préventif : ${taux}% (${conformes} sur ${total})` : '';
     }
+
+    // DEBUG : Affiche les lignes détectées comme "conforme" et "non conforme"
+    function showDebugConformite() {
+      let conformes = [], nonconformes = [];
+      allData.forEach(row => {
+        if (!isAllowedSite(row["Site Intervention"])) return;
+        if (isConforme(row)) conformes.push(row);
+        else nonconformes.push(row);
+      });
+      document.getElementById("debug-conformite").innerHTML =
+        `<b>DEBUG :</b><br>
+        <b>Lignes "conforme" (${conformes.length})</b> :<br><pre>${JSON.stringify(conformes, null, 2)}</pre>
+        <b>Lignes "non conforme" (${nonconformes.length})</b> :<br><pre>${JSON.stringify(nonconformes, null, 2)}</pre>`;
+    }
+
   </script>
 </body>
 </html>
