@@ -293,9 +293,11 @@
           }
         }
         const typeValue = row["Choix du type de maintenance"] || row["Type d'intervention"] || "-";
+        // Utilisation du lien PDF (colonne "PDF URL") pour la colonne Rapport
         let rapportHtml = "-";
-        if (row["Rapport d'intervention"] && row["Rapport d'intervention"].trim() && row["Rapport d'intervention"].startsWith("http")) {
-          rapportHtml = `<a class="rapport-icon" href="${row["Rapport d'intervention"]}" target="_blank" title="Voir le rapport"><span>📄</span></a>`;
+        const lienPdf = row["PDF URL"];
+        if (lienPdf && lienPdf.trim() && lienPdf.startsWith("http")) {
+          rapportHtml = `<a class="rapport-icon" href="${lienPdf}" target="_blank" title="Voir le PDF"><span>📄</span></a>`;
         }
         const tr = document.createElement("tr");
         tr.innerHTML = `
