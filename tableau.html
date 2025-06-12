@@ -11,18 +11,6 @@
       font-family: Arial, sans-serif;
       margin: 0;
       background-color: #f4f4f4;
-      /* Décor SVG type maintenance intégré en fond */
-      background-image: url('data:image/svg+xml;utf8,<svg width="340" height="340" viewBox="0 0 340 340" fill="none" xmlns="http://www.w3.org/2000/svg"><g opacity="0.12"><circle cx="170" cy="170" r="120" fill="%234e79a7"/><g><rect x="180" y="40" width="60" height="15" rx="7" fill="%23f28e2b" transform="rotate(45 180 40)"/><rect x="230" y="180" width="60" height="15" rx="7" fill="%23e15759" transform="rotate(-45 230 180)"/></g><g><circle cx="102" cy="260" r="36" fill="%2376b7b2"/><rect x="102" y="224" width="12" height="36" rx="6" fill="%23f28e2b"/><rect x="90" y="260" width="24" height="12" rx="6" fill="%234e79a7"/></g></g></svg>');
-      background-repeat: no-repeat;
-      background-position: bottom right;
-      background-size: 340px;
-      transition: background-size 0.3s;
-    }
-    @media (max-width: 600px) {
-      body {
-        background-position: bottom right;
-        background-size: cover;
-      }
     }
     header {
       display: flex;
@@ -168,7 +156,7 @@
       <label for="typeFilter">Type</label>
       <select id="typeFilter"><option value="">Tous les types</option></select>
     </div>
-    <!-- Filtre machine supprimé -->
+    <!-- Suppression du filtre Machine -->
     <div class="filter-group">
       <label for="yearFilter">Année</label>
       <select id="yearFilter"><option value="">Toutes les années</option></select>
