@@ -117,6 +117,13 @@
       margin: 40px 0;
       gap: 40px;
     }
+    #conformite {
+      text-align: center;
+      font-size: 1.3em;
+      font-weight: bold;
+      margin: 30px 0 10px 0;
+      color: #137c12;
+    }
     canvas {
       width: 320px !important;
       height: 320px !important;
@@ -213,6 +220,7 @@
       <a href="#" id="logout-link" onclick="logout();return false;" style="color:#c00;">Déconnexion</a>
     </div>
   </header>
+  <div id="conformite"></div>
   <div class="filters">
     <div class="filter-group">
       <label for="siteFilter">Site</label>
@@ -369,7 +377,6 @@
     }
 
     function populateFilters(data) {
-      // On ne créé plus le filtre "Type"
       const yearSet = new Set();
       data.forEach(row => {
         if (row["Choix du type de maintenance"] && (
@@ -423,7 +430,7 @@
       });
     }
 
-    // --- Calcul dynamique "à faire" / "en retard" selon colonne Conforme ---
+    // ---- LOGIQUE CONFORMITÉ ----
     function parseDateFR(str) {
       if (!str) return null;
       str = str.trim();
@@ -436,16 +443,7 @@
       const conforme = (row["Conforme"] || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
       return (conforme === "oui" || conforme === "yes" || conforme === "conforme");
     }
-    function isAFaireOrEnRetard(row, today) {
-      if (!row["Date Intervention"]) return false;
-      if (isConforme(row)) return false;
-      const d = parseDateFR(row["Date Intervention"]);
-      if (!d) return false;
-      d.setHours(0,0,0,0);
-      today.setHours(0,0,0,0);
-      return true;
-    }
-    function calculStatut(row, today) {
+    function statutCalcule(row, today) {
       if (isConforme(row)) return null;
       const d = parseDateFR(row["Date Intervention"]);
       if (!d) return null;
@@ -462,20 +460,23 @@
       const tbody = document.getElementById("preventifTable").querySelector("tbody");
       tbody.innerHTML = "";
       const today = new Date();
+
+      // Pour le camembert et le tableau : on ne garde que les lignes non conformes
       const filteredRows = allData.filter(row => {
         if (!isAllowedSite(row["Site Intervention"])) return false;
         const typeMaint = (row["Choix du type de maintenance"] || "").toLowerCase();
         if (!(typeMaint.includes("prév") || typeMaint.includes("mois"))) return false;
-        if (!isAFaireOrEnRetard(row, today)) return false;
-        const statutCalcule = calculStatut(row, today);
-        if (!statutCalcule) return false;
+        // Exclure les "conformes"
+        if (isConforme(row)) return false;
+        const d = parseDateFR(row["Date Intervention"]);
+        if (!d) return false;
         const matchSite = !site || row["Site Intervention"] === site;
         const matchMachine = !machine || row["Machine"] === machine;
-        const rowDate = parseDateFR(row["Date Intervention"]);
-        const matchYear = !year || (!isNaN(rowDate) && rowDate.getFullYear() == year);
+        const matchYear = !year || (!isNaN(d) && d.getFullYear() == year);
         return matchSite && matchMachine && matchYear;
       });
       updatePieChartPreventif(filteredRows, today);
+
       filteredRows.forEach(row => {
         let d = row["Date Intervention"] || "";
         if (d) {
@@ -488,7 +489,7 @@
           }
         }
         const typeValue = row["Choix du type de maintenance"] || "-";
-        const statutCalcule = calculStatut(row, today) || "-";
+        const statut = statutCalcule(row, today) || "-";
         let rapportHtml = "-";
         const lienPdf = row["PDF URL"];
         if (lienPdf && lienPdf.trim() && lienPdf.startsWith("http")) {
@@ -500,16 +501,20 @@
           <td>${row["Site Intervention"] || "-"}</td>
           <td>${row["Machine"] || "-"}</td>
           <td>${typeValue}</td>
-          <td>${statutCalcule}</td>
+          <td>${statut}</td>
           <td style="text-align:center;">${rapportHtml}</td>
         `;
         tbody.appendChild(tr);
       });
+
+      // Calcul et affichage du taux de conformité
+      updateConformite();
     }
+
     function updatePieChartPreventif(filteredRows, today) {
       let aFaire = 0, enRetard = 0;
       filteredRows.forEach(row => {
-        const statut = calculStatut(row, today);
+        const statut = statutCalcule(row, today);
         if (statut === "En retard") enRetard++;
         else if (statut === "À faire") aFaire++;
       });
@@ -531,7 +536,7 @@
           plugins: {
             title: {
               display: true,
-              text: "Répartition préventif : À faire / En retard (calculé)"
+              text: "Répartition préventif : À faire / En retard"
             },
             datalabels: {
               formatter: (value, ctx) => {
@@ -548,6 +553,23 @@
         },
         plugins: [ChartDataLabels]
       });
+    }
+
+    function updateConformite() {
+      // Pourcentage = nb conformes / (conformes + à faire + en retard)
+      const today = new Date();
+      let total = 0, conformes = 0;
+      allData.forEach(row => {
+        if (!isAllowedSite(row["Site Intervention"])) return;
+        const typeMaint = (row["Choix du type de maintenance"] || "").toLowerCase();
+        if (!(typeMaint.includes("prév") || typeMaint.includes("mois"))) return;
+        const d = parseDateFR(row["Date Intervention"]);
+        if (!d) return;
+        total++;
+        if (isConforme(row)) conformes++;
+      });
+      let taux = (total ? (conformes / total * 100) : 0).toFixed(1);
+      document.getElementById("conformite").textContent = total ? `Taux de conformité préventif : ${taux}% (${conformes} sur ${total})` : '';
     }
   </script>
 </body>
