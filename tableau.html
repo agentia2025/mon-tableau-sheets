@@ -11,7 +11,7 @@
       font-family: Arial, sans-serif;
       margin: 0;
       background-color: #f4f4f4;
-      /* Ajoute un fond décoratif maintenance en bas à droite */
+      /* Décor SVG type maintenance intégré en fond */
       background-image: url('data:image/svg+xml;utf8,<svg width="340" height="340" viewBox="0 0 340 340" fill="none" xmlns="http://www.w3.org/2000/svg"><g opacity="0.12"><circle cx="170" cy="170" r="120" fill="%234e79a7"/><g><rect x="180" y="40" width="60" height="15" rx="7" fill="%23f28e2b" transform="rotate(45 180 40)"/><rect x="230" y="180" width="60" height="15" rx="7" fill="%23e15759" transform="rotate(-45 230 180)"/></g><g><circle cx="102" cy="260" r="36" fill="%2376b7b2"/><rect x="102" y="224" width="12" height="36" rx="6" fill="%23f28e2b"/><rect x="90" y="260" width="24" height="12" rx="6" fill="%234e79a7"/></g></g></svg>');
       background-repeat: no-repeat;
       background-position: bottom right;
@@ -20,12 +20,10 @@
     }
     @media (max-width: 600px) {
       body {
-        /* Le décor prend toute la largeur en mobile */
         background-position: bottom right;
         background-size: cover;
       }
     }
-    /* ... le reste de ton CSS inchangé ... */
     header {
       display: flex;
       align-items: center;
@@ -139,7 +137,272 @@
   </style>
 </head>
 <body>
-  <!-- ... Reste du HTML inchangé ... -->
-  <!-- CONTENU INCHANGÉ (voir version précédente) -->
+  <!-- Overlay connexion -->
+  <div id="login-overlay">
+    <form id="login-box" autocomplete="off" onsubmit="return false;">
+      <h2>Connexion</h2>
+      <div id="login-error"></div>
+      <input type="password" id="password" placeholder="Mot de passe" autofocus />
+      <br>
+      <button type="submit">Entrer</button>
+    </form>
+  </div>
+  <header>
+    <button class="menu-button">☰</button>
+    <h1 class="page-title">Tableau de bord Maintenance</h1>
+    <div class="menu" id="menu">
+      <a href="index.html">Accueil</a>
+      <a href="tableau.html">Tableau de bord</a>
+      <a href="historique.html">Historique maintenance</a>
+      <a href="preventif.html">Préventif</a>
+      <a href="#" id="logout-link" onclick="logout();return false;" style="color:#c00;">Déconnexion</a>
+    </div>
+  </header>
+
+  <div class="filters">
+    <div class="filter-group">
+      <label for="siteFilter">Site</label>
+      <select id="siteFilter"><option value="">Tous les sites</option></select>
+    </div>
+    <div class="filter-group">
+      <label for="typeFilter">Type</label>
+      <select id="typeFilter"><option value="">Tous les types</option></select>
+    </div>
+    <!-- Filtre machine supprimé -->
+    <div class="filter-group">
+      <label for="yearFilter">Année</label>
+      <select id="yearFilter"><option value="">Toutes les années</option></select>
+    </div>
+  </div>
+
+  <div class="chart-container">
+    <canvas id="pieChart"></canvas>
+    <canvas id="barChart"></canvas>
+  </div>
+
+  <script>
+    // --- SÉCURITÉ ---
+    const PASSWORDS = {
+      "Armitec2025": ["commun", "lidec", "atelier", "scr"],
+      "commun*d*sit": ["commun"],
+      "lidecbelli": ["lidec", "atelier"],
+      "scrfuture": ["scr"]
+    };
+    // Liens entre les id droits et les labels utilisés dans les données
+    const SITES = [
+      { id: "commun", label: "Commun de site" },
+      { id: "lidec", label: "Lidec" },
+      { id: "atelier", label: "Atelier Bélliparc" },
+      { id: "scr", label: "SCR" }
+    ];
+
+    let userRights = [];
+    let allData = [];
+    let pieChart, barChart;
+
+    document.getElementById("login-box").onsubmit = function () {
+      const pass = document.getElementById("password").value;
+      if (PASSWORDS[pass]) {
+        userRights = PASSWORDS[pass];
+        sessionStorage.setItem("userRights", JSON.stringify(userRights));
+        document.getElementById("login-overlay").style.display = "none";
+        afterLogin();
+      } else {
+        document.getElementById("login-error").innerText = "Mot de passe incorrect.";
+        document.getElementById("password").value = "";
+        document.getElementById("password").focus();
+      }
+      return false;
+    };
+
+    function logout() {
+      sessionStorage.removeItem("userRights");
+      document.getElementById("login-overlay").style.display = "flex";
+      document.getElementById("password").value = "";
+      document.getElementById("password").focus();
+    }
+
+    window.onload = function () {
+      // Menu
+      const menu = document.getElementById("menu");
+      const button = document.querySelector(".menu-button");
+      menu.style.display = "none";
+      button.addEventListener("click", function () {
+        menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+      });
+      document.addEventListener("click", function (event) {
+        if (!menu.contains(event.target) && event.target !== button) {
+          menu.style.display = "none";
+        }
+      });
+
+      // Sécurité
+      const rights = sessionStorage.getItem("userRights");
+      if (!rights) {
+        document.getElementById("login-overlay").style.display = "flex";
+        document.getElementById("password").focus();
+      } else {
+        userRights = JSON.parse(rights);
+        document.getElementById("login-overlay").style.display = "none";
+        afterLogin();
+      }
+    };
+
+    // --- MÉTIER ---
+    const url = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
+
+    function afterLogin() {
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          allData = data;
+          populateFilters(data);
+          updateCharts();
+        });
+    }
+
+    function populateFilters(data) {
+      // Restriction : ne montrer que les sites autorisés
+      const siteSet = new Set();
+      const typeSet = new Set();
+      // const machineSet = new Set(); // supprimé
+      const yearSet = new Set();
+
+      data.forEach(row => {
+        // On ne propose ce site que s'il est autorisé pour l'utilisateur
+        const siteObj = SITES.find(s => s.label === row["Site Intervention"]);
+        if (siteObj && userRights.includes(siteObj.id)) {
+          siteSet.add(row["Site Intervention"]);
+        }
+        // Les autres filtres restent globaux
+        typeSet.add(row["Type d'intervention"]);
+        // machineSet.add(row["Machine"]); // supprimé
+        const date = new Date(row["Date Intervention"]);
+        if (!isNaN(date)) yearSet.add(date.getFullYear());
+      });
+
+      fillSelect("siteFilter", siteSet);
+      fillSelect("typeFilter", typeSet);
+      // fillSelect("machineFilter", machineSet); // supprimé
+      fillSelect("yearFilter", yearSet);
+
+      // On ne sélectionne plus que les select existants (le filtre machine a été supprimé)
+      document.querySelectorAll("select").forEach(select => {
+        select.addEventListener("change", updateCharts);
+      });
+
+      // Si l'utilisateur n'a accès qu'à un seul site : sélection automatique, filtre désactivé
+      const siteSelect = document.getElementById("siteFilter");
+      if (siteSet.size === 1) {
+        siteSelect.selectedIndex = 1;
+        siteSelect.disabled = true;
+      } else {
+        siteSelect.disabled = false;
+      }
+    }
+
+    function fillSelect(id, values) {
+      const select = document.getElementById(id);
+      // Efface les anciennes options (autres que la première)
+      for (let i = select.options.length - 1; i >= 1; i--) select.remove(i);
+      Array.from(values).sort().forEach(value => {
+        if (value) {
+          const opt = document.createElement("option");
+          opt.value = value;
+          opt.textContent = value;
+          select.appendChild(opt);
+        }
+      });
+    }
+
+    function updateCharts() {
+      const site = document.getElementById("siteFilter").value;
+      const type = document.getElementById("typeFilter").value;
+      // const machine = document.getElementById("machineFilter").value; // supprimé
+      const year = document.getElementById("yearFilter").value;
+
+      // Restriction : on ne garde que les données accessibles pour l'utilisateur
+      const filtered = allData.filter(row => {
+        const siteObj = SITES.find(s => s.label === row["Site Intervention"]);
+        if (!siteObj || !userRights.includes(siteObj.id)) return false;
+        const matchSite = !site || row["Site Intervention"] === site;
+        const matchType = !type || row["Type d'intervention"] === type;
+        // const matchMachine = !machine || row["Machine"] === machine; // supprimé
+        const rowDate = new Date(row["Date Intervention"]);
+        const matchYear = !year || (!isNaN(rowDate) && rowDate.getFullYear() == year);
+        // return matchSite && matchType && matchMachine && matchYear;
+        return matchSite && matchType && matchYear; // modifié
+      });
+
+      const typeCounts = {};
+      const siteCounts = {};
+      filtered.forEach(row => {
+        const type = row["Type d'intervention"] || "Inconnu";
+        const site = row["Site Intervention"] || "Inconnu";
+        typeCounts[type] = (typeCounts[type] || 0) + 1;
+        siteCounts[site] = (siteCounts[site] || 0) + 1;
+      });
+
+      const total = Object.values(typeCounts).reduce((a, b) => a + b, 0);
+
+      const pieCtx = document.getElementById("pieChart").getContext("2d");
+      if (pieChart) pieChart.destroy();
+      pieChart = new Chart(pieCtx, {
+        type: "doughnut",
+        data: {
+          labels: Object.keys(typeCounts),
+          datasets: [{
+            data: Object.values(typeCounts),
+            backgroundColor: ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2"]
+          }]
+        },
+        options: {
+          plugins: {
+            title: {
+              display: true,
+              text: "Répartition des types d'intervention"
+            },
+            datalabels: {
+              formatter: (value) => `${((value / total) * 100).toFixed(1)}%`,
+              color: '#fff',
+              font: { weight: 'bold' }
+            }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+
+      const barCtx = document.getElementById("barChart").getContext("2d");
+      if (barChart) barChart.destroy();
+      barChart = new Chart(barCtx, {
+        type: "bar",
+        data: {
+          labels: Object.keys(siteCounts),
+          datasets: [{
+            label: "Nombre d'interventions",
+            data: Object.values(siteCounts),
+            backgroundColor: "#4e79a7"
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          plugins: {
+            title: {
+              display: true,
+              text: "Nombre d'interventions par site"
+            },
+            datalabels: {
+              anchor: 'end',
+              align: 'right',
+              formatter: (value) => `${value}`,
+              font: { weight: 'bold' }
+            },
+            legend: { display: false }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+    }
+  </script>
 </body>
 </html>
