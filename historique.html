@@ -7,26 +7,29 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
+    html, body {
+      height: 100%;
       margin: 0;
-      background-color: #f4f4f4;
-      background-image: url('Capture d’écran 2025-06-12 à 18.32.34.png');
-      background-repeat: no-repeat;
-      background-size: cover;
-      background-position: center center;
-      color: #222;
+      padding: 0;
+    }
+    body {
+      min-height: 100vh;
       position: relative;
+      color: #222;
+      font-family: Arial, sans-serif;
+      z-index: 1;
     }
     body::before {
       content: "";
       position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
       z-index: 0;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(255,255,255,0.1);
+      background: url('Capture d’écran 2025-06-12 à 18.32.34.png') center center / cover no-repeat;
+      opacity: 1;
       pointer-events: none;
     }
-    header, .filters, .history-table-container {
+    main, header, .filters, .history-table-container {
       position: relative;
       z-index: 1;
     }
@@ -36,9 +39,8 @@
       padding: 10px 20px;
       background-color: #4e79a7;
       color: #fff !important;
-      position: relative;
-      z-index: 2;
       text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
+      z-index: 2;
     }
     .menu-button {
       font-size: 26px;
@@ -81,6 +83,7 @@
     }
     .menu a:last-child { border-bottom: none; }
     .menu a:hover { background-color: #f0f0f0; }
+
     .filters {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -114,10 +117,10 @@
     }
     .chart-container {
       display: flex;
-      flex-wrap: wrap;
       justify-content: center;
-      gap: 40px;
+      align-items: center;
       margin: 40px 0;
+      gap: 40px;
     }
     #pieChartHistory {
       width: 320px !important;
@@ -184,6 +187,9 @@
     #login-box button:hover { background: #355270; }
     #login-error { color: #c00; margin-bottom: 10px; min-height: 22px; }
     @media (max-width: 600px) {
+      .filters { grid-template-columns: 1fr; padding: 20px; gap: 15px; }
+      .filter-group { align-items: stretch; text-align: left; }
+      .filter-group label { margin-bottom: 4px; }
       #pieChartHistory { width: 90vw !important; height: auto !important; }
       table { min-width: 500px; }
       .history-table-container { padding: 6px; }
@@ -213,7 +219,6 @@
     </div>
   </header>
   <div class="filters">
-    <!-- Les filtres restent inchangés -->
     <div class="filter-group">
       <label for="siteFilter">Site</label>
       <select id="siteFilter"></select>
@@ -231,25 +236,27 @@
       <select id="yearFilter"><option value="">Toutes les années</option></select>
     </div>
   </div>
-  <div class="chart-container">
-    <canvas id="pieChartHistory"></canvas>
-  </div>
-  <div class="history-table-container">
-    <table id="historyTable">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Site</th>
-          <th>Machine</th>
-          <th>Type de maintenance</th>
-          <th>Rapport</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Données injectées dynamiquement -->
-      </tbody>
-    </table>
-  </div>
+  <main>
+    <div class="chart-container">
+      <canvas id="pieChartHistory"></canvas>
+    </div>
+    <div class="history-table-container">
+      <table id="historyTable">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Site</th>
+            <th>Machine</th>
+            <th>Type de maintenance</th>
+            <th>Rapport</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Données injectées dynamiquement -->
+        </tbody>
+      </table>
+    </div>
+  </main>
   <script>
     // Menu
     function toggleMenu() {
@@ -334,7 +341,7 @@
           allData = data;
           populateFilters(data);
           showSiteFilterSites();
-          updateMachineFilter(); // Ajouté pour synchroniser au premier affichage
+          updateMachineFilter();
           updateTable();
         });
     }
@@ -388,7 +395,6 @@
       });
     }
 
-    // Ajout : met à jour la liste des machines selon le site sélectionné
     function updateMachineFilter() {
       const site = document.getElementById("siteFilter").value;
       let machineSet = new Set();
@@ -401,7 +407,6 @@
       fillSelect("machineFilter", machineSet, "Toutes les machines");
     }
 
-    // Ajout : écouteur pour déclencher la mise à jour des machines et du tableau quand le site change
     document.addEventListener("DOMContentLoaded", function() {
       document.getElementById("siteFilter").addEventListener("change", function() {
         updateMachineFilter();
@@ -429,7 +434,6 @@
       const tbody = document.getElementById("historyTable").querySelector("tbody");
       tbody.innerHTML = "";
 
-      // Filtrage des lignes selon accès et filtres
       const filteredRows = allData.filter(row => {
         if (!isAllowedSite(row["Site Intervention"])) return false;
         const matchSite = !site || row["Site Intervention"] === site;
@@ -441,7 +445,6 @@
         return matchSite && matchType && matchMachine && matchYear;
       });
 
-      // Mets à jour le graphe camembert correctif/modification/préventif
       updatePieChartHistory(filteredRows);
 
       filteredRows.forEach(row => {
@@ -456,7 +459,6 @@
           }
         }
         const typeValue = row["Choix du type de maintenance"] || row["Type d'intervention"] || "-";
-        // Utilisation du lien PDF (colonne "PDF URL") pour la colonne Rapport
         let rapportHtml = "-";
         const lienPdf = row["PDF URL"];
         if (lienPdf && lienPdf.trim() && lienPdf.startsWith("http")) {
@@ -474,7 +476,6 @@
       });
     }
 
-    // Graphe camembert correctif/modification/préventif identique à tableau.html
     function updatePieChartHistory(filteredRows) {
       let correctif = 0, modif = 0, preventif = 0;
       filteredRows.forEach(row => {
@@ -489,11 +490,9 @@
           type.includes("preventif")
         ) preventif++;
       });
-      const total = correctif + modif + preventif;
       const data = [correctif, modif, preventif];
       const labels = ["Correctif", "Modification", "Préventif (1/6/12 mois)"];
       const colors = ["#e15759", "#f28e2b", "#4e79a7"];
-
       const ctx = document.getElementById("pieChartHistory").getContext("2d");
       if (pieChartHistory) pieChartHistory.destroy();
       pieChartHistory = new Chart(ctx, {
