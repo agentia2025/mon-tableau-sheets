@@ -190,6 +190,7 @@
           allData = data;
           populateFilters(data);
           showSiteFilterSites();
+          updateMachineFilter(); // Ajouté pour synchroniser au premier affichage
           updateTable();
         });
     }
@@ -223,28 +224,51 @@
       } else {
         select.disabled = false;
       }
-      updateTable();
+      // updateTable(); // Plus besoin ici, sera fait après updateMachineFilter
     }
 
     function populateFilters(data) {
       const typeSet = new Set();
-      const machineSet = new Set();
       const yearSet = new Set();
       data.forEach(row => {
         typeSet.add(row["Choix du type de maintenance"] || row["Type d'intervention"]);
-        machineSet.add(row["Machine"]);
         const date = new Date(row["Date Intervention"]);
         if (!isNaN(date)) yearSet.add(date.getFullYear());
       });
       fillSelect("typeFilter", typeSet, "Tous les types");
-      fillSelect("machineFilter", machineSet, "Toutes les machines");
       fillSelect("yearFilter", yearSet, "Toutes les années");
+
+      // NE PAS remplir ici le filtre machine, il sera fait dynamiquement
+      // fillSelect("machineFilter", machineSet, "Toutes les machines");
+
       document.querySelectorAll("select").forEach(select => {
         if (select.id !== "siteFilter") {
           select.addEventListener("change", updateTable);
         }
       });
     }
+
+    // Ajout : met à jour la liste des machines selon le site sélectionné
+    function updateMachineFilter() {
+      const site = document.getElementById("siteFilter").value;
+      let machineSet = new Set();
+      allData.forEach(row => {
+        // Si "Tous les sites", on prend toutes les machines des sites autorisés
+        if ((!site && isAllowedSite(row["Site Intervention"])) ||
+            (site && row["Site Intervention"] === site)) {
+          machineSet.add(row["Machine"]);
+        }
+      });
+      fillSelect("machineFilter", machineSet, "Toutes les machines");
+    }
+
+    // Ajout : écouteur pour déclencher la mise à jour des machines et du tableau quand le site change
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById("siteFilter").addEventListener("change", function() {
+        updateMachineFilter();
+        updateTable();
+      });
+    });
 
     function fillSelect(id, values, label) {
       const select = document.getElementById(id);
