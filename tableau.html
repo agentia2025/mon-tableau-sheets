@@ -11,6 +11,18 @@
       font-family: Arial, sans-serif;
       margin: 0;
       background-color: #f4f4f4;
+      background-image: url('Capture d’écran 2025-06-12 à 18.32.34.png');
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-position: center center;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      z-index: 0;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(255,255,255,0.4);
+      pointer-events: none;
     }
     header {
       display: flex;
@@ -19,6 +31,7 @@
       background-color: #4e79a7;
       color: white;
       position: relative;
+      z-index: 1;
     }
     .menu-button {
       font-size: 26px;
@@ -64,6 +77,7 @@
       padding: 30px 20px 10px;
       max-width: 800px;
       margin: auto;
+      z-index: 1;
     }
     .filter-group {
       display: flex;
@@ -78,6 +92,7 @@
       justify-content: center;
       gap: 40px;
       margin: 40px 0;
+      z-index: 1;
     }
     canvas { width: 320px !important; height: 320px !important; }
     @media (max-width: 600px) {
@@ -253,7 +268,6 @@
       // Restriction : ne montrer que les sites autorisés
       const siteSet = new Set();
       const typeSet = new Set();
-      // const machineSet = new Set(); // supprimé
       const yearSet = new Set();
 
       data.forEach(row => {
@@ -264,17 +278,14 @@
         }
         // Les autres filtres restent globaux
         typeSet.add(row["Type d'intervention"]);
-        // machineSet.add(row["Machine"]); // supprimé
         const date = new Date(row["Date Intervention"]);
         if (!isNaN(date)) yearSet.add(date.getFullYear());
       });
 
       fillSelect("siteFilter", siteSet);
       fillSelect("typeFilter", typeSet);
-      // fillSelect("machineFilter", machineSet); // supprimé
       fillSelect("yearFilter", yearSet);
 
-      // On ne sélectionne plus que les select existants (le filtre machine a été supprimé)
       document.querySelectorAll("select").forEach(select => {
         select.addEventListener("change", updateCharts);
       });
@@ -306,7 +317,6 @@
     function updateCharts() {
       const site = document.getElementById("siteFilter").value;
       const type = document.getElementById("typeFilter").value;
-      // const machine = document.getElementById("machineFilter").value; // supprimé
       const year = document.getElementById("yearFilter").value;
 
       // Restriction : on ne garde que les données accessibles pour l'utilisateur
@@ -315,11 +325,9 @@
         if (!siteObj || !userRights.includes(siteObj.id)) return false;
         const matchSite = !site || row["Site Intervention"] === site;
         const matchType = !type || row["Type d'intervention"] === type;
-        // const matchMachine = !machine || row["Machine"] === machine; // supprimé
         const rowDate = new Date(row["Date Intervention"]);
         const matchYear = !year || (!isNaN(rowDate) && rowDate.getFullYear() == year);
-        // return matchSite && matchType && matchMachine && matchYear;
-        return matchSite && matchType && matchYear; // modifié
+        return matchSite && matchType && matchYear;
       });
 
       const typeCounts = {};
