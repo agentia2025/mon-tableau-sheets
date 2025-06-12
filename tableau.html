@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Tableau de bord Maintenance</title>
+  <title>Préventif Maintenance</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
@@ -26,7 +26,7 @@
       background: rgba(255,255,255,0.1);
       pointer-events: none;
     }
-    header, .filters, .chart-container {
+    header, .filters, .chart-container, .preventif-table-container {
       position: relative;
       z-index: 1;
     }
@@ -87,7 +87,7 @@
       gap: 20px;
       justify-content: center;
       padding: 30px 20px 10px;
-      max-width: 800px;
+      max-width: 600px;
       margin: auto;
       color: #222;
       text-shadow: 0 1px 2px #fff;
@@ -114,10 +114,17 @@
     }
     .chart-container {
       display: flex;
-      flex-wrap: wrap;
       justify-content: center;
-      gap: 40px;
+      align-items: center;
       margin: 40px 0;
+      gap: 40px;
+    }
+    #conformite {
+      text-align: center;
+      font-size: 1.3em;
+      font-weight: bold;
+      margin: 30px 0 10px 0;
+      color: #137c12;
     }
     canvas {
       width: 320px !important;
@@ -126,13 +133,25 @@
       border-radius: 12px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.10);
       z-index: 2;
+      display: block;
+      margin: 0 auto;
     }
-    @media (max-width: 600px) {
-      .filters { grid-template-columns: 1fr; padding: 20px; gap: 15px; }
-      .filter-group { align-items: stretch; text-align: left; }
-      .filter-group label { margin-bottom: 4px; }
-      canvas { width: 90vw !important; height: auto !important; }
+    .preventif-table-container {
+      max-width: 1000px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      overflow-x: auto;
+      padding: 18px 12px 18px 12px;
+      position: relative;
+      z-index: 1;
     }
+    table { border-collapse: collapse; width: 100%; min-width: 700px; }
+    th, td { padding: 8px 8px; border-bottom: 1px solid #eee; text-align: left; }
+    th { background: #f7f9fa; font-weight: bold; }
+    tr:hover { background: #f5f5ff; }
+    .rapport-icon { font-size: 18px; text-align: center; }
     #login-overlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.45);
@@ -171,10 +190,18 @@
     }
     #login-box button:hover { background: #355270; }
     #login-error { color: #c00; margin-bottom: 10px; min-height: 22px; }
+    @media (max-width: 600px) {
+      .filters { grid-template-columns: 1fr; padding: 20px; gap: 15px; }
+      .filter-group { align-items: stretch; text-align: left; }
+      .filter-group label { margin-bottom: 4px; }
+      canvas { width: 90vw !important; height: auto !important; }
+      table { min-width: 500px; }
+      .preventif-table-container { padding: 6px; }
+      .chart-container { padding: 12px 0; }
+    }
   </style>
 </head>
 <body>
-  <!-- Overlay connexion -->
   <div id="login-overlay">
     <form id="login-box" autocomplete="off" onsubmit="return false;">
       <h2>Connexion</h2>
@@ -185,8 +212,8 @@
     </form>
   </div>
   <header>
-    <button class="menu-button">☰</button>
-    <h1 class="page-title">Tableau de bord Maintenance</h1>
+    <button class="menu-button" onclick="toggleMenu()">☰</button>
+    <h1 class="page-title">Préventif Maintenance</h1>
     <div class="menu" id="menu">
       <a href="index.html">Accueil</a>
       <a href="tableau.html">Tableau de bord</a>
@@ -195,61 +222,97 @@
       <a href="#" id="logout-link" onclick="logout();return false;" style="color:#c00;">Déconnexion</a>
     </div>
   </header>
-
+  <div id="conformite"></div>
   <div class="filters">
     <div class="filter-group">
       <label for="siteFilter">Site</label>
-      <select id="siteFilter"><option value="">Tous les sites</option></select>
+      <select id="siteFilter"></select>
     </div>
     <div class="filter-group">
-      <label for="typeFilter">Type</label>
-      <select id="typeFilter"><option value="">Tous les types</option></select>
+      <label for="machineFilter">Machine</label>
+      <select id="machineFilter"><option value="">Toutes les machines</option></select>
     </div>
-    <!-- Suppression du filtre Machine -->
     <div class="filter-group">
       <label for="yearFilter">Année</label>
       <select id="yearFilter"><option value="">Toutes les années</option></select>
     </div>
   </div>
-
-  <div class="chart-container">
-    <canvas id="pieChart"></canvas>
-    <canvas id="barChart"></canvas>
-  </div>
-
+  <main>
+    <div class="chart-container">
+      <canvas id="pieChartPreventif"></canvas>
+    </div>
+    <div class="preventif-table-container">
+      <table id="preventifTable">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Site</th>
+            <th>Machine</th>
+            <th>Type de préventif</th>
+            <th>Statut</th>
+            <th>Rapport</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Données injectées dynamiquement -->
+        </tbody>
+      </table>
+    </div>
+  </main>
   <script>
-    // --- SÉCURITÉ ---
+    // Menu
+    function toggleMenu() {
+      const m = document.getElementById("menu");
+      m.style.display = m.style.display === "flex" ? "none" : "flex";
+    }
+    document.addEventListener("click", function(e) {
+      const m = document.getElementById("menu");
+      const b = document.querySelector(".menu-button");
+      if (!m.contains(e.target) && e.target !== b) m.style.display = "none";
+    });
+
+    // Connexion/déconnexion
     const PASSWORDS = {
       "Armitec2025": ["commun", "lidec", "atelier", "scr"],
       "commun*d*sit": ["commun"],
       "lidecbelli": ["lidec", "atelier"],
       "scrfuture": ["scr"]
     };
-    // Liens entre les id droits et les labels utilisés dans les données
     const SITES = [
       { id: "commun", label: "Commun de site" },
       { id: "lidec", label: "Lidec" },
       { id: "atelier", label: "Atelier Bélliparc" },
       { id: "scr", label: "SCR" }
     ];
-
+    function normalize(str) {
+      return (str || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+    }
+    function isAllowedSite(siteLabel) {
+      for (const s of SITES) {
+        if (normalize(s.label) === normalize(siteLabel) && userRights.includes(s.id)) return true;
+      }
+      return false;
+    }
     let userRights = [];
     let allData = [];
-    let pieChart, barChart;
+    let pieChartPreventif = null;
 
-    document.getElementById("login-box").onsubmit = function () {
+    document.getElementById("login-box").onsubmit = function() {
       const pass = document.getElementById("password").value;
       if (PASSWORDS[pass]) {
         userRights = PASSWORDS[pass];
         sessionStorage.setItem("userRights", JSON.stringify(userRights));
         document.getElementById("login-overlay").style.display = "none";
-        afterLogin();
+        fetchData();
       } else {
         document.getElementById("login-error").innerText = "Mot de passe incorrect.";
         document.getElementById("password").value = "";
         document.getElementById("password").focus();
       }
-      return false;
     };
 
     function logout() {
@@ -260,20 +323,6 @@
     }
 
     window.onload = function () {
-      // Menu
-      const menu = document.getElementById("menu");
-      const button = document.querySelector(".menu-button");
-      menu.style.display = "none";
-      button.addEventListener("click", function () {
-        menu.style.display = menu.style.display === "flex" ? "none" : "flex";
-      });
-      document.addEventListener("click", function (event) {
-        if (!menu.contains(event.target) && event.target !== button) {
-          menu.style.display = "none";
-        }
-      });
-
-      // Sécurité
       const rights = sessionStorage.getItem("userRights");
       if (!rights) {
         document.getElementById("login-overlay").style.display = "flex";
@@ -281,157 +330,251 @@
       } else {
         userRights = JSON.parse(rights);
         document.getElementById("login-overlay").style.display = "none";
-        afterLogin();
+        fetchData();
       }
     };
 
-    // --- MÉTIER ---
-    const url = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
-
-    function afterLogin() {
+    function fetchData() {
+      const url = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
       fetch(url)
-        .then(response => response.json())
+        .then(r => r.json())
         .then(data => {
           allData = data;
           populateFilters(data);
-          updateCharts();
+          showSiteFilterSites();
+          updateMachineFilter();
+          updateTable();
         });
     }
 
-    function populateFilters(data) {
-      // Restriction : ne montrer que les sites autorisés
+    function showSiteFilterSites() {
+      const select = document.getElementById("siteFilter");
+      if (!select) return;
+      select.innerHTML = "";
       const siteSet = new Set();
-      const typeSet = new Set();
-      const yearSet = new Set();
-
-      data.forEach(row => {
-        // On ne propose ce site que s'il est autorisé pour l'utilisateur
-        const siteObj = SITES.find(s => s.label === row["Site Intervention"]);
-        if (siteObj && userRights.includes(siteObj.id)) {
+      allData.forEach(row => {
+        if (isAllowedSite(row["Site Intervention"])) {
           siteSet.add(row["Site Intervention"]);
         }
-        // Les autres filtres restent globaux
-        typeSet.add(row["Type d'intervention"]);
-        const date = new Date(row["Date Intervention"]);
-        if (!isNaN(date)) yearSet.add(date.getFullYear());
       });
-
-      fillSelect("siteFilter", siteSet);
-      fillSelect("typeFilter", typeSet);
-      fillSelect("yearFilter", yearSet);
-
-      document.querySelectorAll("select").forEach(select => {
-        select.addEventListener("change", updateCharts);
+      const siteList = Array.from(siteSet).sort();
+      if (siteList.length > 1) {
+        const optAll = document.createElement("option");
+        optAll.value = "";
+        optAll.textContent = "Tous les sites";
+        select.appendChild(optAll);
+      }
+      siteList.forEach(siteValue => {
+        const opt = document.createElement("option");
+        opt.value = siteValue;
+        opt.textContent = siteValue;
+        select.appendChild(opt);
       });
-
-      // Si l'utilisateur n'a accès qu'à un seul site : sélection automatique, filtre désactivé
-      const siteSelect = document.getElementById("siteFilter");
-      if (siteSet.size === 1) {
-        siteSelect.selectedIndex = 1;
-        siteSelect.disabled = true;
+      if (siteList.length === 1) {
+        select.selectedIndex = 0;
+        select.disabled = true;
       } else {
-        siteSelect.disabled = false;
+        select.disabled = false;
       }
     }
 
-    function fillSelect(id, values) {
-      const select = document.getElementById(id);
-      // Efface les anciennes options (autres que la première)
-      for (let i = select.options.length - 1; i >= 1; i--) select.remove(i);
-      Array.from(values).sort().forEach(value => {
-        if (value) {
-          const opt = document.createElement("option");
-          opt.value = value;
-          opt.textContent = value;
-          select.appendChild(opt);
+    function populateFilters(data) {
+      const yearSet = new Set();
+      data.forEach(row => {
+        if (row["Choix du type de maintenance"] && (
+          row["Choix du type de maintenance"].toLowerCase().includes("préventif") ||
+          row["Choix du type de maintenance"].toLowerCase().includes("preventif") ||
+          row["Choix du type de maintenance"].toLowerCase().includes("mois")
+        )) {
+          const date = new Date(row["Date Intervention"]);
+          if (!isNaN(date)) yearSet.add(date.getFullYear());
+        }
+      });
+      fillSelect("yearFilter", yearSet, "Toutes les années");
+
+      document.querySelectorAll("select").forEach(select => {
+        if (select.id !== "siteFilter") {
+          select.addEventListener("change", updateTable);
         }
       });
     }
 
-    function updateCharts() {
+    function updateMachineFilter() {
       const site = document.getElementById("siteFilter").value;
-      const type = document.getElementById("typeFilter").value;
+      let machineSet = new Set();
+      allData.forEach(row => {
+        if ((row["Choix du type de maintenance"] || "").toLowerCase().includes("prév")
+          || (row["Choix du type de maintenance"] || "").toLowerCase().includes("mois")) {
+          if ((!site && isAllowedSite(row["Site Intervention"])) ||
+              (site && row["Site Intervention"] === site)) {
+            machineSet.add(row["Machine"]);
+          }
+        }
+      });
+      fillSelect("machineFilter", machineSet, "Toutes les machines");
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById("siteFilter").addEventListener("change", function() {
+        updateMachineFilter();
+        updateTable();
+      });
+    });
+
+    function fillSelect(id, values, label) {
+      const select = document.getElementById(id);
+      select.innerHTML = `<option value="">${label}</option>`;
+      Array.from(values).sort().forEach(value => {
+        const opt = document.createElement("option");
+        opt.value = value;
+        opt.textContent = value;
+        select.appendChild(opt);
+      });
+    }
+
+    // ---- LOGIQUE CONFORMITÉ ----
+    function parseDateFR(str) {
+      if (!str) return null;
+      str = str.trim();
+      if (/^\d{4}-\d{2}-\d{2}/.test(str)) return new Date(str);
+      const m = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+      if (m) return new Date(Number(m[3]), Number(m[2])-1, Number(m[1]));
+      return null;
+    }
+    function isConforme(row) {
+      // Attention ! colonne "conformité"
+      const conf = (row["conformité"] || "")
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .trim().toLowerCase();
+      return conf === "conforme";
+    }
+    function statutCalcule(row, today) {
+      if (isConforme(row)) return null;
+      const d = parseDateFR(row["Date Intervention"]);
+      if (!d) return null;
+      d.setHours(0,0,0,0);
+      today.setHours(0,0,0,0);
+      if (d < today) return "En retard";
+      else return "À faire";
+    }
+    function updateTable() {
+      const site = document.getElementById("siteFilter").value;
+      const machine = document.getElementById("machineFilter").value;
       const year = document.getElementById("yearFilter").value;
+      const rights = userRights.length ? userRights : JSON.parse(sessionStorage.getItem("userRights") || "[]");
+      const tbody = document.getElementById("preventifTable").querySelector("tbody");
+      tbody.innerHTML = "";
+      const today = new Date();
 
-      // Restriction : on ne garde que les données accessibles pour l'utilisateur
-      const filtered = allData.filter(row => {
-        const siteObj = SITES.find(s => s.label === row["Site Intervention"]);
-        if (!siteObj || !userRights.includes(siteObj.id)) return false;
+      // Pour le camembert et le tableau : on ne garde que les lignes non conformes
+      const filteredRows = allData.filter(row => {
+        if (!isAllowedSite(row["Site Intervention"])) return false;
+        const typeMaint = (row["Choix du type de maintenance"] || "").toLowerCase();
+        if (!(typeMaint.includes("prév") || typeMaint.includes("mois"))) return false;
+        // Exclure les "conformes"
+        if (isConforme(row)) return false;
+        const d = parseDateFR(row["Date Intervention"]);
+        if (!d) return false;
         const matchSite = !site || row["Site Intervention"] === site;
-        const matchType = !type || row["Type d'intervention"] === type;
-        const rowDate = new Date(row["Date Intervention"]);
-        const matchYear = !year || (!isNaN(rowDate) && rowDate.getFullYear() == year);
-        return matchSite && matchType && matchYear;
+        const matchMachine = !machine || row["Machine"] === machine;
+        const matchYear = !year || (!isNaN(d) && d.getFullYear() == year);
+        return matchSite && matchMachine && matchYear;
+      });
+      updatePieChartPreventif(filteredRows, today);
+
+      filteredRows.forEach(row => {
+        let d = row["Date Intervention"] || "";
+        if (d) {
+          const D = parseDateFR(d);
+          if (!isNaN(D)) {
+            const day = String(D.getDate()).padStart(2, "0");
+            const month = String(D.getMonth() + 1).padStart(2, "0");
+            const year = D.getFullYear();
+            d = `${day}/${month}/${year}`;
+          }
+        }
+        const typeValue = row["Choix du type de maintenance"] || "-";
+        const statut = statutCalcule(row, today) || "-";
+        let rapportHtml = "-";
+        const lienPdf = row["PDF URL"];
+        if (lienPdf && lienPdf.trim() && lienPdf.startsWith("http")) {
+          rapportHtml = `<a class="rapport-icon" href="${lienPdf}" target="_blank" title="Voir le PDF"><span>📄</span></a>`;
+        }
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${d}</td>
+          <td>${row["Site Intervention"] || "-"}</td>
+          <td>${row["Machine"] || "-"}</td>
+          <td>${typeValue}</td>
+          <td>${statut}</td>
+          <td style="text-align:center;">${rapportHtml}</td>
+        `;
+        tbody.appendChild(tr);
       });
 
-      const typeCounts = {};
-      const siteCounts = {};
-      filtered.forEach(row => {
-        const type = row["Type d'intervention"] || "Inconnu";
-        const site = row["Site Intervention"] || "Inconnu";
-        typeCounts[type] = (typeCounts[type] || 0) + 1;
-        siteCounts[site] = (siteCounts[site] || 0) + 1;
+      // Calcul et affichage du taux de conformité
+      updateConformite();
+    }
+
+    function updatePieChartPreventif(filteredRows, today) {
+      let aFaire = 0, enRetard = 0;
+      filteredRows.forEach(row => {
+        const statut = statutCalcule(row, today);
+        if (statut === "En retard") enRetard++;
+        else if (statut === "À faire") aFaire++;
       });
-
-      const total = Object.values(typeCounts).reduce((a, b) => a + b, 0);
-
-      const pieCtx = document.getElementById("pieChart").getContext("2d");
-      if (pieChart) pieChart.destroy();
-      pieChart = new Chart(pieCtx, {
+      const data = [aFaire, enRetard];
+      const labels = ["À faire", "En retard"];
+      const colors = ["#4e79a7", "#e15759"];
+      const ctx = document.getElementById("pieChartPreventif").getContext("2d");
+      if (pieChartPreventif) pieChartPreventif.destroy();
+      pieChartPreventif = new Chart(ctx, {
         type: "doughnut",
         data: {
-          labels: Object.keys(typeCounts),
+          labels: labels,
           datasets: [{
-            data: Object.values(typeCounts),
-            backgroundColor: ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2"]
+            data: data,
+            backgroundColor: colors
           }]
         },
         options: {
           plugins: {
             title: {
               display: true,
-              text: "Répartition des interventions par type"
+              text: "Répartition préventif : À faire / En retard"
             },
             datalabels: {
-              formatter: (value) => `${((value / total) * 100).toFixed(1)}%`,
+              formatter: (value, ctx) => {
+                const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                if (!total) return '';
+                return ((value / total) * 100).toFixed(1) + '%';
+              },
               color: '#fff',
               font: { weight: 'bold' }
-            }
-          }
+            },
+            legend: { display: true }
+          },
+          cutout: "55%"
         },
         plugins: [ChartDataLabels]
       });
+    }
 
-      const barCtx = document.getElementById("barChart").getContext("2d");
-      if (barChart) barChart.destroy();
-      barChart = new Chart(barCtx, {
-        type: "bar",
-        data: {
-          labels: Object.keys(siteCounts),
-          datasets: [{
-            label: "Volume d'interventions par site",
-            data: Object.values(siteCounts),
-            backgroundColor: "#4e79a7"
-          }]
-        },
-        options: {
-          indexAxis: 'y',
-          plugins: {
-            title: {
-              display: true,
-              text: "Répartition des interventions par site"
-            },
-            datalabels: {
-              anchor: 'end',
-              align: 'right',
-              formatter: (value) => `${value}`,
-              font: { weight: 'bold' }
-            },
-            legend: { display: false }
-          }
-        },
-        plugins: [ChartDataLabels]
+    function updateConformite() {
+      // Pourcentage = nb conformes / (conformes + à faire + en retard)
+      const today = new Date();
+      let total = 0, conformes = 0;
+      allData.forEach(row => {
+        if (!isAllowedSite(row["Site Intervention"])) return;
+        const typeMaint = (row["Choix du type de maintenance"] || "").toLowerCase();
+        if (!(typeMaint.includes("prév") || typeMaint.includes("mois"))) return;
+        const d = parseDateFR(row["Date Intervention"]);
+        if (!d) return;
+        total++;
+        if (isConforme(row)) conformes++;
       });
+      let taux = (total ? (conformes / total * 100) : 0).toFixed(1);
+      document.getElementById("conformite").textContent = total ? `Taux de conformité préventif : ${taux}% (${conformes} sur ${total})` : '';
     }
   </script>
 </body>
