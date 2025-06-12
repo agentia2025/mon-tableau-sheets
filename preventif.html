@@ -7,11 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    }
+    html, body { height: 100%; margin: 0; padding: 0; }
     body {
       min-height: 100vh;
       position: relative;
@@ -433,6 +429,35 @@
       });
     }
 
+    // --- Calcul dynamique "à faire" / "en retard" ---
+    function parseDateFR(str) {
+      if (!str) return null;
+      str = str.trim();
+      if (/^\d{4}-\d{2}-\d{2}/.test(str)) return new Date(str);
+      const m = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+      if (m) return new Date(Number(m[3]), Number(m[2])-1, Number(m[1]));
+      return null;
+    }
+    function isAFaireOrEnRetard(row, today) {
+      if (!row["Date Intervention"]) return false;
+      const statut = (row["Statut"] || "").toLowerCase();
+      if (statut.includes("fait")) return false; // On ignore les faits
+      const d = parseDateFR(row["Date Intervention"]);
+      if (!d) return false;
+      d.setHours(0,0,0,0);
+      today.setHours(0,0,0,0);
+      return true;
+    }
+    function calculStatut(row, today) {
+      const statut = (row["Statut"] || "").toLowerCase();
+      if (statut.includes("fait")) return null;
+      const d = parseDateFR(row["Date Intervention"]);
+      if (!d) return null;
+      d.setHours(0,0,0,0);
+      today.setHours(0,0,0,0);
+      if (d < today) return "En retard";
+      else return "À faire";
+    }
     function updateTable() {
       const site = document.getElementById("siteFilter").value;
       const type = document.getElementById("typeFilter").value;
@@ -441,28 +466,26 @@
       const rights = userRights.length ? userRights : JSON.parse(sessionStorage.getItem("userRights") || "[]");
       const tbody = document.getElementById("preventifTable").querySelector("tbody");
       tbody.innerHTML = "";
-
-      // Filtrage: statut à faire ou en retard uniquement
+      const today = new Date();
       const filteredRows = allData.filter(row => {
         if (!isAllowedSite(row["Site Intervention"])) return false;
         const typeMaint = (row["Choix du type de maintenance"] || "").toLowerCase();
         if (!(typeMaint.includes("prév") || typeMaint.includes("mois"))) return false;
-        const statut = (row["Statut"] || "").toLowerCase();
-        if (!(statut.includes("à faire") || statut.includes("a faire") || statut.includes("en retard"))) return false;
+        if (!isAFaireOrEnRetard(row, today)) return false;
+        const statutCalcule = calculStatut(row, today);
+        if (!statutCalcule) return false;
         const matchSite = !site || row["Site Intervention"] === site;
         const matchType = !type || row["Choix du type de maintenance"] === type;
         const matchMachine = !machine || row["Machine"] === machine;
-        const rowDate = new Date(row["Date Intervention"]);
+        const rowDate = parseDateFR(row["Date Intervention"]);
         const matchYear = !year || (!isNaN(rowDate) && rowDate.getFullYear() == year);
         return matchSite && matchType && matchMachine && matchYear;
       });
-
-      updatePieChartPreventif(filteredRows);
-
+      updatePieChartPreventif(filteredRows, today);
       filteredRows.forEach(row => {
         let d = row["Date Intervention"] || "";
         if (d) {
-          const D = new Date(d);
+          const D = parseDateFR(d);
           if (!isNaN(D)) {
             const day = String(D.getDate()).padStart(2, "0");
             const month = String(D.getMonth() + 1).padStart(2, "0");
@@ -471,7 +494,7 @@
           }
         }
         const typeValue = row["Choix du type de maintenance"] || "-";
-        const statutValue = row["Statut"] || "-";
+        const statutCalcule = calculStatut(row, today) || "-";
         let rapportHtml = "-";
         const lienPdf = row["PDF URL"];
         if (lienPdf && lienPdf.trim() && lienPdf.startsWith("http")) {
@@ -483,20 +506,18 @@
           <td>${row["Site Intervention"] || "-"}</td>
           <td>${row["Machine"] || "-"}</td>
           <td>${typeValue}</td>
-          <td>${statutValue}</td>
+          <td>${statutCalcule}</td>
           <td style="text-align:center;">${rapportHtml}</td>
         `;
         tbody.appendChild(tr);
       });
     }
-
-    // Camembert : seulement "À faire" et "En retard"
-    function updatePieChartPreventif(filteredRows) {
+    function updatePieChartPreventif(filteredRows, today) {
       let aFaire = 0, enRetard = 0;
       filteredRows.forEach(row => {
-        const statut = (row["Statut"] || "").toLowerCase();
-        if (statut.includes("en retard")) enRetard++;
-        else if (statut.includes("à faire") || statut.includes("a faire")) aFaire++;
+        const statut = calculStatut(row, today);
+        if (statut === "En retard") enRetard++;
+        else if (statut === "À faire") aFaire++;
       });
       const data = [aFaire, enRetard];
       const labels = ["À faire", "En retard"];
@@ -516,7 +537,7 @@
           plugins: {
             title: {
               display: true,
-              text: "Répartition préventif : À faire / En retard"
+              text: "Répartition préventif : À faire / En retard (calculé)"
             },
             datalabels: {
               formatter: (value, ctx) => {
