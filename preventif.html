@@ -429,7 +429,7 @@
       });
     }
 
-    // --- Calcul dynamique "à faire" / "en retard" ---
+    // --- Calcul dynamique "à faire" / "en retard" selon colonne Conforme ---
     function parseDateFR(str) {
       if (!str) return null;
       str = str.trim();
@@ -438,10 +438,14 @@
       if (m) return new Date(Number(m[3]), Number(m[2])-1, Number(m[1]));
       return null;
     }
+    function isConforme(row) {
+      // "Oui", "OUI", "oui", etc. => conforme
+      const conforme = (row["Conforme"] || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+      return (conforme === "oui" || conforme === "yes" || conforme === "conforme");
+    }
     function isAFaireOrEnRetard(row, today) {
       if (!row["Date Intervention"]) return false;
-      const statut = (row["Statut"] || "").toLowerCase();
-      if (statut.includes("fait")) return false; // On ignore les faits
+      if (isConforme(row)) return false;
       const d = parseDateFR(row["Date Intervention"]);
       if (!d) return false;
       d.setHours(0,0,0,0);
@@ -449,8 +453,7 @@
       return true;
     }
     function calculStatut(row, today) {
-      const statut = (row["Statut"] || "").toLowerCase();
-      if (statut.includes("fait")) return null;
+      if (isConforme(row)) return null;
       const d = parseDateFR(row["Date Intervention"]);
       if (!d) return null;
       d.setHours(0,0,0,0);
