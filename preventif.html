@@ -85,7 +85,7 @@
       gap: 20px;
       justify-content: center;
       padding: 30px 20px 10px;
-      max-width: 800px;
+      max-width: 600px;
       margin: auto;
       color: #222;
       text-shadow: 0 1px 2px #fff;
@@ -217,10 +217,6 @@
     <div class="filter-group">
       <label for="siteFilter">Site</label>
       <select id="siteFilter"></select>
-    </div>
-    <div class="filter-group">
-      <label for="typeFilter">Type</label>
-      <select id="typeFilter"><option value="">Tous les types</option></select>
     </div>
     <div class="filter-group">
       <label for="machineFilter">Machine</label>
@@ -373,7 +369,7 @@
     }
 
     function populateFilters(data) {
-      const typeSet = new Set();
+      // On ne créé plus le filtre "Type"
       const yearSet = new Set();
       data.forEach(row => {
         if (row["Choix du type de maintenance"] && (
@@ -381,12 +377,10 @@
           row["Choix du type de maintenance"].toLowerCase().includes("preventif") ||
           row["Choix du type de maintenance"].toLowerCase().includes("mois")
         )) {
-          typeSet.add(row["Choix du type de maintenance"]);
           const date = new Date(row["Date Intervention"]);
           if (!isNaN(date)) yearSet.add(date.getFullYear());
         }
       });
-      fillSelect("typeFilter", typeSet, "Tous les types");
       fillSelect("yearFilter", yearSet, "Toutes les années");
 
       document.querySelectorAll("select").forEach(select => {
@@ -439,7 +433,6 @@
       return null;
     }
     function isConforme(row) {
-      // "Oui", "OUI", "oui", etc. => conforme
       const conforme = (row["Conforme"] || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
       return (conforme === "oui" || conforme === "yes" || conforme === "conforme");
     }
@@ -463,7 +456,6 @@
     }
     function updateTable() {
       const site = document.getElementById("siteFilter").value;
-      const type = document.getElementById("typeFilter").value;
       const machine = document.getElementById("machineFilter").value;
       const year = document.getElementById("yearFilter").value;
       const rights = userRights.length ? userRights : JSON.parse(sessionStorage.getItem("userRights") || "[]");
@@ -478,11 +470,10 @@
         const statutCalcule = calculStatut(row, today);
         if (!statutCalcule) return false;
         const matchSite = !site || row["Site Intervention"] === site;
-        const matchType = !type || row["Choix du type de maintenance"] === type;
         const matchMachine = !machine || row["Machine"] === machine;
         const rowDate = parseDateFR(row["Date Intervention"]);
         const matchYear = !year || (!isNaN(rowDate) && rowDate.getFullYear() == year);
-        return matchSite && matchType && matchMachine && matchYear;
+        return matchSite && matchMachine && matchYear;
       });
       updatePieChartPreventif(filteredRows, today);
       filteredRows.forEach(row => {
