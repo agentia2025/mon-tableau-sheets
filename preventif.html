@@ -7,296 +7,44 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <style>
-    html, body { height: 100%; margin: 0; padding: 0; }
-    body {
-      min-height: 100vh;
-      position: relative;
-      color: #222;
-      font-family: Arial, sans-serif;
-      z-index: 1;
-    }
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      z-index: 0;
-      background: url('Capture d’écran 2025-06-12 à 18.32.34.png') center center / cover no-repeat;
-      opacity: 1;
-      pointer-events: none;
-    }
-    main, header, .filters, .preventif-table-container {
-      position: relative;
-      z-index: 1;
-    }
-    header {
-      display: flex;
-      align-items: center;
-      padding: 10px 20px;
-      background-color: #4e79a7;
-      color: #fff !important;
-      text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
-      z-index: 2;
-    }
-    .menu-button {
-      font-size: 26px;
-      cursor: pointer;
-      background: none;
-      border: none;
-      color: #fff !important;
-      margin-right: 3ch;
-      text-shadow: 0 1px 3px #222, 0 0 6px #4e79a7;
-    }
-    .page-title {
-      font-size: 24px;
-      margin: 0;
-      color: #fff !important;
-      text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
-    }
-    .menu {
-      display: none;
-      flex-direction: column;
-      position: absolute;
-      top: 50px;
-      left: 20px;
-      background-color: #fff;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-      z-index: 999;
-    }
-    .menu a {
-      padding: 10px 20px;
-      text-decoration: none;
-      color: #222 !important;
-      border-bottom: 1px solid #eee;
-      background: none;
-      cursor: pointer;
-      display: block;
-      text-align: left;
-      font-weight: bold;
-      text-shadow: 0 1px 3px #fff, 0 0 3px #fff;
-    }
-    .menu a:last-child { border-bottom: none; }
-    .menu a:hover { background-color: #f0f0f0; }
-    .filters {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 20px;
-      justify-content: center;
-      padding: 30px 20px 10px;
-      max-width: 600px;
-      margin: auto;
-      color: #222;
-      text-shadow: 0 1px 2px #fff;
-    }
-    .filter-group {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .filter-group label {
-      margin-bottom: 5px;
-      font-weight: bold;
-      color: #222;
-      text-shadow: 0 1px 2px #fff;
-    }
-    .filter-group select {
-      padding: 6px;
-      width: 160px;
-      background: #fff;
-      color: #222;
-      border: 1px solid #4e79a7;
-      font-weight: bold;
-      text-shadow: 0 1px 2px #fff;
-    }
-    .chart-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: 40px 0;
-      gap: 40px;
-    }
-    #conformite {
-      text-align: center;
-      font-size: 1.3em;
-      font-weight: bold;
-      margin: 30px 0 10px 0;
-      color: #137c12;
-    }
-    canvas {
-      width: 320px !important;
-      height: 320px !important;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.10);
-      z-index: 2;
-      display: block;
-      margin: 0 auto;
-    }
-    .preventif-table-container {
-      max-width: 1000px;
-      margin: 40px auto;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      overflow-x: auto;
-      padding: 18px 12px 18px 12px;
-      position: relative;
-      z-index: 1;
-    }
-    table { border-collapse: collapse; width: 100%; min-width: 700px; }
-    th, td { padding: 8px 8px; border-bottom: 1px solid #eee; text-align: left; }
-    th { background: #f7f9fa; font-weight: bold; }
-    tr:hover { background: #f5f5ff; }
-    .rapport-icon { font-size: 18px; text-align: center; }
-    #login-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.45);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-    }
-    #login-box {
-      background: #fff;
-      padding: 30px 40px 20px 40px;
-      border-radius: 12px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.15);
-      max-width: 340px;
-      width: 90%;
-      text-align: center;
-    }
-    #login-box input[type="password"] {
-      width: 90%;
-      padding: 10px;
-      font-size: 18px;
-      margin-bottom: 16px;
-      border: 1px solid #aaa;
-      border-radius: 5px;
-      color: #222;
-      background: #fff;
-    }
-    #login-box button {
-      padding: 8px 26px;
-      font-size: 18px;
-      background: #4e79a7;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    #login-box button:hover { background: #355270; }
-    #login-error { color: #c00; margin-bottom: 10px; min-height: 22px; }
-    @media (max-width: 600px) {
-      .filters { grid-template-columns: 1fr; padding: 20px; gap: 15px; }
-      .filter-group { align-items: stretch; text-align: left; }
-      .filter-group label { margin-bottom: 4px; }
-      canvas { width: 90vw !important; height: auto !important; }
-      table { min-width: 500px; }
-      .preventif-table-container { padding: 6px; }
-      .chart-container { padding: 12px 0; }
-    }
-    /* DEBUG display */
-    #debug-conformite {
-      background: #ffc;
-      color: #111;
-      font-size: 14px;
-      padding: 10px;
-      margin: 15px auto 0 auto;
-      max-width: 1200px;
-      border: 1px solid #bbb;
-      border-radius: 6px;
-      white-space: pre-wrap;
-      word-break: break-all;
-      box-shadow: 0 2px 6px #0001;
-    }
+    body { font-family: Arial, sans-serif; }
+    #conformite { text-align:center; font-size:1.3em; font-weight: bold; margin:30px 0 10px 0; color:#137c12;}
+    .chart-container { display: flex; justify-content: center; align-items: center; margin: 40px 0; gap: 40px;}
+    .preventif-table-container { max-width: 1000px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow-x: auto; padding: 18px 12px 18px 12px;}
+    table { border-collapse: collapse; width: 100%; min-width: 700px;}
+    th, td { padding: 8px 8px; border-bottom: 1px solid #eee; text-align: left;}
+    th { background: #f7f9fa; font-weight: bold;}
+    tr:hover { background: #f5f5ff;}
+    .rapport-icon { font-size: 18px; text-align: center;}
+    #debug-conformite { background: #ffc; color: #111; font-size: 14px; padding: 10px; margin: 15px auto 0 auto; max-width: 1200px; border: 1px solid #bbb; border-radius: 6px; white-space: pre-wrap; word-break: break-all; box-shadow: 0 2px 6px #0001;}
   </style>
 </head>
 <body>
-  <div id="login-overlay">
-    <form id="login-box" autocomplete="off" onsubmit="return false;">
-      <h2>Connexion</h2>
-      <div id="login-error"></div>
-      <input type="password" id="password" placeholder="Mot de passe" autofocus />
-      <br>
-      <button type="submit">Entrer</button>
-    </form>
-  </div>
-  <header>
-    <button class="menu-button" onclick="toggleMenu()">☰</button>
-    <h1 class="page-title">Préventif Maintenance</h1>
-    <div class="menu" id="menu">
-      <a href="index.html">Accueil</a>
-      <a href="tableau.html">Tableau de bord</a>
-      <a href="historique.html">Historique maintenance</a>
-      <a href="preventif.html">Préventif</a>
-      <a href="#" id="logout-link" onclick="logout();return false;" style="color:#c00;">Déconnexion</a>
-    </div>
-  </header>
   <div id="conformite"></div>
-  <div class="filters">
-    <div class="filter-group">
-      <label for="siteFilter">Site</label>
-      <select id="siteFilter"></select>
-    </div>
-    <div class="filter-group">
-      <label for="machineFilter">Machine</label>
-      <select id="machineFilter"><option value="">Toutes les machines</option></select>
-    </div>
-    <div class="filter-group">
-      <label for="yearFilter">Année</label>
-      <select id="yearFilter"><option value="">Toutes les années</option></select>
-    </div>
+  <div class="chart-container">
+    <canvas id="pieChartPreventif"></canvas>
   </div>
-  <main>
-    <div class="chart-container">
-      <canvas id="pieChartPreventif"></canvas>
-    </div>
-    <div class="preventif-table-container">
-      <table id="preventifTable">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Site</th>
-            <th>Machine</th>
-            <th>Type de préventif</th>
-            <th>Statut</th>
-            <th>Rapport</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Données injectées dynamiquement -->
-        </tbody>
-      </table>
-    </div>
-  </main>
+  <div class="preventif-table-container">
+    <table id="preventifTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Site</th>
+          <th>Machine</th>
+          <th>Type de préventif</th>
+          <th>Statut (calculé)</th>
+          <th>Rapport</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
   <div id="debug-conformite"></div>
   <script>
-    // Menu
-    function toggleMenu() {
-      const m = document.getElementById("menu");
-      m.style.display = m.style.display === "flex" ? "none" : "flex";
-    }
-    document.addEventListener("click", function(e) {
-      const m = document.getElementById("menu");
-      const b = document.querySelector(".menu-button");
-      if (!m.contains(e.target) && e.target !== b) m.style.display = "none";
-    });
+    // ----------- CONFIGURATION -----------
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
+    // -------------------------------------
 
-    // Connexion/déconnexion
-    const PASSWORDS = {
-      "Armitec2025": ["commun", "lidec", "atelier", "scr"],
-      "commun*d*sit": ["commun"],
-      "lidecbelli": ["lidec", "atelier"],
-      "scrfuture": ["scr"]
-    };
-    const SITES = [
-      { id: "commun", label: "Commun de site" },
-      { id: "lidec", label: "Lidec" },
-      { id: "atelier", label: "Atelier Bélliparc" },
-      { id: "scr", label: "SCR" }
-    ];
     function normalize(str) {
       return (str || "")
         .normalize("NFD")
@@ -304,150 +52,6 @@
         .toLowerCase()
         .trim();
     }
-    function isAllowedSite(siteLabel) {
-      for (const s of SITES) {
-        if (normalize(s.label) === normalize(siteLabel) && userRights.includes(s.id)) return true;
-      }
-      return false;
-    }
-    let userRights = [];
-    let allData = [];
-    let pieChartPreventif = null;
-
-    document.getElementById("login-box").onsubmit = function() {
-      const pass = document.getElementById("password").value;
-      if (PASSWORDS[pass]) {
-        userRights = PASSWORDS[pass];
-        sessionStorage.setItem("userRights", JSON.stringify(userRights));
-        document.getElementById("login-overlay").style.display = "none";
-        fetchData();
-      } else {
-        document.getElementById("login-error").innerText = "Mot de passe incorrect.";
-        document.getElementById("password").value = "";
-        document.getElementById("password").focus();
-      }
-    };
-
-    function logout() {
-      sessionStorage.removeItem("userRights");
-      document.getElementById("login-overlay").style.display = "flex";
-      document.getElementById("password").value = "";
-      document.getElementById("password").focus();
-    }
-
-    window.onload = function () {
-      const rights = sessionStorage.getItem("userRights");
-      if (!rights) {
-        document.getElementById("login-overlay").style.display = "flex";
-        document.getElementById("password").focus();
-      } else {
-        userRights = JSON.parse(rights);
-        document.getElementById("login-overlay").style.display = "none";
-        fetchData();
-      }
-    };
-
-    function fetchData() {
-      const url = "https://script.google.com/macros/s/AKfycbw9IewZyfdFGqAbstI1_sOKzQpbq5-8XeZ19zYT8LQL0ru77msSB-Eql7cncFKSEc1Rpg/exec";
-      fetch(url)
-        .then(r => r.json())
-        .then(data => {
-          allData = data;
-          populateFilters(data);
-          showSiteFilterSites();
-          updateMachineFilter();
-          updateTable();
-          showDebugConformite();
-        });
-    }
-
-    function showSiteFilterSites() {
-      const select = document.getElementById("siteFilter");
-      if (!select) return;
-      select.innerHTML = "";
-      const siteSet = new Set();
-      allData.forEach(row => {
-        if (isAllowedSite(row["Site Intervention"])) {
-          siteSet.add(row["Site Intervention"]);
-        }
-      });
-      const siteList = Array.from(siteSet).sort();
-      if (siteList.length > 1) {
-        const optAll = document.createElement("option");
-        optAll.value = "";
-        optAll.textContent = "Tous les sites";
-        select.appendChild(optAll);
-      }
-      siteList.forEach(siteValue => {
-        const opt = document.createElement("option");
-        opt.value = siteValue;
-        opt.textContent = siteValue;
-        select.appendChild(opt);
-      });
-      if (siteList.length === 1) {
-        select.selectedIndex = 0;
-        select.disabled = true;
-      } else {
-        select.disabled = false;
-      }
-    }
-
-    function populateFilters(data) {
-      const yearSet = new Set();
-      data.forEach(row => {
-        if (row["Choix du type de maintenance"] && (
-          row["Choix du type de maintenance"].toLowerCase().includes("préventif") ||
-          row["Choix du type de maintenance"].toLowerCase().includes("preventif") ||
-          row["Choix du type de maintenance"].toLowerCase().includes("mois")
-        )) {
-          const date = new Date(row["Date Intervention"]);
-          if (!isNaN(date)) yearSet.add(date.getFullYear());
-        }
-      });
-      fillSelect("yearFilter", yearSet, "Toutes les années");
-
-      document.querySelectorAll("select").forEach(select => {
-        if (select.id !== "siteFilter") {
-          select.addEventListener("change", updateTable);
-        }
-      });
-    }
-
-    function updateMachineFilter() {
-      const site = document.getElementById("siteFilter").value;
-      let machineSet = new Set();
-      allData.forEach(row => {
-        if ((row["Choix du type de maintenance"] || "").toLowerCase().includes("prév")
-          || (row["Choix du type de maintenance"] || "").toLowerCase().includes("mois")) {
-          if ((!site && isAllowedSite(row["Site Intervention"])) ||
-              (site && row["Site Intervention"] === site)) {
-            machineSet.add(row["Machine"]);
-          }
-        }
-      });
-      fillSelect("machineFilter", machineSet, "Toutes les machines");
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
-      document.getElementById("siteFilter").addEventListener("change", function() {
-        updateMachineFilter();
-        updateTable();
-        showDebugConformite();
-      });
-    });
-
-    function fillSelect(id, values, label) {
-      const select = document.getElementById(id);
-      select.innerHTML = `<option value="">${label}</option>`;
-      Array.from(values).sort().forEach(value => {
-        const opt = document.createElement("option");
-        opt.value = value;
-        opt.textContent = value;
-        select.appendChild(opt);
-      });
-    }
-
-    // ---- LOGIQUE CONFORMITÉ ----
     function parseDateFR(str) {
       if (!str) return null;
       str = str.trim();
@@ -456,48 +60,52 @@
       if (m) return new Date(Number(m[3]), Number(m[2])-1, Number(m[1]));
       return null;
     }
-    function isConforme(row) {
-      // Attention ! colonne "conformité" (minuscule, sans accent)
-      const conf = (row["conformité"] || "")
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        .trim().toLowerCase();
-      return conf === "conforme";
-    }
-    function statutCalcule(row, today) {
-      if (isConforme(row)) return null;
+
+    // La fonction principale de calcul du statut
+    function statutConformite(row, today = new Date()) {
+      const conf = normalize(row["conformité"]);
+      if (conf === "conforme") return "conforme";
       const d = parseDateFR(row["Date Intervention"]);
-      if (!d) return null;
-      d.setHours(0,0,0,0);
-      today.setHours(0,0,0,0);
-      if (d < today) return "En retard";
-      else return "À faire";
+      if (!d) return "indéterminé";
+      today.setHours(0,0,0,0); d.setHours(0,0,0,0);
+      if (d > today) return "à faire (conforme)";
+      if (d <= today) return "non conforme";
+      return "indéterminé";
     }
-    function updateTable() {
-      const site = document.getElementById("siteFilter").value;
-      const machine = document.getElementById("machineFilter").value;
-      const year = document.getElementById("yearFilter").value;
-      const rights = userRights.length ? userRights : JSON.parse(sessionStorage.getItem("userRights") || "[]");
+
+    let allData = [];
+    let pieChartPreventif = null;
+
+    fetch(SHEET_URL)
+      .then(r => r.json())
+      .then(data => {
+        allData = data;
+        updateTableAndChart();
+        showDebugConformite();
+      });
+
+    function updateTableAndChart() {
       const tbody = document.getElementById("preventifTable").querySelector("tbody");
       tbody.innerHTML = "";
       const today = new Date();
 
-      // Pour le camembert et le tableau : on ne garde que les lignes non conformes
-      const filteredRows = allData.filter(row => {
-        if (!isAllowedSite(row["Site Intervention"])) return false;
-        const typeMaint = (row["Choix du type de maintenance"] || "").toLowerCase();
-        if (!(typeMaint.includes("prév") || typeMaint.includes("mois"))) return false;
-        // Exclure les "conformes"
-        if (isConforme(row)) return false;
-        const d = parseDateFR(row["Date Intervention"]);
-        if (!d) return false;
-        const matchSite = !site || row["Site Intervention"] === site;
-        const matchMachine = !machine || row["Machine"] === machine;
-        const matchYear = !year || (!isNaN(d) && d.getFullYear() == year);
-        return matchSite && matchMachine && matchYear;
-      });
-      updatePieChartPreventif(filteredRows, today);
+      let conforme = 0, aFaireConforme = 0, nonConforme = 0, total = 0;
+      let statutsRows = [];
 
-      filteredRows.forEach(row => {
+      allData.forEach(row => {
+        // On ne traite que les préventifs (adapte selon ta colonne)
+        const typeMaint = (row["Choix du type de maintenance"] || "").toLowerCase();
+        if (!(typeMaint.includes("prév") || typeMaint.includes("mois") || typeMaint.includes("preventif"))) return;
+        total++;
+
+        const statut = statutConformite(row, today);
+        if (statut === "conforme") conforme++;
+        else if (statut === "à faire (conforme)") aFaireConforme++;
+        else if (statut === "non conforme") nonConforme++;
+
+        statutsRows.push({...row, statut_conformite: statut});
+
+        // Pour le tableau, on affiche tout
         let d = row["Date Intervention"] || "";
         if (d) {
           const D = parseDateFR(d);
@@ -508,8 +116,6 @@
             d = `${day}/${month}/${year}`;
           }
         }
-        const typeValue = row["Choix du type de maintenance"] || "-";
-        const statut = statutCalcule(row, today) || "-";
         let rapportHtml = "-";
         const lienPdf = row["PDF URL"];
         if (lienPdf && lienPdf.trim() && lienPdf.startsWith("http")) {
@@ -520,27 +126,27 @@
           <td>${d}</td>
           <td>${row["Site Intervention"] || "-"}</td>
           <td>${row["Machine"] || "-"}</td>
-          <td>${typeValue}</td>
+          <td>${row["Choix du type de maintenance"] || "-"}</td>
           <td>${statut}</td>
           <td style="text-align:center;">${rapportHtml}</td>
         `;
         tbody.appendChild(tr);
       });
 
-      // Calcul et affichage du taux de conformité
-      updateConformite();
+      // Camembert
+      updatePieChartPreventif(conforme, aFaireConforme, nonConforme);
+
+      // Taux de conformité
+      let taux = (total ? ((conforme + aFaireConforme) / total * 100) : 0).toFixed(1);
+      document.getElementById("conformite").textContent = total ?
+        `Taux de conformité préventif : ${taux}% — Conforme : ${conforme}, À faire (conforme) : ${aFaireConforme}, Non conforme : ${nonConforme} (total ${total})`
+        : "Aucune donnée à afficher.";
     }
 
-    function updatePieChartPreventif(filteredRows, today) {
-      let aFaire = 0, enRetard = 0;
-      filteredRows.forEach(row => {
-        const statut = statutCalcule(row, today);
-        if (statut === "En retard") enRetard++;
-        else if (statut === "À faire") aFaire++;
-      });
-      const data = [aFaire, enRetard];
-      const labels = ["À faire", "En retard"];
-      const colors = ["#4e79a7", "#e15759"];
+    function updatePieChartPreventif(conforme, aFaireConforme, nonConforme) {
+      const data = [conforme, aFaireConforme, nonConforme];
+      const labels = ["Conforme", "À faire (conforme)", "Non conforme"];
+      const colors = ["#137c12", "#4e79a7", "#e15759"];
       const ctx = document.getElementById("pieChartPreventif").getContext("2d");
       if (pieChartPreventif) pieChartPreventif.destroy();
       pieChartPreventif = new Chart(ctx, {
@@ -556,7 +162,7 @@
           plugins: {
             title: {
               display: true,
-              text: "Répartition préventif : À faire / En retard"
+              text: "Conformité préventif"
             },
             datalabels: {
               formatter: (value, ctx) => {
@@ -575,37 +181,24 @@
       });
     }
 
-    function updateConformite() {
-      // Pourcentage = nb conformes / (conformes + à faire + en retard)
-      const today = new Date();
-      let total = 0, conformes = 0;
-      allData.forEach(row => {
-        if (!isAllowedSite(row["Site Intervention"])) return;
-        const typeMaint = (row["Choix du type de maintenance"] || "").toLowerCase();
-        if (!(typeMaint.includes("prév") || typeMaint.includes("mois"))) return;
-        const d = parseDateFR(row["Date Intervention"]);
-        if (!d) return;
-        total++;
-        if (isConforme(row)) conformes++;
-      });
-      let taux = (total ? (conformes / total * 100) : 0).toFixed(1);
-      document.getElementById("conformite").textContent = total ? `Taux de conformité préventif : ${taux}% (${conformes} sur ${total})` : '';
-    }
-
-    // DEBUG : Affiche les lignes détectées comme "conforme" et "non conforme"
+    // DEBUG : Affiche les lignes détectées comme "conforme", "à faire (conforme)" et "non conforme"
     function showDebugConformite() {
-      let conformes = [], nonconformes = [];
+      let conformes = [], aFaireConformes = [], nonconformes = [];
+      const today = new Date();
       allData.forEach(row => {
-        if (!isAllowedSite(row["Site Intervention"])) return;
-        if (isConforme(row)) conformes.push(row);
-        else nonconformes.push(row);
+        const typeMaint = (row["Choix du type de maintenance"] || "").toLowerCase();
+        if (!(typeMaint.includes("prév") || typeMaint.includes("mois") || typeMaint.includes("preventif"))) return;
+        const statut = statutConformite(row, today);
+        if (statut === "conforme") conformes.push(row);
+        else if (statut === "à faire (conforme)") aFaireConformes.push(row);
+        else if (statut === "non conforme") nonconformes.push(row);
       });
       document.getElementById("debug-conformite").innerHTML =
         `<b>DEBUG :</b><br>
         <b>Lignes "conforme" (${conformes.length})</b> :<br><pre>${JSON.stringify(conformes, null, 2)}</pre>
+        <b>Lignes "à faire (conforme)" (${aFaireConformes.length})</b> :<br><pre>${JSON.stringify(aFaireConformes, null, 2)}</pre>
         <b>Lignes "non conforme" (${nonconformes.length})</b> :<br><pre>${JSON.stringify(nonconformes, null, 2)}</pre>`;
     }
-
   </script>
 </body>
 </html>
