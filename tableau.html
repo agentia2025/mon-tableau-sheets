@@ -7,7 +7,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <style>
-    /* ... (tout ton CSS inchangé) ... */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -157,10 +156,7 @@
       <label for="typeFilter">Type</label>
       <select id="typeFilter"><option value="">Tous les types</option></select>
     </div>
-    <div class="filter-group">
-      <label for="machineFilter">Machine</label>
-      <select id="machineFilter"><option value="">Toutes les machines</option></select>
-    </div>
+    <!-- Suppression du filtre Machine -->
     <div class="filter-group">
       <label for="yearFilter">Année</label>
       <select id="yearFilter"><option value="">Toutes les années</option></select>
@@ -257,7 +253,7 @@
       // Restriction : ne montrer que les sites autorisés
       const siteSet = new Set();
       const typeSet = new Set();
-      const machineSet = new Set();
+      // const machineSet = new Set(); // supprimé
       const yearSet = new Set();
 
       data.forEach(row => {
@@ -268,16 +264,17 @@
         }
         // Les autres filtres restent globaux
         typeSet.add(row["Type d'intervention"]);
-        machineSet.add(row["Machine"]);
+        // machineSet.add(row["Machine"]); // supprimé
         const date = new Date(row["Date Intervention"]);
         if (!isNaN(date)) yearSet.add(date.getFullYear());
       });
 
       fillSelect("siteFilter", siteSet);
       fillSelect("typeFilter", typeSet);
-      fillSelect("machineFilter", machineSet);
+      // fillSelect("machineFilter", machineSet); // supprimé
       fillSelect("yearFilter", yearSet);
 
+      // On ne sélectionne plus que les select existants (le filtre machine a été supprimé)
       document.querySelectorAll("select").forEach(select => {
         select.addEventListener("change", updateCharts);
       });
@@ -309,7 +306,7 @@
     function updateCharts() {
       const site = document.getElementById("siteFilter").value;
       const type = document.getElementById("typeFilter").value;
-      const machine = document.getElementById("machineFilter").value;
+      // const machine = document.getElementById("machineFilter").value; // supprimé
       const year = document.getElementById("yearFilter").value;
 
       // Restriction : on ne garde que les données accessibles pour l'utilisateur
@@ -318,10 +315,11 @@
         if (!siteObj || !userRights.includes(siteObj.id)) return false;
         const matchSite = !site || row["Site Intervention"] === site;
         const matchType = !type || row["Type d'intervention"] === type;
-        const matchMachine = !machine || row["Machine"] === machine;
+        // const matchMachine = !machine || row["Machine"] === machine; // supprimé
         const rowDate = new Date(row["Date Intervention"]);
         const matchYear = !year || (!isNaN(rowDate) && rowDate.getFullYear() == year);
-        return matchSite && matchType && matchMachine && matchYear;
+        // return matchSite && matchType && matchMachine && matchYear;
+        return matchSite && matchType && matchYear; // modifié
       });
 
       const typeCounts = {};
