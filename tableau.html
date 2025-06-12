@@ -15,35 +15,45 @@
       background-repeat: no-repeat;
       background-size: cover;
       background-position: center center;
+      color: #222;
+      position: relative;
     }
     body::before {
       content: "";
       position: fixed;
       z-index: 0;
       top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(255,255,255,0.4);
+      background: rgba(255,255,255,0.62);
       pointer-events: none;
+    }
+    header, .filters, .chart-container {
+      position: relative;
+      z-index: 1;
     }
     header {
       display: flex;
       align-items: center;
       padding: 10px 20px;
       background-color: #4e79a7;
-      color: white;
+      color: #fff !important;
       position: relative;
-      z-index: 1;
+      z-index: 2;
+      text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
     }
     .menu-button {
       font-size: 26px;
       cursor: pointer;
       background: none;
       border: none;
-      color: black;
+      color: #fff !important;
       margin-right: 3ch;
+      text-shadow: 0 1px 3px #222, 0 0 6px #4e79a7;
     }
     .page-title {
       font-size: 24px;
       margin: 0;
+      color: #fff !important;
+      text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
     }
     .menu {
       display: none;
@@ -51,7 +61,7 @@
       position: absolute;
       top: 50px;
       left: 20px;
-      background-color: white;
+      background-color: #fff;
       border: 1px solid #ccc;
       border-radius: 6px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -60,12 +70,14 @@
     .menu a {
       padding: 10px 20px;
       text-decoration: none;
-      color: #333;
+      color: #222 !important;
       border-bottom: 1px solid #eee;
       background: none;
       cursor: pointer;
       display: block;
       text-align: left;
+      font-weight: bold;
+      text-shadow: 0 1px 3px #fff, 0 0 3px #fff;
     }
     .menu a:last-child { border-bottom: none; }
     .menu a:hover { background-color: #f0f0f0; }
@@ -77,24 +89,44 @@
       padding: 30px 20px 10px;
       max-width: 800px;
       margin: auto;
-      z-index: 1;
+      color: #222;
+      text-shadow: 0 1px 2px #fff;
     }
     .filter-group {
       display: flex;
       flex-direction: column;
       align-items: center;
     }
-    .filter-group label { margin-bottom: 5px; font-weight: bold; }
-    .filter-group select { padding: 6px; width: 160px; }
+    .filter-group label {
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #222;
+      text-shadow: 0 1px 2px #fff;
+    }
+    .filter-group select {
+      padding: 6px;
+      width: 160px;
+      background: #fff;
+      color: #222;
+      border: 1px solid #4e79a7;
+      font-weight: bold;
+      text-shadow: 0 1px 2px #fff;
+    }
     .chart-container {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       gap: 40px;
       margin: 40px 0;
-      z-index: 1;
     }
-    canvas { width: 320px !important; height: 320px !important; }
+    canvas {
+      width: 320px !important;
+      height: 320px !important;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+      z-index: 2;
+    }
     @media (max-width: 600px) {
       .filters { grid-template-columns: 1fr; padding: 20px; gap: 15px; }
       .filter-group { align-items: stretch; text-align: left; }
@@ -125,6 +157,8 @@
       margin-bottom: 16px;
       border: 1px solid #aaa;
       border-radius: 5px;
+      color: #222;
+      background: #fff;
     }
     #login-box button {
       padding: 8px 26px;
@@ -356,7 +390,7 @@
           plugins: {
             title: {
               display: true,
-              text: "Répartition des types d'intervention"
+              text: "Répartition des interventions par type"
             },
             datalabels: {
               formatter: (value) => `${((value / total) * 100).toFixed(1)}%`,
@@ -375,7 +409,7 @@
         data: {
           labels: Object.keys(siteCounts),
           datasets: [{
-            label: "Nombre d'interventions",
+            label: "Volume d'interventions par site",
             data: Object.values(siteCounts),
             backgroundColor: "#4e79a7"
           }]
@@ -385,7 +419,7 @@
           plugins: {
             title: {
               display: true,
-              text: "Nombre d'interventions par site"
+              text: "Répartition des interventions par site"
             },
             datalabels: {
               anchor: 'end',
