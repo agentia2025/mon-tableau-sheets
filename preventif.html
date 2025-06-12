@@ -247,6 +247,7 @@
             <th>Site</th>
             <th>Machine</th>
             <th>Type de préventif</th>
+            <th>Statut</th>
             <th>Rapport</th>
           </tr>
         </thead>
@@ -441,10 +442,13 @@
       const tbody = document.getElementById("preventifTable").querySelector("tbody");
       tbody.innerHTML = "";
 
+      // Filtrage: statut à faire ou en retard uniquement
       const filteredRows = allData.filter(row => {
         if (!isAllowedSite(row["Site Intervention"])) return false;
         const typeMaint = (row["Choix du type de maintenance"] || "").toLowerCase();
         if (!(typeMaint.includes("prév") || typeMaint.includes("mois"))) return false;
+        const statut = (row["Statut"] || "").toLowerCase();
+        if (!(statut.includes("à faire") || statut.includes("a faire") || statut.includes("en retard"))) return false;
         const matchSite = !site || row["Site Intervention"] === site;
         const matchType = !type || row["Choix du type de maintenance"] === type;
         const matchMachine = !machine || row["Machine"] === machine;
@@ -467,6 +471,7 @@
           }
         }
         const typeValue = row["Choix du type de maintenance"] || "-";
+        const statutValue = row["Statut"] || "-";
         let rapportHtml = "-";
         const lienPdf = row["PDF URL"];
         if (lienPdf && lienPdf.trim() && lienPdf.startsWith("http")) {
@@ -478,24 +483,24 @@
           <td>${row["Site Intervention"] || "-"}</td>
           <td>${row["Machine"] || "-"}</td>
           <td>${typeValue}</td>
+          <td>${statutValue}</td>
           <td style="text-align:center;">${rapportHtml}</td>
         `;
         tbody.appendChild(tr);
       });
     }
 
+    // Camembert : seulement "À faire" et "En retard"
     function updatePieChartPreventif(filteredRows) {
-      let mois1 = 0, mois6 = 0, mois12 = 0, autre = 0;
+      let aFaire = 0, enRetard = 0;
       filteredRows.forEach(row => {
-        const type = (row["Choix du type de maintenance"] || "").toLowerCase();
-        if (type.includes("1 mois")) mois1++;
-        else if (type.includes("6 mois")) mois6++;
-        else if (type.includes("12 mois")) mois12++;
-        else autre++;
+        const statut = (row["Statut"] || "").toLowerCase();
+        if (statut.includes("en retard")) enRetard++;
+        else if (statut.includes("à faire") || statut.includes("a faire")) aFaire++;
       });
-      const data = [mois1, mois6, mois12, autre];
-      const labels = ["1 mois", "6 mois", "12 mois", "Autre"];
-      const colors = ["#4e79a7", "#f28e2b", "#76b7b2", "#e15759"];
+      const data = [aFaire, enRetard];
+      const labels = ["À faire", "En retard"];
+      const colors = ["#4e79a7", "#e15759"];
       const ctx = document.getElementById("pieChartPreventif").getContext("2d");
       if (pieChartPreventif) pieChartPreventif.destroy();
       pieChartPreventif = new Chart(ctx, {
@@ -511,7 +516,7 @@
           plugins: {
             title: {
               display: true,
-              text: "Répartition des préventifs (%)"
+              text: "Répartition préventif : À faire / En retard"
             },
             datalabels: {
               formatter: (value, ctx) => {
