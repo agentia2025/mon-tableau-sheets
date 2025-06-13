@@ -201,13 +201,15 @@
       .chart-container { padding: 12px 0; }
     }
       .history-table-container {
-      overflow-x: auto;
-    }
-    #historyTable thead th {
-      position: sticky;
-      top: 0;
-      background: #f7f9fa;
-      z-index: 3;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 500px; /* à adapter selon besoin */
+}
+#historyTable thead th {
+  position: sticky;
+  top: 0;
+  background: #f7f9fa;
+  z-index: 3;
 }
   </style>
 </head>
