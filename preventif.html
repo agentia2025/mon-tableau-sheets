@@ -1,4 +1,4 @@
-<!DOCTYPE html>More actions
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -6,28 +6,103 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #f2f2f2; }
-    header { display: flex; align-items: center; padding: 10px 20px; background: #4e79a7; color: white; position: relative; }
-    .menu-button { font-size: 26px; cursor: pointer; background: none; border: none; color: black; margin-right: 3ch; }
-    .page-title { font-size: 24px; margin: 0; }
-    .menu { display: none; flex-direction: column; position: absolute; top: 50px; left: 20px;
-            background: #fff; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 999; }
-    .menu a { padding: 10px 20px; text-decoration: none; color: #333; border-bottom: 1px solid #eee; }
-    .menu a:last-child { border-bottom: none; }
-    .menu a:hover { background: #f0f0f0; }
-    .filters {
+    /* --- Adaptation du style à la version demandée --- */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #f4f4f4;
+      background-image: url('Capture d’écran 2025-06-12 à 18.32.34.png');
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-position: center center;
+      color: #222;
+      position: relative;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      z-index: 0;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(255,255,255,0.1);
+      pointer-events: none;
+    }
+    header {
       display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #4e79a7;
+      color: #fff !important;
+      position: relative;
+      z-index: 2;
+      text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
+    }
+    .menu-button {
+      font-size: 26px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: #fff !important;
+      margin-right: 3ch;
+      text-shadow: 0 1px 3px #222, 0 0 6px #4e79a7;
+    }
+    .page-title {
+      font-size: 24px;
+      margin: 0;
+      color: #fff !important;
+      text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
+    }
+    .menu {
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      top: 50px;
+      left: 20px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      z-index: 999;
+    }
+    .menu a {
+      padding: 10px 20px;
+      text-decoration: none;
+      color: #222 !important;
+      border-bottom: 1px solid #eee;
+      background: none;
+      cursor: pointer;
+      display: block;
+      text-align: left;
+      font-weight: bold;
+      text-shadow: 0 1px 3px #fff, 0 0 3px #fff;
+    }
+    .menu a:last-child { border-bottom: none; }
+    .menu a:hover { background-color: #f0f0f0; }
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
       justify-content: center;
-      gap: 40px;
-      margin: 30px 0 0 0;
-      flex-wrap: wrap;
-      text-align: center;
+      padding: 30px 20px 10px;
+      max-width: 600px;
+      margin: auto;
+      color: #222;
+      text-shadow: 0 1px 2px #fff;
     }
     .filters label {
+      margin-bottom: 5px;
       font-weight: bold;
-      margin-right: 8px;
+      color: #222;
+      text-shadow: 0 1px 2px #fff;
     }
-    .filters select { padding: 6px; }
+    .filters select {
+      padding: 6px;
+      width: 160px;
+      background: #fff;
+      color: #222;
+      border: 1px solid #4e79a7;
+      font-weight: bold;
+      text-shadow: 0 1px 2px #fff;
+    }
     .chart-center {
       display: flex;
       flex-direction: column;
@@ -35,6 +110,8 @@
       justify-content: center;
       width: 100%;
       margin: 32px 0 32px 0;
+      position: relative;
+      z-index: 1;
     }
     #pieChart {
       width: 320px !important;
@@ -43,19 +120,29 @@
       max-height: 90vw;
       margin: 0 auto;
       display: block;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 14px rgba(30,60,120,0.06);
     }
     .stats {
       margin-top: 14px;
       font-size: 16px;
       text-align: center;
-      color: #333;
+      color: #222;
+      background: rgba(255,255,255,0.7);
+      border-radius: 8px;
+      padding: 6px 18px;
+      box-shadow: 0 1px 4px rgba(30,60,120,0.08);
+      display: inline-block;
+      margin-bottom: 2px;
     }
     h2.upcoming-title {
       text-align: center;
       margin-top: 28px;
       font-size: 20px;
-      color: #333;
+      color: #222;
       margin-bottom: 10px;
+      text-shadow: 0 1px 2px #fff;
     }
     .upcoming {
       width: 90%;
@@ -63,19 +150,71 @@
       margin: 20px auto;
       border-collapse: collapse;
       text-align: center;
+      background: rgba(255,255,255,0.85);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 14px rgba(30,60,120,0.06);
+      position: relative;
+      z-index: 1;
     }
     .upcoming th, .upcoming td {
       padding: 8px;
       border: 1px solid #ddd;
       text-align: center;
     }
-    .upcoming th { background: #4e79a7; color: #fff; }
-    #login-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-    #login-box { background: #fff; padding: 30px 40px 20px 40px; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.15); max-width: 340px; width: 90%; text-align: center; }
-    #login-box input[type="password"] { width: 90%; padding: 10px; font-size: 18px; margin-bottom: 16px; border: 1px solid #aaa; border-radius: 5px; }
-    #login-box button { padding: 8px 26px; font-size: 18px; background: #4e79a7; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
+    .upcoming th {
+      background: #4e79a7;
+      color: #fff;
+      text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
+    }
+    .upcoming tr:nth-child(even) td {
+      background: rgba(78,121,167,0.04);
+    }
+    #login-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 2000;
+    }
+    #login-box {
+      background: #fff;
+      padding: 30px 40px 20px 40px;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+      max-width: 340px;
+      width: 90%;
+      text-align: center;
+      position: relative;
+      z-index: 3000;
+    }
+    #login-box input[type="password"] {
+      width: 90%;
+      padding: 10px;
+      font-size: 18px;
+      margin-bottom: 16px;
+      border: 1px solid #aaa;
+      border-radius: 5px;
+    }
+    #login-box button {
+      padding: 8px 26px;
+      font-size: 18px;
+      background: #4e79a7;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
+    }
     #login-box button:hover { background: #355270; }
-    #login-error { color: #c00; margin-bottom: 10px; min-height: 22px; }
+    #login-error {
+      color: #c00;
+      margin-bottom: 10px;
+      min-height: 22px;
+      background: #fff;
+      border-radius: 6px;
+      padding: 2px;
+      box-shadow: 0 1px 2px #fff;
+    }
   </style>
 </head>
 <body>
@@ -100,10 +239,14 @@
     </div>
   </header>
   <div class="filters">
-    <label for="siteFilter">Site</label>
-    <select id="siteFilter"><option value="">Tous les sites</option></select>
-    <label for="yearFilter">Année</label>
-    <select id="yearFilter"><option value="">Toutes les années</option></select>
+    <div class="filter-group">
+      <label for="siteFilter">Site</label>
+      <select id="siteFilter"><option value="">Tous les sites</option></select>
+    </div>
+    <div class="filter-group">
+      <label for="yearFilter">Année</label>
+      <select id="yearFilter"><option value="">Toutes les années</option></select>
+    </div>
   </div>
 
   <div class="chart-center">
@@ -124,6 +267,7 @@
     <tbody></tbody>
   </table>
 
+  <!-- SCRIPT NON MODIFIÉ -->
   <script>
     // Gestion du menu (identique à la V7)
     function toggleMenu() {
