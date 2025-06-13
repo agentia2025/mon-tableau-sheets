@@ -25,7 +25,7 @@
       top: 0; left: 0;
       width: 100vw; height: 100vh;
       z-index: 0;
-      background: url('Capture d’écran 2025-06-12 à 18.32.34.png') center center / cover no-repeat;
+      background: url('Capture d’écran 2025-06-12 à 18.32.34.png') center center / cover no-repeat;
       opacity: 1;
       pointer-events: none;
     }
@@ -143,6 +143,20 @@
       position: relative;
       z-index: 1;
     }
+    /* --- Ajout Copilot: scroll header --- */
+    .history-table-scroll {
+      max-height: 350px;
+      overflow-y: auto;
+      width: 100%;
+    }
+    #historyTable thead th {
+      position: sticky;
+      top: 0;
+      background: #f7f9fa;
+      z-index: 2;
+    }
+    /* --- Fin Ajout Copilot --- */
+
     table { border-collapse: collapse; width: 100%; min-width: 700px; }
     th, td { padding: 8px 8px; border-bottom: 1px solid #eee; text-align: left; }
     th { background: #f7f9fa; font-weight: bold; }
@@ -241,20 +255,24 @@
       <canvas id="pieChartHistory"></canvas>
     </div>
     <div class="history-table-container">
-      <table id="historyTable">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Site</th>
-            <th>Machine</th>
-            <th>Type de maintenance</th>
-            <th>Rapport</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Données injectées dynamiquement -->
-        </tbody>
-      </table>
+      <!-- Ajout Copilot: scroll header -->
+      <div class="history-table-scroll">
+        <table id="historyTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Site</th>
+              <th>Machine</th>
+              <th>Type de maintenance</th>
+              <th>Rapport</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Données injectées dynamiquement -->
+          </tbody>
+        </table>
+      </div>
+      <!-- Fin ajout Copilot -->
     </div>
   </main>
   <script>
