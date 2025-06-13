@@ -199,7 +199,15 @@
       table { min-width: 500px; }
       .history-table-container { padding: 6px; }
       .chart-container { padding: 12px 0; }
-    }
+    }.history-table-container {
+  overflow-x: auto;
+}
+#historyTable thead th {
+  position: sticky;
+  top: 0;
+  background: #f7f9fa;
+  z-index: 3;
+}
   </style>
 </head>
 <body>
