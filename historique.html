@@ -14,6 +14,8 @@
     }
     body {
       min-height: 100vh;
+
+
       position: relative;
       color: #222;
       font-family: Arial, sans-serif;
@@ -25,7 +27,7 @@
       top: 0; left: 0;
       width: 100vw; height: 100vh;
       z-index: 0;
-      background: url('Capture d’écran 2025-06-12 à 18.32.34.png') center center / cover no-repeat;
+      background: url('Capture d’écran 2025-06-12 à 18.32.34.png') center center / cover no-repeat;
       opacity: 1;
       pointer-events: none;
     }
@@ -39,6 +41,8 @@
       padding: 10px 20px;
       background-color: #4e79a7;
       color: #fff !important;
+
+
       text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
       z-index: 2;
     }
@@ -117,6 +121,7 @@
     }
     .chart-container {
       display: flex;
+
       justify-content: center;
       align-items: center;
       margin: 40px 0;
@@ -143,20 +148,6 @@
       position: relative;
       z-index: 1;
     }
-    /* --- Ajout Copilot: scroll header --- */
-    .history-table-scroll {
-      max-height: 350px;
-      overflow-y: auto;
-      width: 100%;
-    }
-    #historyTable thead th {
-      position: sticky;
-      top: 0;
-      background: #f7f9fa;
-      z-index: 2;
-    }
-    /* --- Fin Ajout Copilot --- */
-
     table { border-collapse: collapse; width: 100%; min-width: 700px; }
     th, td { padding: 8px 8px; border-bottom: 1px solid #eee; text-align: left; }
     th { background: #f7f9fa; font-weight: bold; }
@@ -233,6 +224,7 @@
     </div>
   </header>
   <div class="filters">
+
     <div class="filter-group">
       <label for="siteFilter">Site</label>
       <select id="siteFilter"></select>
@@ -255,24 +247,20 @@
       <canvas id="pieChartHistory"></canvas>
     </div>
     <div class="history-table-container">
-      <!-- Ajout Copilot: scroll header -->
-      <div class="history-table-scroll">
-        <table id="historyTable">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Site</th>
-              <th>Machine</th>
-              <th>Type de maintenance</th>
-              <th>Rapport</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Données injectées dynamiquement -->
-          </tbody>
-        </table>
-      </div>
-      <!-- Fin ajout Copilot -->
+      <table id="historyTable">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Site</th>
+            <th>Machine</th>
+            <th>Type de maintenance</th>
+            <th>Rapport</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Données injectées dynamiquement -->
+        </tbody>
+      </table>
     </div>
   </main>
   <script>
@@ -413,6 +401,7 @@
       });
     }
 
+
     function updateMachineFilter() {
       const site = document.getElementById("siteFilter").value;
       let machineSet = new Set();
@@ -424,6 +413,7 @@
       });
       fillSelect("machineFilter", machineSet, "Toutes les machines");
     }
+
 
     document.addEventListener("DOMContentLoaded", function() {
       document.getElementById("siteFilter").addEventListener("change", function() {
@@ -452,6 +442,7 @@
       const tbody = document.getElementById("historyTable").querySelector("tbody");
       tbody.innerHTML = "";
 
+
       const filteredRows = allData.filter(row => {
         if (!isAllowedSite(row["Site Intervention"])) return false;
         const matchSite = !site || row["Site Intervention"] === site;
@@ -462,6 +453,7 @@
         const matchYear = !year || (!isNaN(rowDate) && rowDate.getFullYear() == year);
         return matchSite && matchType && matchMachine && matchYear;
       });
+
 
       updatePieChartHistory(filteredRows);
 
@@ -477,6 +469,7 @@
           }
         }
         const typeValue = row["Choix du type de maintenance"] || row["Type d'intervention"] || "-";
+
         let rapportHtml = "-";
         const lienPdf = row["PDF URL"];
         if (lienPdf && lienPdf.trim() && lienPdf.startsWith("http")) {
@@ -494,6 +487,7 @@
       });
     }
 
+
     function updatePieChartHistory(filteredRows) {
       let correctif = 0, modif = 0, preventif = 0;
       filteredRows.forEach(row => {
@@ -508,9 +502,11 @@
           type.includes("preventif")
         ) preventif++;
       });
+
       const data = [correctif, modif, preventif];
       const labels = ["Correctif", "Modification", "Préventif (1/6/12 mois)"];
       const colors = ["#e15759", "#f28e2b", "#4e79a7"];
+
       const ctx = document.getElementById("pieChartHistory").getContext("2d");
       if (pieChartHistory) pieChartHistory.destroy();
       pieChartHistory = new Chart(ctx, {
