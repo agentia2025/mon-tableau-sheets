@@ -7,216 +7,124 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    }
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      min-height: 100vh;
-      position: relative;
-      color: #222;
-
-      z-index: 1;
-      background-color: #f4f4f4;
-      background-image: url('Capture d’écran 2025-06-12 à 18.32.34.png');
-      background-repeat: no-repeat;
-      background-size: cover;
-      background-position: center center;
-    }
-    body::before {
-      content: "";
-      position: fixed;
-
-
-      z-index: 0;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(255,255,255,0.1);
-      pointer-events: none;
-    }
-    main, header, .filters, .history-table-container {
-      position: relative;
-      z-index: 1;
-    }
-    header {
-      display: flex;
-      align-items: center;
-      padding: 10px 20px;
-      background-color: #4e79a7;
-      color: #fff !important;
-      text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
-      z-index: 2;
-    }
-    .menu-button {
-      font-size: 26px;
-      cursor: pointer;
-      background: none;
-      border: none;
-      color: #fff !important;
-      margin-right: 3ch;
-      text-shadow: 0 1px 3px #222, 0 0 6px #4e79a7;
-    }
-    .page-title {
-      font-size: 24px;
-      margin: 0;
-      color: #fff !important;
-      text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
-    }
-    .menu {
-      display: none;
-      flex-direction: column;
-      position: absolute;
-      top: 50px;
-      left: 20px;
-      background-color: #fff;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-      z-index: 999;
-    }
-    .menu a {
-      padding: 10px 20px;
-      text-decoration: none;
-      color: #222 !important;
-      border-bottom: 1px solid #eee;
-      background: none;
-      cursor: pointer;
-      display: block;
-      text-align: left;
-      font-weight: bold;
-      text-shadow: 0 1px 3px #fff, 0 0 3px #fff;
-    }
-    .menu a:last-child { border-bottom: none; }
-    .menu a:hover { background-color: #f0f0f0; }
-
-    .filters {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 20px;
-      justify-content: center;
-      padding: 30px 20px 10px;
-      max-width: 800px;
-      margin: auto;
-      color: #222;
-      text-shadow: 0 1px 2px #fff;
-    }
-    .filter-group {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .filter-group label {
-      margin-bottom: 5px;
-      font-weight: bold;
-      color: #222;
-      text-shadow: 0 1px 2px #fff;
-    }
-    .filter-group select {
-      padding: 6px;
-      width: 160px;
-      background: #fff;
-      color: #222;
-      border: 1px solid #4e79a7;
-      font-weight: bold;
-      text-shadow: 0 1px 2px #fff;
-    }
-    .chart-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: 40px 0;
-      gap: 40px;
-    }
-    #pieChartHistory {
-      width: 320px !important;
-      height: 320px !important;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.10);
-      z-index: 2;
-      display: block;
-      margin: 0 auto;
-    }
-    .history-table-container {
-      max-width: 1000px;
-      margin: 40px auto;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      overflow-x: auto;
-      padding: 18px 12px 18px 12px;
-      position: relative;
-      z-index: 1;
-    }
-    /* --- Ajout Copilot: scroll header --- */
-    .history-table-scroll {
-      max-height: 350px;
-      overflow-y: auto;
-      width: 100%;
-    }
-    #historyTable thead th {
-      position: sticky;
-      top: 0;
-      background: #f7f9fa;
-      z-index: 2;
-    }
-    /* --- Fin Ajout Copilot --- */
-
-    table { border-collapse: collapse; width: 100%; min-width: 700px; }
-    th, td { padding: 8px 8px; border-bottom: 1px solid #eee; text-align: left; }
-    th { background: #f7f9fa; font-weight: bold; }
-    tr:hover { background: #f5f5ff; }
-    .rapport-icon { font-size: 18px; text-align: center; }
-    #login-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.45);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-    }
-    #login-box {
-      background: #fff;
-      padding: 30px 40px 20px 40px;
-      border-radius: 12px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.15);
-      max-width: 340px;
-      width: 90%;
-      text-align: center;
-    }
-    #login-box input[type="password"] {
-      width: 90%;
-      padding: 10px;
-      font-size: 18px;
-      margin-bottom: 16px;
-      border: 1px solid #aaa;
-      border-radius: 5px;
-      color: #222;
-      background: #fff;
-    }
-    #login-box button {
-      padding: 8px 26px;
-      font-size: 18px;
-      background: #4e79a7;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    #login-box button:hover { background: #355270; }
-    #login-error { color: #c00; margin-bottom: 10px; min-height: 22px; }
-    @media (max-width: 600px) {
-      .filters { grid-template-columns: 1fr; padding: 20px; gap: 15px; }
-      .filter-group { align-items: stretch; text-align: left; }
-      .filter-group label { margin-bottom: 4px; }
-      #pieChartHistory { width: 90vw !important; height: auto !important; }
-      table { min-width: 500px; }
-      .history-table-container { padding: 6px; }
-      .chart-container { padding: 12px 0; }
-    }
-  </style>
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background-color: #f4f4f4;
+  background-image: url('Capture d’écran 2025-06-12 à 18.32.34.png');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center center;
+  color: #222;
+  position: relative;
+}
+body::before {
+  content: "";
+  position: fixed;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255,255,255,0.1);
+  pointer-events: none;
+}
+header, .filters, .chart-container, .preventif-table-container {
+  position: relative;
+  z-index: 1;
+}
+header {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #4e79a7;
+  color: #fff !important;
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
+}
+.menu-button {
+  font-size: 26px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: #fff !important;
+  margin-right: 3ch;
+  text-shadow: 0 1px 3px #222, 0 0 6px #4e79a7;
+}
+.page-title {
+  font-size: 24px;
+  margin: 0;
+  color: #fff !important;
+  text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
+}
+.menu {
+  display: none;
+  flex-direction: column;
+  position: absolute;
+  top: 50px;
+  left: 20px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 999;
+}
+.menu a {
+  padding: 10px 20px;
+  text-decoration: none;
+  color: #222 !important;
+  border-bottom: 1px solid #eee;
+  background: none;
+  cursor: pointer;
+  display: block;
+  text-align: left;
+  font-weight: bold;
+  text-shadow: 0 1px 3px #fff, 0 0 3px #fff;
+}
+.menu a:last-child {
+  border-bottom: none;
+}
+.menu a:hover {
+  background-color: #f0f0f0;
+}
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+  justify-content: center;
+  padding: 30px 20px 10px;
+  max-width: 600px;
+  margin: auto;
+  color: #222;
+  text-shadow: 0 1px 2px #fff;
+}
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.filter-group label {
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #222;
+  text-shadow: 0 1px 2px #fff;
+}
+.filter-group select {
+  padding: 6px;
+  width: 160px;
+  background: #fff;
+  color: #222;
+  border: 1px solid #4e79a7;
+  font-weight: bold;
+  text-shadow: 0 1px 2px #fff;
+}
+</style>
 </head>
 <body>
   <div id="login-overlay">
