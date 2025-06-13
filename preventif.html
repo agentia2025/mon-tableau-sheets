@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html>More actions
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -144,17 +144,6 @@
       margin-bottom: 10px;
       text-shadow: 0 1px 2px #fff;
     }
-    .history-table-container {
-      overflow-x: auto;
-      overflow-y: auto;
-      max-height: 500px; /* à adapter selon besoin */
-    }
-    #historyTable thead th {
-      position: sticky;
-      top: 0;
-      background: #f7f9fa;
-      z-index: 3;
-    }
     .upcoming {
       width: 90%;
       max-width: 600px;
@@ -226,12 +215,68 @@
       padding: 2px;
       box-shadow: 0 1px 2px #fff;
     }
+    .history-table-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 500px; /* à adapter selon besoin */
+}
+#historyTable thead th {
+  position: sticky;
+  top: 0;
+  background: #f7f9fa;
+  z-index: 3;
+}
   </style>
 </head>
 <body>
-<!-- le reste de ton code HTML ici -->
-</body>
-</html>
+  <div id="login-overlay">
+    <form id="login-box" autocomplete="off" onsubmit="return false;">
+      <h2>Connexion</h2>
+      <div id="login-error"></div>
+      <input type="password" id="password" placeholder="Mot de passe" autofocus />
+      <br>
+      <button type="submit">Entrer</button>
+    </form>
+  </div>
+  <header>
+    <button class="menu-button" onclick="toggleMenu()">☰</button>
+    <h1 class="page-title">Suivi Préventif</h1>
+    <div class="menu" id="menu">
+      <a href="index.html">Accueil</a>
+      <a href="tableau.html">Tableau de bord</a>
+      <a href="historique.html">Historique maintenance</a>
+      <a href="preventif.html">Préventif</a>
+      <a href="#" id="logout-link" onclick="logout();return false;" style="color:#c00;">Déconnexion</a>
+    </div>
+  </header>
+  <div class="filters">
+    <div class="filter-group">
+      <label for="siteFilter">Site</label>
+      <select id="siteFilter"><option value="">Tous les sites</option></select>
+    </div>
+    <div class="filter-group">
+      <label for="yearFilter">Année</label>
+      <select id="yearFilter"><option value="">Toutes les années</option></select>
+    </div>
+  </div>
+
+  <div class="chart-center">
+    <canvas id="pieChart"></canvas>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <h2 class="upcoming-title">Les prochains préventifs :</h2>
+
+  <table class="upcoming" id="upcomingTable">
+    <thead>
+      <tr>
+        <th>Site</th>
+        <th>Machine</th>
+        <th>Date (JJ-MM)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
   <!-- SCRIPT NON MODIFIÉ -->
   <script>
