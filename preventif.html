@@ -1,4 +1,4 @@
-<!DOCTYPE html>More actions
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -144,18 +144,27 @@
       margin-bottom: 10px;
       text-shadow: 0 1px 2px #fff;
     }
-    .upcoming {
+    /* Ajout scroll vertical et entête fixe pour la table upcoming */
+    .upcoming-container {
       width: 90%;
       max-width: 600px;
       margin: 20px auto;
-      border-collapse: collapse;
-      text-align: center;
       background: rgba(255,255,255,0.85);
       border-radius: 10px;
       overflow: hidden;
       box-shadow: 0 2px 14px rgba(30,60,120,0.06);
       position: relative;
       z-index: 1;
+      max-height: 320px; /* Fixe la "page" (hauteur max), à ajuster si besoin */
+      overflow-y: auto;
+      border: 1px solid #ddd;
+    }
+    .upcoming {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: center;
+      background: transparent;
+      /* plus de overflow ici */
     }
     .upcoming th, .upcoming td {
       padding: 8px;
@@ -166,6 +175,9 @@
       background: #4e79a7;
       color: #fff;
       text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
+      position: sticky;
+      top: 0;
+      z-index: 2;
     }
     .upcoming tr:nth-child(even) td {
       background: rgba(78,121,167,0.04);
@@ -215,17 +227,18 @@
       padding: 2px;
       box-shadow: 0 1px 2px #fff;
     }
+    /* Scroll vertical pour l'historique, inchangé */
     .history-table-container {
-  overflow-x: auto;
-  overflow-y: auto;
-  max-height: 500px; /* à adapter selon besoin */
-}
-#historyTable thead th {
-  position: sticky;
-  top: 0;
-  background: #f7f9fa;
-  z-index: 3;
-}
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: 500px; /* à adapter selon besoin */
+    }
+    #historyTable thead th {
+      position: sticky;
+      top: 0;
+      background: #f7f9fa;
+      z-index: 3;
+    }
   </style>
 </head>
 <body>
@@ -267,16 +280,19 @@
 
   <h2 class="upcoming-title">Les prochains préventifs :</h2>
 
-  <table class="upcoming" id="upcomingTable">
-    <thead>
-      <tr>
-        <th>Site</th>
-        <th>Machine</th>
-        <th>Date (JJ-MM)</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <!-- Ajout du conteneur pour scroll -->
+  <div class="upcoming-container">
+    <table class="upcoming" id="upcomingTable">
+      <thead>
+        <tr>
+          <th>Site</th>
+          <th>Machine</th>
+          <th>Date (JJ-MM)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
   <!-- SCRIPT NON MODIFIÉ -->
   <script>
