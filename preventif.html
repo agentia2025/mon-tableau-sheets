@@ -232,3 +232,211 @@
 <!-- le reste de ton code HTML ici -->
 </body>
 </html>
+
+  <!-- SCRIPT NON MODIFIÉ -->
+  <script>
+    // Gestion du menu (identique à la V7)
+    function toggleMenu() {
+      const m = document.getElementById("menu");
+      m.style.display = m.style.display === "flex" ? "none" : "flex";
+    }
+    document.addEventListener("click", e => {
+      const m = document.getElementById("menu");
+      const b = document.querySelector(".menu-button");
+      if (!m.contains(e.target) && e.target !== b) m.style.display = "none";
+    });
+
+    // Gestion des mots de passe V7
+    const PASSWORDS = {
+      "Armitec2025": ["commun", "lidec", "atelier", "scr"],
+      "commun*d*sit": ["commun"],
+      "lidecbelli": ["lidec", "atelier"],
+      "scrfuture": ["scr"]
+    };
+    const SITES = [
+      { id: "commun", label: "Commun de site" },
+      { id: "lidec", label: "Lidec" },
+      { id: "atelier", label: "Atelier Bélliparc" },
+      { id: "scr", label: "SCR" }
+    ];
+    let userRights = [];
+
+    document.getElementById("login-box").onsubmit = function () {
+      const pass = document.getElementById("password").value;
+      if (PASSWORDS[pass]) {
+        userRights = PASSWORDS[pass];
+        sessionStorage.setItem("userRights", JSON.stringify(userRights));
+        document.getElementById("login-overlay").style.display = "none";
+        showSiteFilterSites();
+      } else {
+        document.getElementById("login-error").innerText = "Mot de passe incorrect.";
+        document.getElementById("password").value = "";
+        document.getElementById("password").focus();
+      }
+    };
+
+    function logout() {
+      sessionStorage.removeItem("userRights");
+      document.getElementById("login-overlay").style.display = "flex";
+      document.getElementById("password").value = "";
+      document.getElementById("password").focus();
+    }
+
+    window.onload = function () {
+      const stored = sessionStorage.getItem("userRights");
+      if (stored) {
+        userRights = JSON.parse(stored);
+        document.getElementById("login-overlay").style.display = "none";
+      }
+      fetchData();
+    };
+
+    // Données
+    const url = "https://script.google.com/macros/s/AKfycbydUwbmc5KCQ_WWLCriPcx8AZEpOxDY8THCtLsRWmNY1oE19RaKJVN_cEKo5FjLJDKcLw/exec";
+    let dataAll = [];
+    function fetchData() {
+      fetch(url).then(r => r.json()).then(data => {
+        dataAll = data;
+        initFilters();
+        showSiteFilterSites();
+        updateChart();
+        fillUpcoming();
+      });
+    }
+
+    // Affichage dynamique des sites accessibles selon les droits (V7)
+    function showSiteFilterSites() {
+      const select = document.getElementById("siteFilter");
+      if (!select) return;
+      select.innerHTML = "";
+      // Récupère tous les sites réels présents ET accessibles
+      const siteSet = new Set();
+      dataAll.forEach(row => {
+        const siteId = SITES.find(s => s.label === row["Site Intervention"])?.id;
+        if (siteId && userRights.includes(siteId)) {
+          siteSet.add(row["Site Intervention"]);
+        }
+      });
+      const siteList = Array.from(siteSet).sort();
+      if (siteList.length > 1) {
+        const optAll = document.createElement("option");
+        optAll.value = "";
+        optAll.textContent = "Tous les sites";
+        select.appendChild(optAll);
+      }
+      siteList.forEach(siteValue => {
+        const opt = document.createElement("option");
+        opt.value = siteValue;
+        opt.textContent = siteValue;
+        select.appendChild(opt);
+      });
+      if (siteList.length === 1) {
+        select.selectedIndex = 0;
+        select.disabled = true;
+      } else {
+        select.disabled = false;
+      }
+    }
+
+    function initFilters() {
+      const s = new Set(), y = new Set();
+      dataAll.forEach(r => {
+
+        const siteId = SITES.find(s => s.label === r["Site Intervention"])?.id;
+        if (siteId && (!userRights.length || userRights.includes(siteId))) {
+          s.add(r["Site Intervention"]);
+        }
+        const d = new Date(r["Prochain contrôle"]);
+        if (!isNaN(d)) y.add(d.getFullYear());
+      });
+      fill("yearFilter", y);
+      document.getElementById("yearFilter").addEventListener("change", () => {
+        updateChart();
+        fillUpcoming();
+      });
+      document.getElementById("siteFilter").addEventListener("change", () => {
+        updateChart();
+        fillUpcoming();
+      });
+    }
+
+    function fill(id, set) {
+      const sel = document.getElementById(id);
+      const label = (id === "yearFilter" ? "Toutes les années" : "Tous les sites");
+      sel.innerHTML = `<option value="">${label}</option>`;
+      Array.from(set).sort().forEach(v => {
+        const o = document.createElement("option");
+        o.value = v;
+        o.textContent = v;
+        sel.appendChild(o);
+      });
+    }
+
+    function updateChart() {
+      const site = document.getElementById("siteFilter").value;
+      const year = document.getElementById("yearFilter").value;
+      let ok = 0, ko = 0;
+      dataAll.forEach(r => {
+
+        const siteId = SITES.find(s => s.label === r["Site Intervention"])?.id;
+        if (site && r["Site Intervention"] !== site) return;
+        if (siteId && userRights.length && !userRights.includes(siteId)) return;
+        if (r.conformité !== "") {
+          const d = new Date(r["Prochain contrôle"]);
+          if (year && d.getFullYear() != year) return;
+          r.conformité === "Conforme" ? ok++ : ko++;
+        }
+      });
+      const total = ok + ko;
+      const percOK = total ? Math.round(ok / total * 100) : 0;
+      const ctx = document.getElementById("pieChart").getContext("2d");
+      if (window.pie) window.pie.destroy();
+      window.pie = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: ["Conforme", "Non conforme"],
+          datasets: [{ data: [ok, ko] }]
+        },
+        options: {
+          plugins: {
+            title: {
+              display: true,
+              text: `Conformité – ${percOK}%`
+            }
+          }
+        }
+      });
+      document.getElementById("stats").textContent = `Conformes : ${ok} / Non conformes : ${ko}`;
+    }
+
+    function fillUpcoming() {
+      const tbody = document.querySelector("#upcomingTable tbody");
+      tbody.innerHTML = "";
+      const site = document.getElementById("siteFilter").value;
+      const today = new Date();
+      const list = dataAll
+        .filter(r => {
+          const siteId = SITES.find(s => s.label === r["Site Intervention"])?.id;
+          if (site && r["Site Intervention"] !== site) return false;
+          if (siteId && userRights.length && !userRights.includes(siteId)) return false;
+          const d = new Date(r["Prochain contrôle"]);
+          return d >= today;
+        })
+        .sort((a, b) => new Date(a["Prochain contrôle"]) - new Date(b["Prochain contrôle"]))
+        .slice(0, 20);
+      list.forEach(r => {
+        const d = new Date(r["Prochain contrôle"]);
+        const dd = String(d.getDate()).padStart(2, "0");
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${r["Site Intervention"]}</td>
+          <td>${r.Machine}</td>
+          <td>${dd}-${mm}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  </script>
+</body>
+</html>
