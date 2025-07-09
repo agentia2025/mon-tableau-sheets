@@ -65,7 +65,6 @@
         option.value = site;
         option.textContent = site;
         siteSelect.appendChild(option);
-      });
       siteSelect.addEventListener('change', () => {
         const selected = siteSelect.value;
         const filtered = selected ? dataRows.filter(r => r[0] === selected) : dataRows;
