@@ -13,6 +13,7 @@
     .menu-button { font-size: 26px; cursor: pointer; background: none; border: none; color: #fff; margin-right: 3ch; text-shadow: 0 1px 3px #222, 0 0 6px #4e79a7; }
     .page-title { font-size: 24px; margin: 0; color: #fff; }
     .menu { display: none; flex-direction: column; position: absolute; top: 50px; left: 20px; background-color: #fff; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); z-index: 999; }
+    .menu.open { display: flex; }
     .menu a { padding: 10px 20px; text-decoration: none; color: #222; border-bottom: 1px solid #eee; font-weight: bold; }
     .menu a:last-child { border-bottom: none; }
     .filters { display: flex; justify-content: center; margin: 2rem auto 1rem; gap: 1rem; flex-wrap: wrap; position: relative; z-index: 1; }
@@ -90,13 +91,16 @@
 
     // Menu toggle
     function toggleMenu() {
-      const m = document.getElementById('menu');
-      m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+      document.getElementById('menu').classList.toggle('open');
     }
+    // Fermer le menu sur clic hors ou sur lien
     document.addEventListener('click', e => {
       const m = document.getElementById('menu');
       const b = document.querySelector('.menu-button');
-      if (!m.contains(e.target) && e.target !== b) m.style.display = 'none';
+      if (!m.contains(e.target) && e.target !== b) m.classList.remove('open');
+    });
+    document.querySelectorAll('.menu a').forEach(link => {
+      link.addEventListener('click', () => document.getElementById('menu').classList.remove('open'));
     });
 
     // Initialisation après auth ou reload
@@ -109,8 +113,7 @@
         })
         .catch(err => {
           console.error(err);
-          const tbody = document.querySelector('#machineTable tbody');
-          tbody.innerHTML = '<tr><td colspan="2">Erreur de chargement des données.</td></tr>';
+          document.querySelector('#machineTable tbody').innerHTML = '<tr><td colspan="2">Erreur de chargement des données.</td></tr>';
         });
     }
 
@@ -124,15 +127,12 @@
 
     // Configuration du filtre une seule fois
     function setupFilter() {
-      // Remplir les options
       siteSelect.innerHTML = '<option value="">-- Tous les sites --</option>';
       const sites = [...new Set(fullDataRows.map(r => r[0]))].sort();
       sites.forEach(site => {
-        const opt = document.createElement('option');
-        opt.value = site; opt.textContent = site;
+        const opt = document.createElement('option'); opt.value = site; opt.textContent = site;
         siteSelect.appendChild(opt);
       });
-      // Listener unique
       siteSelect.onchange = () => {
         const sel = siteSelect.value;
         sessionStorage.setItem('selectedSite', sel);
@@ -174,4 +174,5 @@
   </script>
 </body>
 </html>
+
 
