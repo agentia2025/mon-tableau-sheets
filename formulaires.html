@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Formulaires de maintenance</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 1rem; }
+    h1 { display: flex; align-items: center; font-size: 1.8rem; margin-bottom: 1rem; }
+    .menu-btn { font-size: 1.5rem; margin-right: 1rem; cursor: pointer; }
+    select { padding: 0.5rem; margin-bottom: 1rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { border: 1px solid #ccc; padding: 0.75rem; text-align: left; }
+    th { background-color: #f5f5f5; }
+  </style>
+</head>
+<body>
+
+  <h1><span class="menu-btn" onclick="toggleMenu()">☰</span>Formulaires de maintenance</h1>
+
+  <nav id="menu" style="display: none; margin-bottom: 1rem;">
+    <a href="index.html">Accueil</a> |
+    <a href="tableau.html">Tableau de bord</a> |
+    <a href="historique.html">Historique</a> |
+    <a href="preventif.html">Préventif</a> |
+    <a href="formulaires.html"><strong>Formulaires</strong></a>
+  </nav>
+
+  <label for="siteSelect">Choisir un site :</label>
+  <select id="siteSelect">
+    <option value="">-- Tous les sites --</option>
+  </select>
+
+  <table id="machineTable">
+    <thead>
+      <tr>
+        <th>Machine</th>
+        <th>Lien du formulaire</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6IZ_9Y9qxUz2qVGHnTVebCZwKJzp2q9aIhEiFOMiG4WTCoE3FOcBqSWhEyGb_dPz0uvs_WaHcskRM/pub?gid=1577035639&single=true&output=csv';
+
+    let dataRows = [];
+
+    fetch(sheetUrl)
+      .then(response => response.text())
+      .then(csvText => {
+        const parsed = Papa.parse(csvText, { header: false });
+        dataRows = parsed.data.filter(row => row.length >= 6);
+        populateSiteFilter(dataRows);
+        displayTable(dataRows);
+      });
+
+    function populateSiteFilter(rows) {
+      const siteSelect = document.getElementById('siteSelect');
+      const sites = [...new Set(rows.map(row => row[0]))].sort();
+      sites.forEach(site => {
+        const option = document.createElement('option');
+        option.value = site;
+        option.textContent = site;
+        siteSelect.appendChild(option);
+      });
+      siteSelect.addEventListener('change', () => {
+        const selected = siteSelect.value;
+        const filtered = selected ? dataRows.filter(r => r[0] === selected) : dataRows;
+        displayTable(filtered);
+      });
+    }
+
+    function displayTable(rows) {
+      const tbody = document.querySelector('#machineTable tbody');
+      tbody.innerHTML = '';
+      rows.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${row[1]}</td>
+          <td><a href="${row[5]}" target="_blank">Ouvrir le formulaire</a></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function toggleMenu() {
+      const menu = document.getElementById('menu');
+      menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+  </script>
+
+</body>
+</html>
