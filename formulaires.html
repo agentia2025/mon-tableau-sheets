@@ -189,7 +189,7 @@
     const PASSWORDS = {
       "form2025": ["Armitec CNPE", "Armitec Belliparc"]
     };
-    let userRights = [];
+    let userRights = [], fullDataRows = [];
 
     document.getElementById("login-box").onsubmit = function () {
       const pass = document.getElementById("password").value;
@@ -221,9 +221,9 @@
         .then(response => response.text())
         .then(csvText => {
           const parsed = Papa.parse(csvText, { header: false });
-          const dataRows = parsed.data.filter(row => row.length >= 6 && userRights.includes(row[0]));
-          populateSiteFilter(dataRows);
-          displayTable(dataRows);
+          fullDataRows = parsed.data.filter(row => row.length >= 6);
+          populateSiteFilter(fullDataRows);
+          displayTable(fullDataRows);
         });
     }
 
@@ -239,7 +239,7 @@
       });
       siteSelect.addEventListener('change', () => {
         const selected = siteSelect.value;
-        const filtered = selected ? rows.filter(r => r[0] === selected) : rows;
+        const filtered = selected ? fullDataRows.filter(r => r[0] === selected) : fullDataRows;
         displayTable(filtered);
       });
     }
@@ -268,3 +268,4 @@
   </script>
 </body>
 </html>
+
