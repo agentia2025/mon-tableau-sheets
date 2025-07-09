@@ -2,228 +2,212 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Accueil</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Formulaires de maintenance</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #f2f2f2; }
-    header { display: flex; align-items: center; padding: 10px 20px; background: #4e79a7; color: white; position: relative; }
-    .menu-button { font-size: 26px; cursor: pointer; background: none; border: none; color: black; margin-right: 3ch; }
-    .page-title { font-size: 24px; margin: 0; }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      position: relative;
+      color: #222;
+      z-index: 1;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 0;
+      background: url('Capture d’écran 2025-06-12 à 18.32.34.png') center center / cover no-repeat;
+      opacity: 1;
+      pointer-events: none;
+    }
+    main, header, .filters, .table-container {
+      position: relative;
+      z-index: 1;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #4e79a7;
+      color: #fff !important;
+      text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
+      z-index: 2;
+    }
+    .menu-button {
+      font-size: 26px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: #fff !important;
+      margin-right: 3ch;
+      text-shadow: 0 1px 3px #222, 0 0 6px #4e79a7;
+    }
+    .page-title {
+      font-size: 24px;
+      margin: 0;
+      color: #fff !important;
+      text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
+    }
     .menu {
       display: none;
       flex-direction: column;
       position: absolute;
       top: 50px;
       left: 20px;
-      background: #fff;
+      background-color: #fff;
       border: 1px solid #ccc;
       border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
       z-index: 999;
     }
     .menu a {
       padding: 10px 20px;
       text-decoration: none;
-      color: #333;
+      color: #222 !important;
       border-bottom: 1px solid #eee;
       background: none;
       cursor: pointer;
       display: block;
       text-align: left;
+      font-weight: bold;
+      text-shadow: 0 1px 3px #fff, 0 0 3px #fff;
     }
     .menu a:last-child { border-bottom: none; }
-    .menu a:hover { background: #f0f0f0; }
-    .main-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-top: 60px;
-    }
-    .main-logo {
+    .menu a:hover { background-color: #f0f0f0; }
+    .filters {
       display: flex;
       justify-content: center;
-      align-items: center;
-      width: 100%;
-      margin-bottom: 30px;
-      margin-top: 10px;
-    }
-    .main-logo img {
-      max-width: 270px;
-      width: 100%;
-      height: auto;
-      display: block;
-      margin: 0 auto;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(78,121,167,0.09);
-      background: white;
-      padding: 8px 16px;
-      object-fit: contain;
-    }
-    .main-container h2 {
-      font-size: 28px;
-      color: #4e79a7;
-      margin-bottom: 32px;
-      text-align: center;
-    }
-    .dashboard-links {
-      display: flex;
+      margin: 2rem auto 1rem;
+      gap: 1rem;
       flex-wrap: wrap;
-      gap: 32px;
-      justify-content: center;
     }
-    .dashboard-link {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background: white;
-      border-radius: 14px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.09);
-      padding: 32px 36px 24px 36px;
-      font-size: 18px;
-      color: #222;
-      text-decoration: none;
-      transition: box-shadow 0.2s, background 0.2s;
-      min-width: 180px;
+    .filters label {
+      font-weight: bold;
+      margin-right: 0.5rem;
+      text-shadow: 0 1px 2px #fff;
     }
-    .dashboard-link:hover {
-      background: #f7faff;
-      box-shadow: 0 4px 18px rgba(78,121,167,0.18);
+    .filters select {
+      padding: 0.5rem;
+      font-weight: bold;
+      border: 1px solid #4e79a7;
     }
-    .dashboard-link span {
-      font-size: 45px;
-      margin-bottom: 10px;
-      color: #4e79a7;
-    }
-    #login-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.45);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-    }
-    #login-box {
+    .table-container {
+      max-width: 1000px;
+      margin: auto;
       background: #fff;
-      padding: 30px 40px 20px 40px;
-      border-radius: 12px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.15);
-      max-width: 340px;
-      width: 90%;
-      text-align: center;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      overflow-x: auto;
+      padding: 18px 12px;
     }
-    #login-box input[type="password"] {
-      width: 90%;
-      padding: 10px;
-      font-size: 18px;
-      margin-bottom: 16px;
-      border: 1px solid #aaa;
-      border-radius: 5px;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 700px;
     }
-    #login-box button {
-      padding: 8px 26px;
-      font-size: 18px;
-      background: #4e79a7;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
+    th, td {
+      border-bottom: 1px solid #eee;
+      padding: 0.75rem;
+      text-align: left;
     }
-    #login-box button:hover { background: #355270; }
-    #login-error { color: #c00; margin-bottom: 10px; min-height: 22px; }
-    @media (max-width: 700px) {
-      .dashboard-links { flex-direction: column; gap: 18px; }
-      .main-container { margin-top: 25px; }
-      .dashboard-link { min-width: unset; width: 85%; padding: 22px 0 18px 0; }
-      .main-container h2 { font-size: 21px; }
-      .main-logo img { max-width: 170px; }
+    th {
+      background: #f7f9fa;
+      font-weight: bold;
     }
+    tr:hover { background: #f5f5ff; }
   </style>
 </head>
 <body>
-  <div id="login-overlay">
-    <form id="login-box" autocomplete="off" onsubmit="return false;">
-      <h2>Connexion</h2>
-      <div id="login-error"></div>
-      <input type="password" id="password" placeholder="Mot de passe" autofocus />
-      <br>
-      <button type="submit">Entrer</button>
-    </form>
-  </div>
   <header>
     <button class="menu-button" onclick="toggleMenu()">☰</button>
-    <h1 class="page-title">Accueil</h1>
+    <h1 class="page-title">Formulaires de maintenance</h1>
     <div class="menu" id="menu">
       <a href="index.html">Accueil</a>
       <a href="tableau.html">Tableau de bord</a>
       <a href="historique.html">Historique maintenance</a>
       <a href="preventif.html">Préventif</a>
       <a href="formulaires.html">Formulaires</a>
-      <a href="#" id="logout-link" onclick="logout();return false;" style="color:#c00;">Déconnexion</a>
     </div>
   </header>
-  <div class="main-container">
-    <div class="main-logo">
-      <img src="logo_armitec.png.jpg" alt="Logo Armitec" />
-    </div>
-    <h2>Bienvenue sur la plateforme de maintenance !<br>
-      Choisissez un module :</h2>
-    <div class="dashboard-links">
-      <a href="tableau.html" class="dashboard-link"><span>📊</span>Tableau de bord</a>
-      <a href="historique.html" class="dashboard-link"><span>📜</span>Historique maintenance</a>
-      <a href="preventif.html" class="dashboard-link"><span>🛠️</span>Préventif</a>
-      <a href="formulaires.html" class="dashboard-link"><span>📝</span>Formulaires</a>
-    </div>
+
+  <div class="filters">
+    <label for="siteSelect">Choisir un site :</label>
+    <select id="siteSelect">
+      <option value="">-- Tous les sites --</option>
+    </select>
   </div>
+
+  <div class="table-container">
+    <table id="machineTable">
+      <thead>
+        <tr>
+          <th>Machine</th>
+          <th>Lien du formulaire</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
   <script>
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/1DT9QEkPm-bo6oUbBp4d7HKcmU84Uh77IKwh_ccoxeSw/gviz/tq?tqx=out:csv&sheet=Id%20Fichiers%20machines';
+    let dataRows = [];
+
+    fetch(sheetUrl)
+      .then(response => response.text())
+      .then(csvText => {
+        const parsed = Papa.parse(csvText, { header: false });
+        dataRows = parsed.data.filter(row => row[0] && row[1] && row[5]);
+        populateSiteFilter(dataRows);
+        displayTable(dataRows);
+      });
+
+    function populateSiteFilter(rows) {
+      const siteSelect = document.getElementById('siteSelect');
+      const sites = [...new Set(rows.map(row => row[0]))].sort();
+      sites.forEach(site => {
+        const option = document.createElement('option');
+        option.value = site;
+        option.textContent = site;
+        siteSelect.appendChild(option);
+      });
+      siteSelect.addEventListener('change', () => {
+        const selected = siteSelect.value;
+        const filtered = selected ? dataRows.filter(r => r[0] === selected) : dataRows;
+        displayTable(filtered);
+      });
+    }
+
+    function displayTable(rows) {
+      const tbody = document.querySelector('#machineTable tbody');
+      tbody.innerHTML = '';
+      rows.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${row[1]}</td>
+          <td><a href="${row[5]}" target="_blank">Ouvrir le formulaire</a></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
     function toggleMenu() {
-      const m = document.getElementById("menu");
-      m.style.display = m.style.display === "flex" ? "none" : "flex";
+      const menu = document.getElementById('menu');
+      menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
     }
     document.addEventListener("click", function(e) {
       const m = document.getElementById("menu");
       const b = document.querySelector(".menu-button");
       if (!m.contains(e.target) && e.target !== b) m.style.display = "none";
     });
-
-    const PASSWORDS = {
-      "Armitec2025": ["commun", "lidec", "atelier", "scr"],
-      "commun*d*sit": ["commun"],
-      "lidecbelli": ["lidec", "atelier"],
-      "scrfuture": ["scr"]
-    };
-    let userRights = [];
-
-    document.getElementById("login-box").onsubmit = function () {
-      const pass = document.getElementById("password").value;
-      if (PASSWORDS[pass]) {
-        userRights = PASSWORDS[pass];
-        sessionStorage.setItem("userRights", JSON.stringify(userRights));
-        document.getElementById("login-overlay").style.display = "none";
-      } else {
-        document.getElementById("login-error").innerText = "Mot de passe incorrect.";
-        document.getElementById("password").value = "";
-        document.getElementById("password").focus();
-      }
-      return false;
-    };
-
-    function logout() {
-      sessionStorage.removeItem("userRights");
-      document.getElementById("login-overlay").style.display = "flex";
-      document.getElementById("password").value = "";
-      document.getElementById("password").focus();
-    }
-
-    window.onload = function () {
-      const rights = sessionStorage.getItem("userRights");
-      if (!rights) {
-        document.getElementById("login-overlay").style.display = "flex";
-        document.getElementById("password").focus();
-      } else {
-        document.getElementById("login-overlay").style.display = "none";
-      }
-    };
   </script>
 </body>
 </html>
