@@ -6,143 +6,27 @@
   <title>Formulaires de maintenance</title>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background-color: #f4f4f4;
-      background-image: url('Capture d’écran 2025-06-12 à 18.32.34.png');
-      background-repeat: no-repeat;
-      background-size: cover;
-      background-position: center center;
-      color: #222;
-      position: relative;
-    }
-    body::before {
-      content: "";
-      position: fixed;
-      z-index: 0;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(255,255,255,0.1);
-      pointer-events: none;
-    }
-    header {
-      display: flex;
-      align-items: center;
-      padding: 10px 20px;
-      background-color: #4e79a7;
-      color: #fff;
-      text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
-      z-index: 2;
-    }
-    .menu-button {
-      font-size: 26px;
-      cursor: pointer;
-      background: none;
-      border: none;
-      color: #fff;
-      margin-right: 3ch;
-      text-shadow: 0 1px 3px #222, 0 0 6px #4e79a7;
-    }
-    .page-title {
-      font-size: 24px;
-      margin: 0;
-      color: #fff;
-    }
-    .menu {
-      display: none;
-      flex-direction: column;
-      position: absolute;
-      top: 50px;
-      left: 20px;
-      background-color: #fff;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-      z-index: 999;
-    }
-    .menu a {
-      padding: 10px 20px;
-      text-decoration: none;
-      color: #222;
-      border-bottom: 1px solid #eee;
-      font-weight: bold;
-    }
+    /* Styles inchangés pour ne pas toucher la mise en page */
+    body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f4; background-image: url('Capture d’écran 2025-06-12 à 18.32.34.png'); background-repeat: no-repeat; background-size: cover; background-position: center center; color: #222; position: relative; }
+    body::before { content: ""; position: fixed; z-index: 0; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(255,255,255,0.1); pointer-events: none; }
+    header { display: flex; align-items: center; padding: 10px 20px; background-color: #4e79a7; color: #fff; text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7; z-index: 2; }
+    .menu-button { font-size: 26px; cursor: pointer; background: none; border: none; color: #fff; margin-right: 3ch; text-shadow: 0 1px 3px #222, 0 0 6px #4e79a7; }
+    .page-title { font-size: 24px; margin: 0; color: #fff; }
+    .menu { display: none; flex-direction: column; position: absolute; top: 50px; left: 20px; background-color: #fff; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); z-index: 999; }
+    .menu a { padding: 10px 20px; text-decoration: none; color: #222; border-bottom: 1px solid #eee; font-weight: bold; }
     .menu a:last-child { border-bottom: none; }
-    .filters {
-      display: flex;
-      justify-content: center;
-      margin: 2rem auto 1rem;
-      gap: 1rem;
-      flex-wrap: wrap;
-      position: relative;
-      z-index: 1;
-    }
-    .filters label {
-      font-weight: bold;
-    }
-    .filters select {
-      padding: 0.5rem;
-      font-weight: bold;
-      border: 1px solid #4e79a7;
-    }
-    .table-container {
-      max-width: 1000px;
-      margin: auto;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      overflow-x: auto;
-      padding: 18px 12px;
-      position: relative;
-      z-index: 1;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 700px;
-    }
-    th, td {
-      border-bottom: 1px solid #eee;
-      padding: 0.75rem;
-      text-align: left;
-    }
-    th {
-      background: #f7f9fa;
-      font-weight: bold;
-    }
+    .filters { display: flex; justify-content: center; margin: 2rem auto 1rem; gap: 1rem; flex-wrap: wrap; position: relative; z-index: 1; }
+    .filters label { font-weight: bold; }
+    .filters select { padding: 0.5rem; font-weight: bold; border: 1px solid #4e79a7; }
+    .table-container { max-width: 1000px; margin: auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow-x: auto; padding: 18px 12px; position: relative; z-index: 1; }
+    table { width: 100%; border-collapse: collapse; min-width: 700px; }
+    th, td { border-bottom: 1px solid #eee; padding: 0.75rem; text-align: left; }
+    th { background: #f7f9fa; font-weight: bold; }
     tr:hover { background: #f5f5ff; }
-    #login-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.45);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 2000;
-    }
-    #login-box {
-      background: #fff;
-      padding: 30px 40px;
-      border-radius: 12px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.15);
-      max-width: 340px;
-      width: 90%;
-      text-align: center;
-    }
-    #login-box input[type="password"] {
-      width: 90%;
-      padding: 10px;
-      font-size: 18px;
-      margin-bottom: 16px;
-      border: 1px solid #aaa;
-      border-radius: 5px;
-    }
-    #login-box button {
-      padding: 8px 26px;
-      font-size: 18px;
-      background: #4e79a7;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
+    #login-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+    #login-box { background: #fff; padding: 30px 40px; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.15); max-width: 340px; width: 90%; text-align: center; }
+    #login-box input[type="password"] { width: 90%; padding: 10px; font-size: 18px; margin-bottom: 16px; border: 1px solid #aaa; border-radius: 5px; }
+    #login-box button { padding: 8px 26px; font-size: 18px; background: #4e79a7; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -160,7 +44,7 @@
     <button class="menu-button" onclick="toggleMenu()">☰</button>
     <h1 class="page-title">Formulaires de maintenance</h1>
     <div class="menu" id="menu">
-      <a href="index.html">Accueil</a>
+      <a href="index.html" onclick="sessionStorage.clear();">Accueil</a>
       <a href="tableau.html">Tableau de bord</a>
       <a href="historique.html">Historique maintenance</a>
       <a href="preventif.html">Préventif</a>
@@ -181,88 +65,110 @@
           <th>Lien du formulaire</th>
         </tr>
       </thead>
-      <tbody></tbody>
+      <tbody><tr id="loading-row"><td colspan="2">Chargement en cours...</td></tr></tbody>
     </table>
   </div>
 
   <script>
-    const PASSWORDS = {
-      "form2025": ["Armitec CNPE", "Armitec Belliparc"]
-    };
+    const PASSWORDS = { "form2025": ["Armitec CNPE", "Armitec Belliparc"] };
     let userRights = [], fullDataRows = [];
+    const siteSelect = document.getElementById('siteSelect');
 
-    document.getElementById("login-box").onsubmit = function () {
-      const pass = document.getElementById("password").value;
+    // Authentication
+    document.getElementById('login-box').onsubmit = () => {
+      const pass = document.getElementById('password').value;
       if (PASSWORDS[pass]) {
         userRights = PASSWORDS[pass];
-        sessionStorage.setItem("userRights", JSON.stringify(userRights));
-        document.getElementById("login-overlay").style.display = "none";
-        fetchData();
+        sessionStorage.setItem('userRights', JSON.stringify(userRights));
+        document.getElementById('login-overlay').style.display = 'none';
+        init();
       } else {
-        document.getElementById("login-error").innerText = "Mot de passe incorrect.";
-        document.getElementById("password").value = "";
-        document.getElementById("password").focus();
+        document.getElementById('login-error').innerText = 'Mot de passe incorrect.';
+        document.getElementById('password').value = '';
       }
     };
 
+    // Menu toggle
     function toggleMenu() {
-      const m = document.getElementById("menu");
-      m.style.display = m.style.display === "flex" ? "none" : "flex";
+      const m = document.getElementById('menu');
+      m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
     }
-    document.addEventListener("click", e => {
-      const m = document.getElementById("menu");
-      const b = document.querySelector(".menu-button");
-      if (!m.contains(e.target) && e.target !== b) m.style.display = "none";
+    document.addEventListener('click', e => {
+      const m = document.getElementById('menu');
+      const b = document.querySelector('.menu-button');
+      if (!m.contains(e.target) && e.target !== b) m.style.display = 'none';
     });
 
-    function fetchData() {
-      const sheetUrl = 'https://docs.google.com/spreadsheets/d/1DT9QEkPm-bo6oUbBp4d7HKcmU84Uh77IKwh_ccoxeSw/gviz/tq?tqx=out:csv&sheet=Id%20Fichiers%20machines';
-      fetch(sheetUrl)
-        .then(response => response.text())
-        .then(csvText => {
-          const parsed = Papa.parse(csvText, { header: false });
-          fullDataRows = parsed.data.filter(row => row.length >= 6);
-          populateSiteFilter(fullDataRows);
-          displayTable(fullDataRows);
+    // Initialisation après auth ou reload
+    function init() {
+      loadData()
+        .then(rows => {
+          fullDataRows = rows;
+          setupFilter();
+          applySavedFilter();
+        })
+        .catch(err => {
+          console.error(err);
+          const tbody = document.querySelector('#machineTable tbody');
+          tbody.innerHTML = '<tr><td colspan="2">Erreur de chargement des données.</td></tr>';
         });
     }
 
-    function populateSiteFilter(rows) {
-      const siteSelect = document.getElementById('siteSelect');
+    // Chargement des données
+    function loadData() {
+      const sheetUrl = 'https://docs.google.com/spreadsheets/d/1DT9QEkPm-bo6oUbBp4d7HKcmU84Uh77IKwh_ccoxeSw/gviz/tq?tqx=out:csv&sheet=Id%20Fichiers%20machines';
+      return fetch(sheetUrl)
+        .then(res => { if (!res.ok) throw new Error('Network error'); return res.text(); })
+        .then(csv => Papa.parse(csv, { header: false }).data.filter(r => r.length >= 6));
+    }
+
+    // Configuration du filtre une seule fois
+    function setupFilter() {
+      // Remplir les options
       siteSelect.innerHTML = '<option value="">-- Tous les sites --</option>';
-      const sites = [...new Set(rows.map(row => row[0]))].sort();
+      const sites = [...new Set(fullDataRows.map(r => r[0]))].sort();
       sites.forEach(site => {
-        const option = document.createElement('option');
-        option.value = site;
-        option.textContent = site;
-        siteSelect.appendChild(option);
+        const opt = document.createElement('option');
+        opt.value = site; opt.textContent = site;
+        siteSelect.appendChild(opt);
       });
-      siteSelect.addEventListener('change', () => {
-        const selected = siteSelect.value;
-        const filtered = selected ? fullDataRows.filter(r => r[0] === selected) : fullDataRows;
-        displayTable(filtered);
-      });
+      // Listener unique
+      siteSelect.onchange = () => {
+        const sel = siteSelect.value;
+        sessionStorage.setItem('selectedSite', sel);
+        renderTable(sel ? fullDataRows.filter(r => r[0] === sel) : fullDataRows);
+      };
     }
 
-    function displayTable(rows) {
+    // Appliquer filtre sauvegardé
+    function applySavedFilter() {
+      const saved = sessionStorage.getItem('selectedSite') || '';
+      siteSelect.value = saved;
+      renderTable(saved ? fullDataRows.filter(r => r[0] === saved) : fullDataRows);
+    }
+
+    // Rendu du tableau
+    function renderTable(rows) {
       const tbody = document.querySelector('#machineTable tbody');
-      tbody.innerHTML = '';
-      rows.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${row[1]}</td>
-          <td><a href="${row[5]}" target="_blank">Ouvrir le formulaire</a></td>
-        `;
-        tbody.appendChild(tr);
-      });
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="2">Aucune machine pour ce site.</td></tr>';
+      } else {
+        tbody.innerHTML = '';
+        rows.forEach(r => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${r[1]}</td><td><a href="${r[5]}" target="_blank">Ouvrir</a></td>`;
+          tbody.appendChild(tr);
+        });
+      }
     }
 
-    window.onload = function () {
-      const stored = sessionStorage.getItem("userRights");
-      if (stored) {
-        userRights = JSON.parse(stored);
-        document.getElementById("login-overlay").style.display = "none";
-        fetchData();
+    // Démarrage page
+    window.onload = () => {
+      const storedRights = sessionStorage.getItem('userRights');
+      if (storedRights) {
+        userRights = JSON.parse(storedRights);
+        document.getElementById('login-overlay').style.display = 'none';
+        init();
       }
     };
   </script>
