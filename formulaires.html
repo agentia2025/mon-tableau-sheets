@@ -31,20 +31,29 @@
   </style>
 </head>
 <body>
- 
-
+  <script>
+  <div id="login-overlay">
+    <form id="login-box" autocomplete="off" onsubmit="return false;">
+      <h2>Connexion</h2>
+      <div id="login-error"></div>
+      <input type="password" id="password" placeholder="Mot de passe" autofocus />
+      <br>
+      <button type="submit">Entrer</button>
+    </form>
+  </div>
   <header>
-    <button class="menu-button" onclick="toggleMenu(event)">☰</button>
-    <h1 class="page-title">Formulaires de maintenance</h1>
-    <div class="menu" id="menu">
-      <a href="index.html">Accueil</a>
-      <a href="tableau.html">Tableau de bord</a>
-      <a href="historique.html">Historique maintenance</a>
-      <a href="preventif.html">Préventif</a>
-      <a href="formulaires.html">Formulaires</a>
-    </div>
-  </header>
+    <button class="menu-button" onclick="toggleMenu()">☰</button>
+    <h1 class="page-title">Formulaires de maintenanc</h1>
+   <div class="menu" id="menu">
+  <a href="index.html">Accueil</a>
+  <a href="tableau.html">Tableau de bord</a>
+  <a href="historique.html">Historique maintenance</a>
+  <a href="preventif.html">Préventif</a>
+  <a href="formulaires.html">Formulaires</a>
+  <a href="#" id="logout-link" onclick="logout();return false;" style="color:#c00;">Déconnexion</a>
+</div>
 
+ 
   <div class="filters">
     <label for="siteSelect">Choisir un site :</label>
     <select id="siteSelect"><option value="">-- Tous les sites --</option></select>
@@ -61,59 +70,20 @@
       <tbody><tr id="loading-row"><td colspan="2">Chargement en cours...</td></tr></tbody>
     </table>
   </div>
-
-  <script>
-    const PASSWORDS = { "form2025": ["Armitec CNPE", "Armitec Belliparc"] };
-    let userRights = [], fullDataRows = [];
-    const siteSelect = document.getElementById('siteSelect');
-
-    // Authentication
-    document.getElementById('login-box').onsubmit = () => {
-      const pass = document.getElementById('password').value;
-      if (PASSWORDS[pass]) {
-        userRights = PASSWORDS[pass];
-        sessionStorage.setItem('userRights', JSON.stringify(userRights));
-        document.getElementById('login-overlay').style.display = 'none';
-        init();
-      } else {
-        document.getElementById('login-error').innerText = 'Mot de passe incorrect.';
-        document.getElementById('password').value = '';
-      }
-    };
+ 
 
     // Menu toggle
     function toggleMenu(event) {
       event.stopPropagation();
       document.getElementById('menu').classList.toggle('open');
     }
-    // Fermer le menu sur clic hors ou sur lien
-    document.addEventListener('click', e => {
-      const m = document.getElementById('menu');
-      const b = document.querySelector('.menu-button');
-      if (!m.contains(e.target) && e.target !== b) m.classList.remove('open');
-    });
-
-    document.querySelectorAll('.menu a').forEach(link => {
+       document.querySelectorAll('.menu a').forEach(link => {
       link.addEventListener('click', () => {
         document.getElementById('menu').classList.remove('open');
       });
     });
 
-    // Initialisation après auth ou reload
-    function init() {
-      loadData()
-        .then(rows => {
-          fullDataRows = rows;
-          setupFilter();
-          applySavedFilter();
-        })
-        .catch(err => {
-          console.error(err);
-          document.querySelector('#machineTable tbody').innerHTML = '<tr><td colspan="2">Erreur de chargement des données.</td></tr>';
-        });
-    }
-
-    // Chargement des données
+      // Chargement des données
     function loadData() {
       const sheetUrl = 'https://docs.google.com/spreadsheets/d/1DT9QEkPm-bo6oUbBp4d7HKcmU84Uh77IKwh_ccoxeSw/gviz/tq?tqx=out:csv&sheet=Id%20Fichiers%20machines';
       return fetch(sheetUrl)
