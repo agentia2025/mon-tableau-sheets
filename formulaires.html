@@ -6,7 +6,160 @@
   <title>Formulaires de maintenance</title>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
-    /* … vos styles inchangés … */
+    /* Styles inchangés pour ne pas toucher la mise en page */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #f4f4f4;
+      background-image: url('Capture%20d%E9cran%202025-06-12%20%C3%A0%2018.32.34.png');
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-position: center center;
+      color: #222;
+      position: relative;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      z-index: 0;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(255,255,255,0.1);
+      pointer-events: none;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #4e79a7;
+      color: #fff;
+      text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
+      z-index: 2;
+    }
+    .menu-button {
+      font-size: 26px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: #fff;
+      margin-right: 3ch;
+      text-shadow: 0 1px 3px #222, 0 0 6px #4e79a7;
+    }
+    .page-title {
+      font-size: 24px;
+      margin: 0;
+      color: #fff;
+    }
+    .menu {
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      top: 50px;
+      left: 20px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      z-index: 999;
+    }
+    .menu.open {
+      display: flex;
+    }
+    .menu a {
+      padding: 10px 20px;
+      text-decoration: none;
+      color: #222;
+      border-bottom: 1px solid #eee;
+      font-weight: bold;
+    }
+    .menu a:last-child {
+      border-bottom: none;
+    }
+    .filters {
+      display: flex;
+      justify-content: center;
+      margin: 2rem auto 1rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+    .filters label {
+      font-weight: bold;
+    }
+    .filters select {
+      padding: 0.5rem;
+      font-weight: bold;
+      border: 1px solid #4e79a7;
+    }
+    .table-container {
+      max-width: 1000px;
+      margin: auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      overflow-x: auto;
+      padding: 18px 12px;
+      position: relative;
+      z-index: 1;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 700px;
+    }
+    th, td {
+      border-bottom: 1px solid #eee;
+      padding: 0.75rem;
+      text-align: left;
+    }
+    th {
+      background: #f7f9fa;
+      font-weight: bold;
+    }
+    tr:hover {
+      background: #f5f5ff;
+    }
+    #login-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+    #login-box {
+      background: #fff;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+      max-width: 340px;
+      width: 90%;
+      text-align: center;
+    }
+    #login-box input[type="password"] {
+      width: 90%;
+      padding: 10px;
+      font-size: 18px;
+      margin-bottom: 16px;
+      border: 1px solid #aaa;
+      border-radius: 5px;
+    }
+    #login-box button {
+      padding: 8px 26px;
+      font-size: 18px;
+      background: #4e79a7;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -21,13 +174,22 @@
   </div>
 
   <header>
-    <!-- … votre header/menu … -->
+    <button class="menu-button" onclick="toggleMenu()">☰</button>
+    <h1 class="page-title">Suivi Préventif</h1>
+    <div class="menu" id="menu">
+      <a href="index.html">Accueil</a>
+      <a href="tableau.html">Tableau de bord</a>
+      <a href="historique.html">Historique maintenance</a>
+      <a href="preventif.html">Préventif</a>
+      <a href="formulaires.html">Formulaires</a>
+      <a href="#" id="logout-link" onclick="logout();return false;" style="color:#c00;">Déconnexion</a>
+    </div>
   </header>
 
   <div class="filters">
     <label for="siteSelect">Choisir un site :</label>
     <select id="siteSelect">
-      <option value="">-- Tous les sites --</option>
+      <!-- Options générées dynamiquement -->
     </select>
   </div>
 
@@ -46,12 +208,9 @@
   </div>
 
   <script>
-    // === 1. Gestion des mots de passe et des droits ===
-    const PASSWORDS = {
-      "form2025": ["Armitec CNPE", "Armitec Belliparc"]
-    };
-    let userRights = [];
-    let fullDataRows = [];
+    // === Gestion des mots de passe et des accès ===
+    const PASSWORDS = { "form2025": ["Armitec CNPE", "Armitec Belliparc"] };
+    let userRights = [], fullDataRows = [];
     const siteSelect = document.getElementById('siteSelect');
 
     // Authentification
@@ -69,7 +228,7 @@
       }
     };
 
-    // Si déjà authentifié, on saute l'écran
+    // Si déjà authentifié, on passe l'overlay
     window.onload = () => {
       const stored = sessionStorage.getItem('userRights');
       if (stored) {
@@ -79,21 +238,15 @@
       }
     };
 
-    // === 2. Chargement & préparation des données ===
+    // Initialisation après authentification
     function init() {
       loadData()
         .then(rawRows => {
-          // trim + supprimer les lignes vides
           const data = rawRows
-            .map(r => r.map(c => typeof c==='string' ? c.trim() : c))
+            .map(r => r.map(c => typeof c === 'string' ? c.trim() : c))
             .filter(r => r.length >= 6 && r.some(cell => cell !== ''));
-
-          // on enlève l'en-tête
           const rows = data.slice(1);
-
-          // on ne garde que les lignes pour lesquelles le site (col A) est dans userRights
           fullDataRows = rows.filter(r => userRights.includes(r[0]));
-
           setupFilter();
           applySavedFilter();
         })
@@ -104,6 +257,7 @@
         });
     }
 
+    // Chargement du CSV
     function loadData() {
       const sheetUrl =
         'https://docs.google.com/spreadsheets/d/1DT9QEkPm-bo6oUbBp4d7HKcmU84Uh77IKwh_ccoxeSw/gviz/tq?tqx=out:csv&sheet=Id%20Fichiers%20machines';
@@ -115,35 +269,25 @@
         .then(txt => Papa.parse(txt, { header: false, skipEmptyLines: true }).data);
     }
 
-    // === 3. Construction du dropdown à partir de userRights ===
+    // Construction du dropdown à partir des droits
     function setupFilter() {
       siteSelect.innerHTML = '';
-
-      // Si plusieurs droits : on propose "Tous les sites"
       if (userRights.length > 1) {
         const optAll = document.createElement('option');
         optAll.value = '';
         optAll.textContent = '-- Tous les sites --';
         siteSelect.appendChild(optAll);
       }
-
-      // On n'affiche QUE les sites autorisés
       userRights.forEach(site => {
         const opt = document.createElement('option');
         opt.value = site;
         opt.textContent = site;
         siteSelect.appendChild(opt);
       });
-
-      // Si un seul droit, on pré-sélectionne et on désactive le filtre
       if (userRights.length === 1) {
         siteSelect.value = userRights[0];
         siteSelect.disabled = true;
-      } else {
-        siteSelect.disabled = false;
       }
-
-      // Au changement : on stocke et on affiche
       siteSelect.onchange = () => {
         sessionStorage.setItem('selectedSite', siteSelect.value);
         const filtered = siteSelect.value
@@ -153,28 +297,24 @@
       };
     }
 
-    // === 4. Réapplique le filtre enregistré (si reload) ===
+    // Récupère et applique le filtre stocké
     function applySavedFilter() {
       const saved = sessionStorage.getItem('selectedSite') || '';
-      // si plusieurs droits, on restaure; sinon on laisse la sélection unique
       if (userRights.length > 1 && saved) {
         siteSelect.value = saved;
       }
       siteSelect.onchange();
     }
 
-    // === 5. Affichage des lignes dans le tableau ===
+    // Affiche les lignes du tableau
     function renderTable(rows) {
       const tbody = document.querySelector('#machineTable tbody');
       tbody.innerHTML = '';
-
       if (rows.length === 0) {
         tbody.innerHTML = '<tr><td colspan="2">Aucune machine pour ce site.</td></tr>';
         return;
       }
-
       rows.forEach(r => {
-        // r[1] = nom machine, r[5] = URL du formulaire
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${r[1] || '(pas de nom)'}</td>
@@ -186,12 +326,13 @@
       });
     }
 
-    // === 6. Menu & déconnexion (inchangés) ===
+    // Menu et déconnexion
     function toggleMenu() {
       document.getElementById('menu').classList.toggle('open');
     }
     document.addEventListener('click', e => {
-      const m = document.getElementById('menu'), b = document.querySelector('.menu-button');
+      const m = document.getElementById('menu'),
+            b = document.querySelector('.menu-button');
       if (!m.contains(e.target) && e.target !== b) m.classList.remove('open');
     });
     document.querySelectorAll('.menu a').forEach(link =>
@@ -204,3 +345,4 @@
   </script>
 </body>
 </html>
+
