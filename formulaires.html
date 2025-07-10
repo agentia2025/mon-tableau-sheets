@@ -208,12 +208,40 @@
   </div>
 
   <script>
-    // === Gestion des mots de passe et des accès ===
-    const PASSWORDS = { "form2025": ["Armitec CNPE", "Armitec Belliparc"] };
+    // Connexion/déconnexion
+    const PASSWORDS = {
+      "Armitec2025": ["commun", "lidec", "atelier", "scr"],
+      "commun*d*sit": ["commun"],
+      "lidecbelli": ["lidec", "atelier"],
+      "scrfuture": ["scr"]
+    };
+    const SITES = [
+      { id: "commun",  label: "Commun de site"    },
+      { id: "lidec",   label: "Lidec"              },
+      { id: "atelier", label: "Atelier Bélliparc" },
+      { id: "scr",     label: "SCR"               }
+    ];
+
+    // normalisation pour comparer sans accents/casse
+    function normalize(str) {
+      return (str||"")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase().trim();
+    }
+
+    // autorisation d'un label de site selon userRights
+    function isAllowedSite(siteLabel) {
+      return SITES.some(s =>
+        normalize(s.label) === normalize(siteLabel)
+        && userRights.includes(s.id)
+      );
+    }
+
     let userRights = [], fullDataRows = [];
     const siteSelect = document.getElementById('siteSelect');
 
-    // Authentification
+    // 1. Authentification
     document.getElementById('login-box').onsubmit = () => {
       const pass = document.getElementById('password').value.trim();
       if (PASSWORDS[pass]) {
@@ -228,7 +256,7 @@
       }
     };
 
-    // Si déjà authentifié, on passe l'overlay
+    // 2. Si déjà connecté, on réinitialise
     window.onload = () => {
       const stored = sessionStorage.getItem('userRights');
       if (stored) {
@@ -238,15 +266,18 @@
       }
     };
 
-    // Initialisation après authentification
+    // 3. Chargement & filtrage des données après login
     function init() {
       loadData()
         .then(rawRows => {
           const data = rawRows
-            .map(r => r.map(c => typeof c === 'string' ? c.trim() : c))
+            .map(r => r.map(c => typeof c==='string' ? c.trim() : c))
             .filter(r => r.length >= 6 && r.some(cell => cell !== ''));
-          const rows = data.slice(1);
-          fullDataRows = rows.filter(r => userRights.includes(r[0]));
+
+          const rows = data.slice(1); // on saute l'en-tête
+          // on ne garde que les lignes dont le site est autorisé
+          fullDataRows = rows.filter(r => isAllowedSite(r[0]));
+
           setupFilter();
           applySavedFilter();
         })
@@ -257,7 +288,7 @@
         });
     }
 
-    // Chargement du CSV
+    // 4. Lecture du CSV Google Sheets
     function loadData() {
       const sheetUrl =
         'https://docs.google.com/spreadsheets/d/1DT9QEkPm-bo6oUbBp4d7HKcmU84Uh77IKwh_ccoxeSw/gviz/tq?tqx=out:csv&sheet=Id%20Fichiers%20machines';
@@ -269,25 +300,16 @@
         .then(txt => Papa.parse(txt, { header: false, skipEmptyLines: true }).data);
     }
 
-    // Construction du dropdown à partir des droits
+    // 5. Peuple le dropdown des sites autorisés
     function setupFilter() {
-      siteSelect.innerHTML = '';
-      if (userRights.length > 1) {
-        const optAll = document.createElement('option');
-        optAll.value = '';
-        optAll.textContent = '-- Tous les sites --';
-        siteSelect.appendChild(optAll);
-      }
-      userRights.forEach(site => {
+      siteSelect.innerHTML = '<option value="">-- Tous les sites --</option>';
+      const labels = [...new Set(fullDataRows.map(r => r[0]))].sort();
+      labels.forEach(lbl => {
         const opt = document.createElement('option');
-        opt.value = site;
-        opt.textContent = site;
+        opt.value = lbl;
+        opt.textContent = lbl;
         siteSelect.appendChild(opt);
       });
-      if (userRights.length === 1) {
-        siteSelect.value = userRights[0];
-        siteSelect.disabled = true;
-      }
       siteSelect.onchange = () => {
         sessionStorage.setItem('selectedSite', siteSelect.value);
         const filtered = siteSelect.value
@@ -297,16 +319,14 @@
       };
     }
 
-    // Récupère et applique le filtre stocké
+    // 6. Réapplique le filtre en session
     function applySavedFilter() {
       const saved = sessionStorage.getItem('selectedSite') || '';
-      if (userRights.length > 1 && saved) {
-        siteSelect.value = saved;
-      }
+      if (saved) siteSelect.value = saved;
       siteSelect.onchange();
     }
 
-    // Affiche les lignes du tableau
+    // 7. Affiche le tableau filtré
     function renderTable(rows) {
       const tbody = document.querySelector('#machineTable tbody');
       tbody.innerHTML = '';
@@ -317,7 +337,7 @@
       rows.forEach(r => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${r[1] || '(pas de nom)'}</td>
+          <td>${r[1]||'(pas de nom)'}</td>
           <td>${r[5]
             ? `<a href="${r[5]}" target="_blank">Ouvrir</a>`
             : '(pas de lien)'}</td>
@@ -326,7 +346,7 @@
       });
     }
 
-    // Menu et déconnexion
+    // 8. Menu & déconnexion
     function toggleMenu() {
       document.getElementById('menu').classList.toggle('open');
     }
@@ -345,4 +365,3 @@
   </script>
 </body>
 </html>
-
