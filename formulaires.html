@@ -205,10 +205,10 @@
 
   <script>
     const PASSWORDS = { "form2025": ["Armitec CNPE", "Armitec Belliparc"] };
-    let userRights = [], fullDataRows = [];
+    let userRights = [], completeDataRows = [], fullDataRows = [];
     const siteSelect = document.getElementById('siteSelect');
 
-    // Authentication
+    // Authentification
     document.getElementById('login-box').onsubmit = () => {
       const pass = document.getElementById('password').value;
       if (PASSWORDS[pass]) {
@@ -222,7 +222,7 @@
       }
     };
 
-    // Menu toggle & fermeture
+    // Toggle & fermeture du menu
     function toggleMenu() {
       document.getElementById('menu').classList.toggle('open');
     }
@@ -234,14 +234,14 @@
       link.addEventListener('click', () => document.getElementById('menu').classList.remove('open'));
     });
 
-    // Init après auth ou reload
+    // Initialisation après auth ou reload
     function init() {
       loadData()
         .then(rows => {
-          // On ne garde que les machines des sites autorisés
-          fullDataRows = rows
-            .slice(1)                          // saute la ligne d'en-tête
-            .filter(r => r.length >= 6 && userRights.includes(r[0]));
+          // 1) On saute la ligne d'en-tête et on garde toutes les lignes valides
+          completeDataRows = rows.slice(1).filter(r => r.length >= 6);
+          // 2) On prépare la liste des lignes autorisées selon userRights
+          fullDataRows = completeDataRows.filter(r => userRights.includes(r[0]));
           setupFilter();
           applySavedFilter();
         })
@@ -252,7 +252,7 @@
         });
     }
 
-    // Chargement CSV
+    // Fetch & parse CSV
     function loadData() {
       const sheetUrl =
         'https://docs.google.com/spreadsheets/d/1DT9QEkPm-bo6oUbBp4d7HKcmU84Uh77IKwh_ccoxeSw/gviz/tq?tqx=out:csv&sheet=Id%20Fichiers%20machines';
@@ -264,10 +264,10 @@
         .then(csv => Papa.parse(csv, { header: false }).data);
     }
 
-    // Setup filtre de site
+    // Construction du dropdown à partir de tous les sites trouvés
     function setupFilter() {
       siteSelect.innerHTML = '<option value="">-- Tous les sites --</option>';
-      const sites = [...new Set(fullDataRows.map(r => r[0]))].sort();
+      const sites = [...new Set(completeDataRows.map(r => r[0]))].sort();
       sites.forEach(site => {
         const opt = document.createElement('option');
         opt.value = site;
@@ -277,44 +277,55 @@
       siteSelect.onchange = () => {
         const sel = siteSelect.value;
         sessionStorage.setItem('selectedSite', sel);
-        renderTable(sel ? fullDataRows.filter(r => r[0] === sel) : fullDataRows);
+        renderTable(
+          sel
+            ? fullDataRows.filter(r => r[0] === sel)
+            : fullDataRows
+        );
       };
     }
 
-    // Appliquer filtre en session
+    // Application du filtre sauvegardé
     function applySavedFilter() {
       const saved = sessionStorage.getItem('selectedSite') || '';
       siteSelect.value = saved;
-      renderTable(saved ? fullDataRows.filter(r => r[0] === saved) : fullDataRows);
+      renderTable(
+        saved
+          ? fullDataRows.filter(r => r[0] === saved)
+          : fullDataRows
+      );
     }
 
-    // Rendu sécurisé du tableau
+    // Affichage sécurisé des lignes dans le tableau
     function renderTable(rows) {
       const tbody = document.querySelector('#machineTable tbody');
       tbody.innerHTML = '';
-      if (!rows.length) {
+      if (rows.length === 0) {
         tbody.innerHTML = '<tr><td colspan="2">Aucune machine pour ce site.</td></tr>';
         return;
       }
       rows.forEach(r => {
         const tr = document.createElement('tr');
-        // Nom de la machine
         const tdName = document.createElement('td');
         tdName.textContent = r[1];
-        // Lien formulaire
         const tdLink = document.createElement('td');
         const a = document.createElement('a');
         a.href = r[5];
         a.target = '_blank';
         a.textContent = 'Ouvrir';
         tdLink.appendChild(a);
-        tr.appendChild(tdName);
-        tr.appendChild(tdLink);
+        tr.append(tdName, tdLink);
         tbody.appendChild(tr);
       });
     }
 
-    // Démarrage automatique si déjà authentifié
+    // Déconnexion
+    function logout() {
+      sessionStorage.clear();
+      location.reload();
+    }
+
+    // Au chargement de la page, si déjà authentifié
     window.onload = () => {
       const stored = sessionStorage.getItem('userRights');
       if (stored) {
@@ -323,15 +334,10 @@
         init();
       }
     };
-
-    // Déconnexion simple
-    function logout() {
-      sessionStorage.clear();
-      location.reload();
-    }
   </script>
 </body>
 </html>
+
 
 
 
