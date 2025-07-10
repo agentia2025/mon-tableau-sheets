@@ -46,11 +46,15 @@
   </div>
 
   <script>
-    const PASSWORDS = { "form2025": ["Armitec CNPE", "Armitec Belliparc"] };
-    let userRights = [], fullDataRows = [];
+    // === 1. Gestion des mots de passe et des droits ===
+    const PASSWORDS = {
+      "form2025": ["Armitec CNPE", "Armitec Belliparc"]
+    };
+    let userRights = [];
+    let fullDataRows = [];
     const siteSelect = document.getElementById('siteSelect');
 
-    // 1. Authentification
+    // Authentification
     document.getElementById('login-box').onsubmit = () => {
       const pass = document.getElementById('password').value.trim();
       if (PASSWORDS[pass]) {
@@ -61,9 +65,11 @@
       } else {
         document.getElementById('login-error').innerText = 'Mot de passe incorrect.';
         document.getElementById('password').value = '';
+        document.getElementById('password').focus();
       }
     };
 
+    // Si déjà authentifié, on saute l'écran
     window.onload = () => {
       const stored = sessionStorage.getItem('userRights');
       if (stored) {
@@ -73,21 +79,20 @@
       }
     };
 
-    // 2. Chargement & préparation des données
+    // === 2. Chargement & préparation des données ===
     function init() {
       loadData()
         .then(rawRows => {
-          // On enlève les lignes vides et on trim chaque cellule
+          // trim + supprimer les lignes vides
           const data = rawRows
             .map(r => r.map(c => typeof c==='string' ? c.trim() : c))
             .filter(r => r.length >= 6 && r.some(cell => cell !== ''));
 
-          // On enlève l'en-tête
+          // on enlève l'en-tête
           const rows = data.slice(1);
 
-          // On applique les droits (colonne A ⇒ index 0)
+          // on ne garde que les lignes pour lesquelles le site (col A) est dans userRights
           fullDataRows = rows.filter(r => userRights.includes(r[0]));
-          console.log('Données filtrées par droits :', fullDataRows);
 
           setupFilter();
           applySavedFilter();
@@ -110,36 +115,55 @@
         .then(txt => Papa.parse(txt, { header: false, skipEmptyLines: true }).data);
     }
 
-    // 3. Construction du dropdown à partir des sites autorisés
+    // === 3. Construction du dropdown à partir de userRights ===
     function setupFilter() {
-      siteSelect.innerHTML = '<option value="">-- Tous les sites --</option>';
-      const sites = [...new Set(fullDataRows.map(r => r[0]))].sort();
-      console.log('Liste des sites disponibles :', sites);
-      sites.forEach(site => {
+      siteSelect.innerHTML = '';
+
+      // Si plusieurs droits : on propose "Tous les sites"
+      if (userRights.length > 1) {
+        const optAll = document.createElement('option');
+        optAll.value = '';
+        optAll.textContent = '-- Tous les sites --';
+        siteSelect.appendChild(optAll);
+      }
+
+      // On n'affiche QUE les sites autorisés
+      userRights.forEach(site => {
         const opt = document.createElement('option');
         opt.value = site;
         opt.textContent = site;
         siteSelect.appendChild(opt);
       });
 
+      // Si un seul droit, on pré-sélectionne et on désactive le filtre
+      if (userRights.length === 1) {
+        siteSelect.value = userRights[0];
+        siteSelect.disabled = true;
+      } else {
+        siteSelect.disabled = false;
+      }
+
+      // Au changement : on stocke et on affiche
       siteSelect.onchange = () => {
-        const sel = siteSelect.value;
-        sessionStorage.setItem('selectedSite', sel);
-        const filtered = sel
-          ? fullDataRows.filter(r => r[0] === sel)
+        sessionStorage.setItem('selectedSite', siteSelect.value);
+        const filtered = siteSelect.value
+          ? fullDataRows.filter(r => r[0] === siteSelect.value)
           : fullDataRows;
         renderTable(filtered);
       };
     }
 
-    // 4. Réapplique le filtre enregistré (si page reload)
+    // === 4. Réapplique le filtre enregistré (si reload) ===
     function applySavedFilter() {
       const saved = sessionStorage.getItem('selectedSite') || '';
-      siteSelect.value = saved;
+      // si plusieurs droits, on restaure; sinon on laisse la sélection unique
+      if (userRights.length > 1 && saved) {
+        siteSelect.value = saved;
+      }
       siteSelect.onchange();
     }
 
-    // 5. Affichage des lignes dans le tableau
+    // === 5. Affichage des lignes dans le tableau ===
     function renderTable(rows) {
       const tbody = document.querySelector('#machineTable tbody');
       tbody.innerHTML = '';
@@ -162,7 +186,7 @@
       });
     }
 
-    // 6. Menu & logout (inchangés)
+    // === 6. Menu & déconnexion (inchangés) ===
     function toggleMenu() {
       document.getElementById('menu').classList.toggle('open');
     }
@@ -170,9 +194,9 @@
       const m = document.getElementById('menu'), b = document.querySelector('.menu-button');
       if (!m.contains(e.target) && e.target !== b) m.classList.remove('open');
     });
-    document.querySelectorAll('.menu a').forEach(link => {
-      link.addEventListener('click', () => document.getElementById('menu').classList.remove('open'));
-    });
+    document.querySelectorAll('.menu a').forEach(link =>
+      link.addEventListener('click', () => document.getElementById('menu').classList.remove('open'))
+    );
     function logout() {
       sessionStorage.clear();
       location.reload();
@@ -180,12 +204,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
