@@ -210,7 +210,7 @@
 
     // Authentification
     document.getElementById('login-box').onsubmit = () => {
-      const pass = document.getElementById('password').value;
+      const pass = document.getElementById('password').value.trim();
       if (PASSWORDS[pass]) {
         userRights = PASSWORDS[pass];
         sessionStorage.setItem('userRights', JSON.stringify(userRights));
@@ -234,14 +234,28 @@
       link.addEventListener('click', () => document.getElementById('menu').classList.remove('open'));
     });
 
-    // Initialisation après auth ou reload
+    // Démarrage si déjà authentifié
+    window.onload = () => {
+      const stored = sessionStorage.getItem('userRights');
+      if (stored) {
+        userRights = JSON.parse(stored);
+        document.getElementById('login-overlay').style.display = 'none';
+        init();
+      }
+    };
+
+    // Initialisation après auth
     function init() {
       loadData()
-        .then(rows => {
-          // 1) On saute la ligne d'en-tête et on garde toutes les lignes valides
-          completeDataRows = rows.slice(1).filter(r => r.length >= 6);
-          // 2) On prépare la liste des lignes autorisées selon userRights
-          fullDataRows = completeDataRows.filter(r => userRights.includes(r[0]));
+        .then(rawRows => {
+          // 1) On trim chaque cellule,  
+          const data = rawRows.map(r =>
+            r.map(c => typeof c === 'string' ? c.trim() : c)
+          );
+          // 2) On skip la ligne d’en-tête et garde ≥6 colonnes  
+          completeDataRows = data.slice(1).filter(r => r.length >= 6);
+          // 3) Applications des droits  
+          fullDataRows     = completeDataRows.filter(r => userRights.includes(r[0]));
           setupFilter();
           applySavedFilter();
         })
@@ -252,7 +266,7 @@
         });
     }
 
-    // Fetch & parse CSV
+    // Récupération du CSV
     function loadData() {
       const sheetUrl =
         'https://docs.google.com/spreadsheets/d/1DT9QEkPm-bo6oUbBp4d7HKcmU84Uh77IKwh_ccoxeSw/gviz/tq?tqx=out:csv&sheet=Id%20Fichiers%20machines';
@@ -261,10 +275,10 @@
           if (!res.ok) throw new Error('Network error');
           return res.text();
         })
-        .then(csv => Papa.parse(csv, { header: false }).data);
+        .then(txt => Papa.parse(txt, { header: false }).data);
     }
 
-    // Construction du dropdown à partir de tous les sites trouvés
+    // Remplit le dropdown avec TOUS les sites (colonne A)
     function setupFilter() {
       siteSelect.innerHTML = '<option value="">-- Tous les sites --</option>';
       const sites = [...new Set(completeDataRows.map(r => r[0]))].sort();
@@ -285,7 +299,7 @@
       };
     }
 
-    // Application du filtre sauvegardé
+    // Applique le filtre en session
     function applySavedFilter() {
       const saved = sessionStorage.getItem('selectedSite') || '';
       siteSelect.value = saved;
@@ -296,7 +310,7 @@
       );
     }
 
-    // Affichage sécurisé des lignes dans le tableau
+    // Affichage sécurisé des lignes
     function renderTable(rows) {
       const tbody = document.querySelector('#machineTable tbody');
       tbody.innerHTML = '';
@@ -324,19 +338,10 @@
       sessionStorage.clear();
       location.reload();
     }
-
-    // Au chargement de la page, si déjà authentifié
-    window.onload = () => {
-      const stored = sessionStorage.getItem('userRights');
-      if (stored) {
-        userRights = JSON.parse(stored);
-        document.getElementById('login-overlay').style.display = 'none';
-        init();
-      }
-    };
   </script>
 </body>
 </html>
+
 
 
 
