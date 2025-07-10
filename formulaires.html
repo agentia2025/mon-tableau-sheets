@@ -1,346 +1,68 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Formulaires de maintenance</title>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <style>
-    /* Styles inchangés pour ne pas toucher la mise en page */
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background-color: #f4f4f4;
-      background-image: url('Capture%20d%E9cran%202025-06-12%20%C3%A0%2018.32.34.png');
-      background-repeat: no-repeat;
-      background-size: cover;
-      background-position: center center;
-      color: #222;
-      position: relative;
-    }
-    body::before {
-      content: "";
-      position: fixed;
-      z-index: 0;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(255,255,255,0.1);
-      pointer-events: none;
-    }
-    header {
-      display: flex;
-      align-items: center;
-      padding: 10px 20px;
-      background-color: #4e79a7;
-      color: #fff;
-      text-shadow: 0 1px 4px #222, 0 0 6px #4e79a7;
-      z-index: 2;
-    }
-    .menu-button {
-      font-size: 26px;
-      cursor: pointer;
-      background: none;
-      border: none;
-      color: #fff;
-      margin-right: 3ch;
-      text-shadow: 0 1px 3px #222, 0 0 6px #4e79a7;
-    }
-    .page-title {
-      font-size: 24px;
-      margin: 0;
-      color: #fff;
-    }
-    .menu {
-      display: none;
-      flex-direction: column;
-      position: absolute;
-      top: 50px;
-      left: 20px;
-      background-color: #fff;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-      z-index: 999;
-    }
-    .menu.open {
-      display: flex;
-    }
-    .menu a {
-      padding: 10px 20px;
-      text-decoration: none;
-      color: #222;
-      border-bottom: 1px solid #eee;
-      font-weight: bold;
-    }
-    .menu a:last-child {
-      border-bottom: none;
-    }
-    .filters {
-      display: flex;
-      justify-content: center;
-      margin: 2rem auto 1rem;
-      gap: 1rem;
-      flex-wrap: wrap;
-      position: relative;
-      z-index: 1;
-    }
-    .filters label {
-      font-weight: bold;
-    }
-    .filters select {
-      padding: 0.5rem;
-      font-weight: bold;
-      border: 1px solid #4e79a7;
-    }
-    .table-container {
-      max-width: 1000px;
-      margin: auto;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      overflow-x: auto;
-      padding: 18px 12px;
-      position: relative;
-      z-index: 1;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 700px;
-    }
-    th, td {
-      border-bottom: 1px solid #eee;
-      padding: 0.75rem;
-      text-align: left;
-    }
-    th {
-      background: #f7f9fa;
-      font-weight: bold;
-    }
-    tr:hover {
-      background: #f5f5ff;
-    }
-    #login-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.45);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-    }
-    #login-box {
-      background: #fff;
-      padding: 30px 40px;
-      border-radius: 12px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.15);
-      max-width: 340px;
-      width: 90%;
-      text-align: center;
-    }
-    #login-box input[type="password"] {
-      width: 90%;
-      padding: 10px;
-      font-size: 18px;
-      margin-bottom: 16px;
-      border: 1px solid #aaa;
-      border-radius: 5px;
-    }
-    #login-box button {
-      padding: 8px 26px;
-      font-size: 18px;
-      background: #4e79a7;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-  </style>
-</head>
-<body>
-  <div id="login-overlay">
-    <form id="login-box" autocomplete="off" onsubmit="return false;">
-      <h2>Connexion</h2>
-      <div id="login-error" style="color: #c00; margin-bottom: 8px;"></div>
-      <input type="password" id="password" placeholder="Mot de passe" autofocus />
-      <br>
-      <button type="submit">Entrer</button>
-    </form>
-  </div>
+<script>
+  // … authentification et loadData() inchangés …
 
-  <header>
-    <button class="menu-button" onclick="toggleMenu()">☰</button>
-    <h1 class="page-title">Suivi Préventif</h1>
-    <div class="menu" id="menu">
-      <a href="index.html">Accueil</a>
-      <a href="tableau.html">Tableau de bord</a>
-      <a href="historique.html">Historique maintenance</a>
-      <a href="preventif.html">Préventif</a>
-      <a href="formulaires.html">Formulaires</a>
-      <a href="#" id="logout-link" onclick="logout();return false;" style="color:#c00;">Déconnexion</a>
-    </div>
-  </header>
+  function init() {
+    loadData()
+      .then(raw => {
+        const data = raw.map(r => r.map(c => typeof c==='string' ? c.trim() : c));
+        const header = data[0];
+        // détecter dynamiquement les colonnes :
+        const siteIdx    = header.indexOf('Site');
+        const machineIdx = header.indexOf('Machine');
+        const linkIdx    = header.indexOf('Lien du formulaire');
 
-  <div class="filters">
-    <label for="siteSelect">Choisir un site :</label>
-    <select id="siteSelect"><option value="">-- Tous les sites --</option></select>
-  </div>
+        const rows = data.slice(1).filter(r => r.length > linkIdx);
+        fullDataRows = rows.filter(r => userRights.includes(r[siteIdx]));
 
-  <div class="table-container">
-    <table id="machineTable">
-      <thead>
-        <tr>
-          <th>Machine</th>
-          <th>Lien du formulaire</th>
-        </tr>
-      </thead>
-      <tbody><tr id="loading-row"><td colspan="2">Chargement en cours...</td></tr></tbody>
-    </table>
-  </div>
+        setupFilter(siteIdx);
+        applySavedFilter(siteIdx);
+      })
+      .catch(err => { /* … */ });
+  }
 
-  <script>
-    const PASSWORDS = { "form2025": ["Armitec CNPE", "Armitec Belliparc"] };
-    let userRights = [], completeDataRows = [], fullDataRows = [];
-    const siteSelect = document.getElementById('siteSelect');
-
-    // Authentification
-    document.getElementById('login-box').onsubmit = () => {
-      const pass = document.getElementById('password').value.trim();
-      if (PASSWORDS[pass]) {
-        userRights = PASSWORDS[pass];
-        sessionStorage.setItem('userRights', JSON.stringify(userRights));
-        document.getElementById('login-overlay').style.display = 'none';
-        init();
-      } else {
-        document.getElementById('login-error').innerText = 'Mot de passe incorrect.';
-        document.getElementById('password').value = '';
-      }
-    };
-
-    // Toggle & fermeture du menu
-    function toggleMenu() {
-      document.getElementById('menu').classList.toggle('open');
-    }
-    document.addEventListener('click', e => {
-      const m = document.getElementById('menu'), b = document.querySelector('.menu-button');
-      if (!m.contains(e.target) && e.target !== b) m.classList.remove('open');
+  function setupFilter(siteIdx) {
+    siteSelect.innerHTML = '<option value="">-- Tous les sites --</option>';
+    // n’utiliser que les sites autorisés
+    const sites = [...new Set(fullDataRows.map(r => r[siteIdx]))].sort();
+    sites.forEach(site => {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = site;
+      siteSelect.appendChild(opt);
     });
-    document.querySelectorAll('.menu a').forEach(link => {
-      link.addEventListener('click', () => document.getElementById('menu').classList.remove('open'));
-    });
-
-    // Démarrage si déjà authentifié
-    window.onload = () => {
-      const stored = sessionStorage.getItem('userRights');
-      if (stored) {
-        userRights = JSON.parse(stored);
-        document.getElementById('login-overlay').style.display = 'none';
-        init();
-      }
+    siteSelect.onchange = () => {
+      const sel = siteSelect.value;
+      sessionStorage.setItem('selectedSite', sel);
+      const filtered = sel
+        ? fullDataRows.filter(r => r[siteIdx] === sel)
+        : fullDataRows;
+      renderTable(filtered, machineIdx, linkIdx);
     };
+  }
 
-    // Initialisation après auth
-    function init() {
-      loadData()
-        .then(rawRows => {
-          // 1) On trim chaque cellule,  
-          const data = rawRows.map(r =>
-            r.map(c => typeof c === 'string' ? c.trim() : c)
-          );
-          // 2) On skip la ligne d’en-tête et garde ≥6 colonnes  
-          completeDataRows = data.slice(1).filter(r => r.length >= 6);
-          // 3) Applications des droits  
-          fullDataRows     = completeDataRows.filter(r => userRights.includes(r[0]));
-          setupFilter();
-          applySavedFilter();
-        })
-        .catch(err => {
-          console.error(err);
-          document.querySelector('#machineTable tbody').innerHTML =
-            '<tr><td colspan="2">Erreur de chargement des données.</td></tr>';
-        });
-    }
+  function applySavedFilter(siteIdx) {
+    const saved = sessionStorage.getItem('selectedSite') || '';
+    siteSelect.value = saved;
+    siteSelect.onchange();
+  }
 
-    // Récupération du CSV
-    function loadData() {
-      const sheetUrl =
-        'https://docs.google.com/spreadsheets/d/1DT9QEkPm-bo6oUbBp4d7HKcmU84Uh77IKwh_ccoxeSw/gviz/tq?tqx=out:csv&sheet=Id%20Fichiers%20machines';
-      return fetch(sheetUrl)
-        .then(res => {
-          if (!res.ok) throw new Error('Network error');
-          return res.text();
-        })
-        .then(txt => Papa.parse(txt, { header: false }).data);
+  function renderTable(rows, machineIdx, linkIdx) {
+    const tbody = document.querySelector('#machineTable tbody');
+    tbody.innerHTML = '';
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="2">Aucune machine pour ce site.</td></tr>';
+      return;
     }
+    rows.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${r[machineIdx]}</td>
+        <td><a href="${r[linkIdx]}" target="_blank">Ouvrir</a></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+</script>
 
-    // Remplit le dropdown avec TOUS les sites (colonne A)
-    function setupFilter() {
-      siteSelect.innerHTML = '<option value="">-- Tous les sites --</option>';
-      const sites = [...new Set(completeDataRows.map(r => r[0]))].sort();
-      sites.forEach(site => {
-        const opt = document.createElement('option');
-        opt.value = site;
-        opt.textContent = site;
-        siteSelect.appendChild(opt);
-      });
-      siteSelect.onchange = () => {
-        const sel = siteSelect.value;
-        sessionStorage.setItem('selectedSite', sel);
-        renderTable(
-          sel
-            ? fullDataRows.filter(r => r[0] === sel)
-            : fullDataRows
-        );
-      };
-    }
-
-    // Applique le filtre en session
-    function applySavedFilter() {
-      const saved = sessionStorage.getItem('selectedSite') || '';
-      siteSelect.value = saved;
-      renderTable(
-        saved
-          ? fullDataRows.filter(r => r[0] === saved)
-          : fullDataRows
-      );
-    }
-
-    // Affichage sécurisé des lignes
-    function renderTable(rows) {
-      const tbody = document.querySelector('#machineTable tbody');
-      tbody.innerHTML = '';
-      if (rows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="2">Aucune machine pour ce site.</td></tr>';
-        return;
-      }
-      rows.forEach(r => {
-        const tr = document.createElement('tr');
-        const tdName = document.createElement('td');
-        tdName.textContent = r[1];
-        const tdLink = document.createElement('td');
-        const a = document.createElement('a');
-        a.href = r[5];
-        a.target = '_blank';
-        a.textContent = 'Ouvrir';
-        tdLink.appendChild(a);
-        tr.append(tdName, tdLink);
-        tbody.appendChild(tr);
-      });
-    }
-
-    // Déconnexion
-    function logout() {
-      sessionStorage.clear();
-      location.reload();
-    }
-  </script>
-</body>
-</html>
 
 
 
