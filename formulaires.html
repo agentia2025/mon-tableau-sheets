@@ -6,7 +6,6 @@
   <title>Formulaires de maintenance</title>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
-    /* Styles inchangés pour ne pas toucher la mise en page */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -100,7 +99,7 @@
       background: #fff;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      overflow-x: auto;
+      overflow-x: auto !important;
       padding: 18px 12px;
       position: relative;
       z-index: 1;
@@ -199,10 +198,11 @@
         <tr>
           <th>Machine</th>
           <th>Lien du formulaire</th>
+          <th>Gammes</th>
         </tr>
       </thead>
       <tbody>
-        <tr id="loading-row"><td colspan="2">Chargement en cours...</td></tr>
+        <tr id="loading-row"><td colspan="3">Chargement en cours...</td></tr>
       </tbody>
     </table>
   </div>
@@ -284,7 +284,7 @@
         .catch(err => {
           console.error(err);
           document.querySelector('#machineTable tbody').innerHTML =
-            '<tr><td colspan="2">Erreur de chargement des données.</td></tr>';
+            '<tr><td colspan="3">Erreur de chargement des données.</td></tr>';
         });
     }
 
@@ -326,21 +326,36 @@
       siteSelect.onchange();
     }
 
-    // 7. Affiche le tableau filtré
+    // 7. Affiche le tableau filtré AVEC colonne Gammes
+    function slugify(str) {
+      return (str||"")
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9]/g, "")
+        .trim();
+    }
+
     function renderTable(rows) {
       const tbody = document.querySelector('#machineTable tbody');
       tbody.innerHTML = '';
       if (rows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="2">Aucune machine pour ce site.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3">Aucune machine pour ce site.</td></tr>';
         return;
       }
       rows.forEach(r => {
+        const machineName = r[1]||'(pas de nom)';
+        const pdfSlug = slugify(machineName);
+        const gammeLink = pdfSlug
+          ? `https://drive.google.com/drive/folders/18PISUuw2nw4bLDEC6C2b4FRSZvfsxV2E/${pdfSlug}.pdf`
+          : null;
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${r[1]||'(pas de nom)'}</td>
+          <td>${machineName}</td>
           <td>${r[5]
             ? `<a href="${r[5]}" target="_blank">Ouvrir</a>`
             : '(pas de lien)'}</td>
+          <td>${gammeLink
+            ? `<a href="${gammeLink}" target="_blank">Gamme PDF</a>`
+            : '(pas de gamme)'}</td>
         `;
         tbody.appendChild(tr);
       });
