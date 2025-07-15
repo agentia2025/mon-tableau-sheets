@@ -233,6 +233,15 @@
         .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase().trim();
     }
+    // Correspondance large pour les noms de machines (sans accent, espace, ponctuation, casse)
+    function normalizeMachineName(str) {
+      return (str||"")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9]/g, "")
+        .toLowerCase()
+        .trim();
+    }
 
     function isAllowedSite(siteLabel) {
       return SITES.some(s =>
@@ -244,7 +253,7 @@
     let userRights = [], fullDataRows = [];
     const siteSelect = document.getElementById('siteSelect');
 
-    // Liens de gammes par nom de machine (remplis au chargement)
+    // Liens de gammes par nom de machine (remplis au chargement, avec clé normalisée)
     let gammesLinks = {};
 
     // Charge les liens Gammes depuis le Google Sheets
@@ -257,12 +266,11 @@
         })
         .then(txt => {
           const data = Papa.parse(txt, { header: false, skipEmptyLines: true }).data;
-          // data = [[machine, lien], ...]
           gammesLinks = {};
           data.forEach(row => {
-            const machine = (row[0]||'').trim();
+            const machineKey = normalizeMachineName(row[0]);
             const lien = (row[1]||'').trim();
-            if(machine && lien) gammesLinks[machine] = lien;
+            if(machineKey && lien) gammesLinks[machineKey] = lien;
           });
           return gammesLinks;
         });
@@ -361,7 +369,8 @@
       }
       rows.forEach(r => {
         const machineName = r[1]||'(pas de nom)';
-        const gammeLien = gammesLinks[machineName];
+        const machineKey = normalizeMachineName(machineName);
+        const gammeLien = gammesLinks[machineKey];
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${machineName}</td>
