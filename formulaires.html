@@ -107,16 +107,21 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 700px;
+      min-width: 800px;
+      table-layout: auto;
     }
     th, td {
       border-bottom: 1px solid #eee;
       padding: 0.75rem;
       text-align: left;
+      background: #fff;
     }
     th {
       background: #f7f9fa;
       font-weight: bold;
+      position: sticky;
+      top: 0;
+      z-index: 2;
     }
     tr:hover {
       background: #f5f5ff;
@@ -222,7 +227,6 @@
       { id: "scr",     label: "SCR"               }
     ];
 
-    // normalisation pour comparer sans accents/casse
     function normalize(str) {
       return (str||"")
         .normalize("NFD")
@@ -230,7 +234,6 @@
         .toLowerCase().trim();
     }
 
-    // autorisation d'un label de site selon userRights
     function isAllowedSite(siteLabel) {
       return SITES.some(s =>
         normalize(s.label) === normalize(siteLabel)
@@ -241,7 +244,31 @@
     let userRights = [], fullDataRows = [];
     const siteSelect = document.getElementById('siteSelect');
 
-    // 1. Authentification
+    // Liens de gammes par nom de machine (remplis au chargement)
+    let gammesLinks = {};
+
+    // Charge les liens Gammes depuis le Google Sheets
+    function loadGammes() {
+      const gammesUrl = 'https://docs.google.com/spreadsheets/d/130ZSDXWjiqReo1LUFWAot8idIfISVfdWV8gDCYQBglI/gviz/tq?tqx=out:csv';
+      return fetch(gammesUrl)
+        .then(res => {
+          if (!res.ok) throw new Error('Erreur réseau ' + res.status);
+          return res.text();
+        })
+        .then(txt => {
+          const data = Papa.parse(txt, { header: false, skipEmptyLines: true }).data;
+          // data = [[machine, lien], ...]
+          gammesLinks = {};
+          data.forEach(row => {
+            const machine = (row[0]||'').trim();
+            const lien = (row[1]||'').trim();
+            if(machine && lien) gammesLinks[machine] = lien;
+          });
+          return gammesLinks;
+        });
+    }
+
+    // Authentification
     document.getElementById('login-box').onsubmit = () => {
       const pass = document.getElementById('password').value.trim();
       if (PASSWORDS[pass]) {
@@ -256,7 +283,6 @@
       }
     };
 
-    // 2. Si déjà connecté, on réinitialise
     window.onload = () => {
       const stored = sessionStorage.getItem('userRights');
       if (stored) {
@@ -266,16 +292,15 @@
       }
     };
 
-    // 3. Chargement & filtrage des données après login
+    // Chargement & filtrage après login
     function init() {
-      loadData()
-        .then(rawRows => {
+      Promise.all([loadData(), loadGammes()])
+        .then(([rawRows, _]) => {
           const data = rawRows
             .map(r => r.map(c => typeof c==='string' ? c.trim() : c))
             .filter(r => r.length >= 6 && r.some(cell => cell !== ''));
 
           const rows = data.slice(1); // on saute l'en-tête
-          // on ne garde que les lignes dont le site est autorisé
           fullDataRows = rows.filter(r => isAllowedSite(r[0]));
 
           setupFilter();
@@ -288,7 +313,7 @@
         });
     }
 
-    // 4. Lecture du CSV Google Sheets
+    // Lecture du CSV Google Sheets
     function loadData() {
       const sheetUrl =
         'https://docs.google.com/spreadsheets/d/1DT9QEkPm-bo6oUbBp4d7HKcmU84Uh77IKwh_ccoxeSw/gviz/tq?tqx=out:csv&sheet=Id%20Fichiers%20machines';
@@ -300,7 +325,7 @@
         .then(txt => Papa.parse(txt, { header: false, skipEmptyLines: true }).data);
     }
 
-    // 5. Peuple le dropdown des sites autorisés
+    // Peuple le dropdown des sites autorisés
     function setupFilter() {
       siteSelect.innerHTML = '<option value="">-- Tous les sites --</option>';
       const labels = [...new Set(fullDataRows.map(r => r[0]))].sort();
@@ -319,21 +344,14 @@
       };
     }
 
-    // 6. Réapplique le filtre en session
+    // Réapplique le filtre en session
     function applySavedFilter() {
       const saved = sessionStorage.getItem('selectedSite') || '';
       if (saved) siteSelect.value = saved;
       siteSelect.onchange();
     }
 
-    // 7. Affiche le tableau filtré AVEC colonne Gammes
-    function slugify(str) {
-      return (str||"")
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-zA-Z0-9]/g, "")
-        .trim();
-    }
-
+    // Affiche le tableau filtré AVEC colonne Gammes
     function renderTable(rows) {
       const tbody = document.querySelector('#machineTable tbody');
       tbody.innerHTML = '';
@@ -343,25 +361,22 @@
       }
       rows.forEach(r => {
         const machineName = r[1]||'(pas de nom)';
-        const pdfSlug = slugify(machineName);
-        const gammeLink = pdfSlug
-          ? `https://drive.google.com/drive/folders/18PISUuw2nw4bLDEC6C2b4FRSZvfsxV2E/${pdfSlug}.pdf`
-          : null;
+        const gammeLien = gammesLinks[machineName];
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${machineName}</td>
           <td>${r[5]
             ? `<a href="${r[5]}" target="_blank">Ouvrir</a>`
             : '(pas de lien)'}</td>
-          <td>${gammeLink
-            ? `<a href="${gammeLink}" target="_blank">Gamme PDF</a>`
+          <td>${gammeLien
+            ? `<a href="${gammeLien}" target="_blank">Gamme PDF</a>`
             : '(pas de gamme)'}</td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    // 8. Menu & déconnexion
+    // Menu & déconnexion
     function toggleMenu() {
       document.getElementById('menu').classList.toggle('open');
     }
