@@ -93,7 +93,7 @@
       font-weight: bold;
       border: 1px solid #4e79a7;
     }
-    /* --- NOUVELLE MISE EN PAGE DU TABLEAU --- */
+    /* --- MISE EN PAGE DU TABLEAU MODIFIÉE --- */
     .table-container {
       max-width: 1000px;
       margin: auto;
@@ -103,16 +103,15 @@
       padding: 0;
       position: relative;
       z-index: 1;
-      /* scroll horizontal ET vertical */
       overflow-x: auto;
       overflow-y: auto;
       max-height: 65vh;
     }
     table {
-      width: 100%;
       border-collapse: collapse;
-      min-width: 800px;
-      table-layout: auto;
+      table-layout: auto; /* <-- Permet l'adaptation automatique */
+      width: 100%;
+      min-width: 600px;
       background: #fff;
     }
     th, td {
@@ -132,6 +131,11 @@
     tr:hover {
       background: #f5f5ff;
     }
+    th:first-child, td:first-child {
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     @media (max-width: 800px) {
       table, th, td {
         font-size: 0.96rem;
@@ -143,7 +147,7 @@
         max-height: 50vh;
       }
     }
-    /* --- FIN NOUVELLE MISE EN PAGE --- */
+    /* --- FIN --- */
     #login-overlay {
       position: fixed;
       top: 0;
@@ -197,7 +201,7 @@
 
   <header>
     <button class="menu-button" onclick="toggleMenu()">☰</button>
-    <h1 class="page-title">Suivi Préventif</h1>
+    <h1 class="page-title">Formulaires de Maintenance</h1>
     <div class="menu" id="menu">
       <a href="index.html">Accueil</a>
       <a href="tableau.html">Tableau de bord</a>
