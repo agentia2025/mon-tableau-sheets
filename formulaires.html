@@ -256,10 +256,11 @@
     // Liens de gammes par nom de machine (remplis au chargement, avec clé normalisée)
     let gammesLinks = {};
 
-    // Charge les liens Gammes depuis le Google Sheets
+    // Charge les liens Gammes depuis la colonne I du même Google Sheets (machines en col B, liens en col I)
     function loadGammes() {
-      const gammesUrl = 'https://docs.google.com/spreadsheets/d/130ZSDXWjiqReo1LUFWAot8idIfISVfdWV8gDCYQBglI/gviz/tq?tqx=out:csv';
-      return fetch(gammesUrl)
+      const sheetUrl =
+        'https://docs.google.com/spreadsheets/d/1DT9QEkPm-bo6oUbBp4d7HKcmU84Uh77IKwh_ccoxeSw/gviz/tq?tqx=out:csv&sheet=Id%20Fichiers%20machines';
+      return fetch(sheetUrl)
         .then(res => {
           if (!res.ok) throw new Error('Erreur réseau ' + res.status);
           return res.text();
@@ -267,10 +268,11 @@
         .then(txt => {
           const data = Papa.parse(txt, { header: false, skipEmptyLines: true }).data;
           gammesLinks = {};
-          data.forEach(row => {
-            const machineKey = normalizeMachineName(row[0]);
-            const lien = (row[1]||'').trim();
-            if(machineKey && lien) gammesLinks[machineKey] = lien;
+          data.slice(1).forEach(row => {
+            const machineName = (row[1]||'').trim(); // colonne B
+            const gammeLink = (row[8]||'').trim();   // colonne I
+            const machineKey = normalizeMachineName(machineName);
+            if(machineKey && gammeLink) gammesLinks[machineKey] = gammeLink;
           });
           return gammesLinks;
         });
