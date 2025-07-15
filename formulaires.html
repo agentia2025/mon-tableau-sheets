@@ -6,199 +6,76 @@
   <title>Formulaires de maintenance</title>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
-    body {
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #f5f7fa;
       font-family: Arial, sans-serif;
-      margin: 0;
-      background-color: #f4f4f4;
-      background-image: url('Capture d’écran 2025-06-12 à 18.32.34.png');
-      background-repeat: no-repeat;
-      background-size: cover;
-      background-position: center center;
-      color: #222;
-      position: relative;
     }
-    body::before {
-      content: "";
-      position: fixed;
-      z-index: 0;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(255,255,255,0.1);
-      pointer-events: none;
-    }
-    header {
-      display: flex;
-      align-items: center;
-      padding: 10px 20px;
-      background-color: #4e79a7;
-      color: #fff;
-      text-shadow:none;
-      z-index: 2;
-    }
-    .menu-button {
-      font-size: 26px;
-      cursor: pointer;
-      background: none;
-      border: none;
-      color: #fff;
-      margin-right: 3ch;
-      text-shadow: 0 1px 3px #222, 0 0 6px #4e79a7;
-    }
-    .page-title {
-      font-size: 24px;
-      margin: 0;
-      color: #fff;
-    }
-    .menu {
-      display: none;
-      flex-direction: column;
-      position: absolute;
-      top: 50px;
-      left: 20px;
-      background-color: #fff;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-      z-index: 999;
-    }
-    .menu.open {
-      display: flex;
-    }
-    .menu a {
-      padding: 10px 20px;
-      text-decoration: none;
-      color: #222;
-      border-bottom: 1px solid #eee;
+    h1 {
+      color: #4e79a7;
+      margin: 2rem 0 1rem 0;
+      text-align: center;
+      font-size: 2rem;
+      letter-spacing: 0.03em;
       font-weight: bold;
     }
-    .menu a:last-child {
-      border-bottom: none;
-    }
-    .filters {
-      display: flex;
-      justify-content: center;
-      margin: 2rem auto 1rem;
-      gap: 1rem;
-      flex-wrap: wrap;
-      position: relative;
-      z-index: 1;
-    }
-    .filters label {
-      font-weight: bold;
-    }
-    .filters select {
-      padding: 0.5rem;
-      font-weight: bold;
-      border: 1px solid #4e79a7;
-    }
-    .table-container {
-      max-width: 1000px;
+    .table-responsive {
+      width: 98%;
+      max-width: 1200px;
       margin: auto;
       background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      overflow-x: auto !important;
-      padding: 18px 12px;
-      position: relative;
-      z-index: 1;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(78,121,167,0.08);
+      padding: 0;
+      /* Ajout scroll vertical et horizontal */
+      overflow-x: auto;
+      overflow-y: auto;
+      /* Hauteur fixe pour scroll vertical */
+      max-height: 60vh;
     }
-    table {
-      width: 100%;
+    .styled-table {
       border-collapse: collapse;
-      min-width: 800px;
-      table-layout: auto;
-    }
-    th, td {
-      border-bottom: 1px solid #eee;
-      padding: 0.75rem;
-      text-align: left;
+      min-width: 700px;
+      width: 100%;
+      font-size: 1rem;
       background: #fff;
     }
-    th {
-      background: #f7f9fa;
-      font-weight: bold;
+    .styled-table th, .styled-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid #e0e0e0;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .styled-table th {
+      background: #4e79a7;
+      color: #fff;
       position: sticky;
       top: 0;
       z-index: 2;
     }
-    tr:hover {
-      background: #f5f5ff;
+    .styled-table tr:hover td {
+      background: #f0f6fa;
     }
-    #login-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.45);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-    }
-    #login-box {
-      background: #fff;
-      padding: 30px 40px;
-      border-radius: 12px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.15);
-      max-width: 340px;
-      width: 90%;
-      text-align: center;
-    }
-    #login-box input[type="password"] {
-      width: 90%;
-      padding: 10px;
-      font-size: 18px;
-      margin-bottom: 16px;
-      border: 1px solid #aaa;
-      border-radius: 5px;
-    }
-    #login-box button {
-      padding: 8px 26px;
-      font-size: 18px;
-      background: #4e79a7;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
+    @media (max-width: 800px) {
+      .styled-table, .styled-table th, .styled-table td {
+        font-size: 0.96rem;
+      }
+      .styled-table th, .styled-table td {
+        padding: 0.6rem 0.5rem;
+      }
+      .table-responsive {
+        padding: 0;
+        max-height: 50vh;
+      }
     }
   </style>
 </head>
 <body>
-  <div id="login-overlay">
-    <form id="login-box" autocomplete="off" onsubmit="return false;">
-      <h2>Connexion</h2>
-      <div id="login-error" style="color: #c00; margin-bottom: 8px;"></div>
-      <input type="password" id="password" placeholder="Mot de passe" autofocus />
-      <br>
-      <button type="submit">Entrer</button>
-    </form>
-  </div>
-
-  <header>
-    <button class="menu-button" onclick="toggleMenu()">☰</button>
-    <h1 class="page-title">Suivi Préventif</h1>
-    <div class="menu" id="menu">
-      <a href="index.html">Accueil</a>
-      <a href="tableau.html">Tableau de bord</a>
-      <a href="historique.html">Historique maintenance</a>
-      <a href="preventif.html">Préventif</a>
-      <a href="formulaires.html">Formulaires</a>
-      <a href="#" id="logout-link" onclick="logout();return false;" style="color:#c00;">Déconnexion</a>
-    </div>
-  </header>
-
-  <div class="filters">
-    <label for="siteSelect">Choisir un site :</label>
-    <select id="siteSelect">
-      <!-- Options générées dynamiquement -->
-    </select>
-  </div>
-
-  <div class="table-container">
-    <table id="machineTable">
+  <h1>Formulaires de maintenance</h1>
+  <div class="table-responsive">
+    <table class="styled-table">
       <thead>
         <tr>
           <th>Machine</th>
@@ -206,34 +83,13 @@
           <th>Gammes</th>
         </tr>
       </thead>
-      <tbody>
-        <tr id="loading-row"><td colspan="3">Chargement en cours...</td></tr>
+      <tbody id="table-body">
+        <tr><td colspan="3">Chargement des données...</td></tr>
       </tbody>
     </table>
   </div>
-
   <script>
-    // Connexion/déconnexion
-    const PASSWORDS = {
-      "Armitec2025": ["commun", "lidec", "atelier", "scr"],
-      "commun*d*sit": ["commun"],
-      "lidecbelli": ["lidec", "atelier"],
-      "scrfuture": ["scr"]
-    };
-    const SITES = [
-      { id: "commun",  label: "Commun de site"    },
-      { id: "lidec",   label: "Lidec"              },
-      { id: "atelier", label: "Atelier Bélliparc" },
-      { id: "scr",     label: "SCR"               }
-    ];
-
-    function normalize(str) {
-      return (str||"")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase().trim();
-    }
-    // Correspondance large pour les noms de machines (sans accent, espace, ponctuation, casse)
+    // Normalisation pour la correspondance des noms de machine
     function normalizeMachineName(str) {
       return (str||"")
         .normalize("NFD")
@@ -243,47 +99,22 @@
         .trim();
     }
 
-    function isAllowedSite(siteLabel) {
-      return SITES.some(s =>
-        normalize(s.label) === normalize(siteLabel)
-        && userRights.includes(s.id)
-      );
-    }
-
-    let userRights = [], fullDataRows = [];
-    const siteSelect = document.getElementById('siteSelect');
-
-    // Liens de gammes par nom de machine (remplis au chargement, avec clé normalisée)
     let gammesLinks = {};
 
     // Charge les liens Gammes depuis la colonne I du même Google Sheets (machines en col B, liens en col I)
-    function loadGammes() {
-      const sheetUrl =
-        'https://docs.google.com/spreadsheets/d/1DT9QEkPm-bo6oUbBp4d7HKcmU84Uh77IKwh_ccoxeSw/gviz/tq?tqx=out:csv&sheet=Id%20Fichiers%20machines';
-      return fetch(sheetUrl)
-        .then(res => {
-          if (!res.ok) throw new Error('Erreur réseau ' + res.status);
-          return res.text();
-        })
-        .then(txt => {
-          const data = Papa.parse(txt, { header: false, skipEmptyLines: true }).data;
-          gammesLinks = {};
-          data.slice(1).forEach(row => {
-            const machineName = (row[1]||'').trim(); // colonne B
-            const gammeLink = (row[8]||'').trim();   // colonne I
-            const machineKey = normalizeMachineName(machineName);
-            if(machineKey && gammeLink) gammesLinks[machineKey] = gammeLink;
-          });
-          return gammesLinks;
-        });
+    function loadGammes(data) {
+      gammesLinks = {};
+      data.slice(1).forEach(row => {
+        const machineName = (row[1]||'').trim(); // colonne B
+        const gammeLink = (row[8]||'').trim();   // colonne I
+        const machineKey = normalizeMachineName(machineName);
+        if(machineKey && gammeLink) gammesLinks[machineKey] = gammeLink;
+      });
     }
 
-    // Cherche un lien gamme par correspondance "nom du tableau" contenu dans "nom du sheet"
     function findGammeLink(machineName) {
       const machineKey = normalizeMachineName(machineName);
-      // Correspondance exacte
       if (gammesLinks[machineKey]) return gammesLinks[machineKey];
-      // Correspondance par inclusion : le nom du tableau est contenu dans le nom du sheet
       for (const key in gammesLinks) {
         if (key.includes(machineKey) && machineKey.length > 0) {
           return gammesLinks[key];
@@ -292,95 +123,11 @@
       return null;
     }
 
-    // Authentification
-    document.getElementById('login-box').onsubmit = () => {
-      const pass = document.getElementById('password').value.trim();
-      if (PASSWORDS[pass]) {
-        userRights = PASSWORDS[pass];
-        sessionStorage.setItem('userRights', JSON.stringify(userRights));
-        document.getElementById('login-overlay').style.display = 'none';
-        init();
-      } else {
-        document.getElementById('login-error').innerText = 'Mot de passe incorrect.';
-        document.getElementById('password').value = '';
-        document.getElementById('password').focus();
-      }
-    };
-
-    window.onload = () => {
-      const stored = sessionStorage.getItem('userRights');
-      if (stored) {
-        userRights = JSON.parse(stored);
-        document.getElementById('login-overlay').style.display = 'none';
-        init();
-      }
-    };
-
-    // Chargement & filtrage après login
-    function init() {
-      Promise.all([loadData(), loadGammes()])
-        .then(([rawRows, _]) => {
-          const data = rawRows
-            .map(r => r.map(c => typeof c==='string' ? c.trim() : c))
-            .filter(r => r.length >= 6 && r.some(cell => cell !== ''));
-
-          const rows = data.slice(1); // on saute l'en-tête
-          fullDataRows = rows.filter(r => isAllowedSite(r[0]));
-
-          setupFilter();
-          applySavedFilter();
-        })
-        .catch(err => {
-          console.error(err);
-          document.querySelector('#machineTable tbody').innerHTML =
-            '<tr><td colspan="3">Erreur de chargement des données.</td></tr>';
-        });
-    }
-
-    // Lecture du CSV Google Sheets
-    function loadData() {
-      const sheetUrl =
-        'https://docs.google.com/spreadsheets/d/1DT9QEkPm-bo6oUbBp4d7HKcmU84Uh77IKwh_ccoxeSw/gviz/tq?tqx=out:csv&sheet=Id%20Fichiers%20machines';
-      return fetch(sheetUrl)
-        .then(res => {
-          if (!res.ok) throw new Error('Network error ' + res.status);
-          return res.text();
-        })
-        .then(txt => Papa.parse(txt, { header: false, skipEmptyLines: true }).data);
-    }
-
-    // Peuple le dropdown des sites autorisés
-    function setupFilter() {
-      siteSelect.innerHTML = '<option value="">-- Tous les sites --</option>';
-      const labels = [...new Set(fullDataRows.map(r => r[0]))].sort();
-      labels.forEach(lbl => {
-        const opt = document.createElement('option');
-        opt.value = lbl;
-        opt.textContent = lbl;
-        siteSelect.appendChild(opt);
-      });
-      siteSelect.onchange = () => {
-        sessionStorage.setItem('selectedSite', siteSelect.value);
-        const filtered = siteSelect.value
-          ? fullDataRows.filter(r => r[0] === siteSelect.value)
-          : fullDataRows;
-        renderTable(filtered);
-      };
-    }
-
-    // Réapplique le filtre en session
-    function applySavedFilter() {
-      const saved = sessionStorage.getItem('selectedSite') || '';
-      if (saved) siteSelect.value = saved;
-      siteSelect.onchange();
-    }
-
-    // Affiche le tableau filtré AVEC colonne Gammes
     function renderTable(rows) {
-      const tbody = document.querySelector('#machineTable tbody');
+      const tbody = document.getElementById('table-body');
       tbody.innerHTML = '';
       if (rows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3">Aucune machine pour ce site.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3">Aucune machine trouvée.</td></tr>';
         return;
       }
       rows.forEach(r => {
@@ -400,22 +147,26 @@
       });
     }
 
-    // Menu & déconnexion
-    function toggleMenu() {
-      document.getElementById('menu').classList.toggle('open');
+    // Chargement du CSV Google Sheets
+    function loadDataAndDisplay() {
+      const sheetUrl =
+        'https://docs.google.com/spreadsheets/d/1DT9QEkPm-bo6oUbBp4d7HKcmU84Uh77IKwh_ccoxeSw/gviz/tq?tqx=out:csv&sheet=Id%20Fichiers%20machines';
+      fetch(sheetUrl)
+        .then(res => {
+          if (!res.ok) throw new Error('Erreur réseau ' + res.status);
+          return res.text();
+        })
+        .then(txt => {
+          const data = Papa.parse(txt, { header: false, skipEmptyLines: true }).data;
+          loadGammes(data);
+          renderTable(data.slice(1));
+        })
+        .catch(err => {
+          document.getElementById('table-body').innerHTML =
+            '<tr><td colspan="3">Erreur de chargement des données.</td></tr>';
+        });
     }
-    document.addEventListener('click', e => {
-      const m = document.getElementById('menu'),
-            b = document.querySelector('.menu-button');
-      if (!m.contains(e.target) && e.target !== b) m.classList.remove('open');
-    });
-    document.querySelectorAll('.menu a').forEach(link =>
-      link.addEventListener('click', () => document.getElementById('menu').classList.remove('open'))
-    );
-    function logout() {
-      sessionStorage.clear();
-      location.reload();
-    }
+    loadDataAndDisplay();
   </script>
 </body>
 </html>
