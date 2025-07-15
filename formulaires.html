@@ -276,6 +276,20 @@
         });
     }
 
+    // Cherche un lien gamme par correspondance "nom du tableau" contenu dans "nom du sheet"
+    function findGammeLink(machineName) {
+      const machineKey = normalizeMachineName(machineName);
+      // Correspondance exacte
+      if (gammesLinks[machineKey]) return gammesLinks[machineKey];
+      // Correspondance par inclusion : le nom du tableau est contenu dans le nom du sheet
+      for (const key in gammesLinks) {
+        if (key.includes(machineKey) && machineKey.length > 0) {
+          return gammesLinks[key];
+        }
+      }
+      return null;
+    }
+
     // Authentification
     document.getElementById('login-box').onsubmit = () => {
       const pass = document.getElementById('password').value.trim();
@@ -369,8 +383,7 @@
       }
       rows.forEach(r => {
         const machineName = r[1]||'(pas de nom)';
-        const machineKey = normalizeMachineName(machineName);
-        const gammeLien = gammesLinks[machineKey];
+        const gammeLien = findGammeLink(machineName);
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${machineName}</td>
